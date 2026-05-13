@@ -1,6 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+// Routes that do NOT require authentication.
+const PUBLIC_PATHS = ["/login", "/auth"];
+
+function isPublic(pathname: string) {
+  return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -25,7 +34,26 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  // Unauthenticated users hitting a protected route → /login
+  if (!user && !isPublic(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.delete("error");
+    return NextResponse.redirect(url);
+  }
+
+  // Authenticated users hitting /login → /overview
+  if (user && pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/overview";
+    return NextResponse.redirect(url);
+  }
 
   return response;
 }
