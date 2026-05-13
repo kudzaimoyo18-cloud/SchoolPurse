@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SchoolPurse — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(128,128,128,0.25);border-radius:3px;}
+input,select,button{font-family:'DM Sans',sans-serif;}
+input:focus,select:focus{outline:none;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+/* ── Mock Data ──────────────────────────────────────────── */
+const ARREARS = [
+  {id:1,name:'Tendai Moyo',class:'Form 3A',fee:450,paid:0,days:62},
+  {id:2,name:'Chipo Dube',class:'Form 1B',fee:450,paid:200,days:45},
+  {id:3,name:'Farai Sithole',class:'Form 4C',fee:500,paid:100,days:38},
+  {id:4,name:'Rutendo Chieza',class:'Form 2A',fee:450,paid:300,days:30},
+  {id:5,name:'Munashe Banda',class:'Form 5A',fee:550,paid:0,days:55},
+  {id:6,name:'Tinotenda Ndlovu',class:'Form 1A',fee:450,paid:150,days:28},
+  {id:7,name:'Simba Mutasa',class:'Form 3B',fee:450,paid:200,days:42},
+  {id:8,name:'Nyasha Gumbo',class:'Form 2C',fee:450,paid:0,days:71},
+  {id:9,name:'Tapiwa Chirwa',class:'Form 4A',fee:500,paid:250,days:19},
+  {id:10,name:'Kudakwashe Mwale',class:'Form 6A',fee:600,paid:0,days:48},
+  {id:11,name:'Ruvimbo Phiri',class:'Form 1C',fee:450,paid:100,days:35},
+  {id:12,name:'Blessing Sibanda',class:'Form 5B',fee:550,paid:300,days:22},
+];
+
+const PAYMENTS = [
+  {id:1,date:'2026-04-28',name:'Tatenda Mukwewa',class:'Form 2B',amount:450,receipt:'SP-2874',method:'Cash'},
+  {id:2,date:'2026-04-28',name:'Chiedza Maramba',class:'Form 3A',amount:500,receipt:'SP-2873',method:'Cash'},
+  {id:3,date:'2026-04-27',name:'Takudzwa Zulu',class:'Form 1A',amount:450,receipt:'SP-2872',method:'Bank Transfer'},
+  {id:4,date:'2026-04-27',name:'Panashe Dlamini',class:'Form 4B',amount:250,receipt:'SP-2871',method:'Cash'},
+  {id:5,date:'2026-04-26',name:'Yeukai Chikowore',class:'Form 6B',amount:600,receipt:'SP-2870',method:'Mobile Money'},
+  {id:6,date:'2026-04-25',name:'Tafadzwa Mhuru',class:'Form 2A',amount:450,receipt:'SP-2869',method:'Cash'},
+  {id:7,date:'2026-04-25',name:'Vimbai Ncube',class:'Form 3C',amount:150,receipt:'SP-2868',method:'Cash'},
+  {id:8,date:'2026-04-24',name:'Isheanesu Mathe',class:'Form 1B',amount:450,receipt:'SP-2867',method:'Bank Transfer'},
+  {id:9,date:'2026-04-23',name:'Fadzai Chiramba',class:'Form 5A',amount:550,receipt:'SP-2866',method:'Mobile Money'},
+  {id:10,date:'2026-04-22',name:'Tonderai Mpofu',class:'Form 2B',amount:300,receipt:'SP-2865',method:'Cash'},
+];
+
+const EXPENSES = [
+  {id:1,date:'2026-04-25',desc:'Electricity Bill',category:'Utilities',amount:380},
+  {id:2,date:'2026-04-22',desc:'Staff Salaries',category:'Payroll',amount:3200},
+  {id:3,date:'2026-04-20',desc:'Stationery & Books',category:'Supplies',amount:215},
+  {id:4,date:'2026-04-18',desc:'Maintenance — Roof Repair',category:'Maintenance',amount:450},
+  {id:5,date:'2026-04-15',desc:'Internet & Communications',category:'Utilities',amount:85},
+  {id:6,date:'2026-04-12',desc:'Cleaning Supplies',category:'Supplies',amount:120},
+  {id:7,date:'2026-04-10',desc:'Security Services',category:'Operations',amount:300},
+  {id:8,date:'2026-04-05',desc:'Water Bill',category:'Utilities',amount:145},
+  {id:9,date:'2026-04-03',desc:'Printer Toner & Paper',category:'Supplies',amount:95},
+  {id:10,date:'2026-04-01',desc:'Bank Charges',category:'Operations',amount:25},
+];
+
+const MONTHLY = [
+  {month:'Nov',income:9200,expenses:6100},
+  {month:'Dec',income:11500,expenses:7200},
+  {month:'Jan',income:15800,expenses:8400},
+  {month:'Feb',income:13200,expenses:7800},
+  {month:'Mar',income:14100,expenses:7600},
+  {month:'Apr',income:12450,expenses:5595},
+];
+
+const EXP_CATEGORIES = [
+  {name:'Payroll',amount:3200,color:'#6366f1'},
+  {name:'Utilities',amount:610,color:'#f59e0b'},
+  {name:'Payroll',amount:450,color:'#ef4444'},
+  {name:'Supplies',amount:430,color:'#8b5cf6'},
+  {name:'Operations',amount:325,color:'#06b6d4'},
+];
+
+/* ── Icons ──────────────────────────────────────────────── */
+function Ico({ n, s=18, c='currentColor' }) {
+  const p = {
+    home: <path d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>,
+    card: <><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke={c} strokeWidth="1.7"/><path d="M2 10h20" stroke={c} strokeWidth="1.7" strokeLinecap="round"/></>,
+    warn: <><path d="M12 9v4M12 17h.01" stroke={c} strokeWidth="1.8" strokeLinecap="round"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" fill="none" stroke={c} strokeWidth="1.7"/></>,
+    file: <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="none" stroke={c} strokeWidth="1.7"/><path d="M14 2v6h6M9 13h6M9 17h4" stroke={c} strokeWidth="1.7" strokeLinecap="round"/></>,
+    bar: <path d="M18 20V10M12 20V4M6 20v-6" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>,
+    gear: <><circle cx="12" cy="12" r="3" fill="none" stroke={c} strokeWidth="1.7"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" fill="none" stroke={c} strokeWidth="1.7"/></>,
+    moon: <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round"/>,
+    sun: <><circle cx="12" cy="12" r="5" fill="none" stroke={c} strokeWidth="1.7"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke={c} strokeWidth="1.7" strokeLinecap="round"/></>,
+    plus: <path d="M12 5v14M5 12h14" stroke={c} strokeWidth="2" strokeLinecap="round"/>,
+    search: <><circle cx="11" cy="11" r="8" fill="none" stroke={c} strokeWidth="1.7"/><path d="m21 21-4.35-4.35" stroke={c} strokeWidth="1.7" strokeLinecap="round"/></>,
+    up: <path d="M23 6l-9.5 9.5-5-5L1 18" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>,
+    down: <path d="M23 18l-9.5-9.5-5 5L1 6" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>,
+    bell: <><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round"/></>,
+    check: <path d="M20 6L9 17l-5-5" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    dl: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></>,
+    send: <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" fill="none" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>,
+    x: <path d="M18 6L6 18M6 6l12 12" stroke={c} strokeWidth="2" strokeLinecap="round"/>,
+  };
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" style={{display:'block',flexShrink:0}}>
+      {p[n]}
+    </svg>
+  );
+}
+
+/* ── Theme ──────────────────────────────────────────────── */
+function mkTheme(dark, accent) {
+  return {
+    accent,
+    accentSoft: accent + (dark ? '28' : '18'),
+    accentText: accent,
+    sidebar: '#0b1f2e',
+    bg: dark ? '#0f1923' : '#f0f3f7',
+    card: dark ? '#172535' : '#ffffff',
+    cardAlt: dark ? '#1e3045' : '#f8fafc',
+    border: dark ? '#243650' : '#e2e8f2',
+    borderStrong: dark ? '#2e4560' : '#d1d9e6',
+    text: dark ? '#dce8f5' : '#14263a',
+    textSub: dark ? '#8aa4be' : '#52697e',
+    muted: dark ? '#5e7a94' : '#94a8bc',
+    red: '#ef4444',
+    redSoft: dark ? '#3d1515' : '#fff2f2',
+    amber: '#f59e0b',
+    amberSoft: dark ? '#3a2500' : '#fffbeb',
+    green: '#22c55e',
+    greenSoft: dark ? '#0b2d18' : '#f0fdf4',
+  };
+}
+
+/* ── Shared components ─────────────────────────────────── */
+function KPICard({ title, value, sub, trend, trendVal, t, accent, wide }) {
+  const upColor = '#22c55e';
+  const downColor = '#ef4444';
+  return (
+    <div style={{background:t.card, border:`1px solid ${t.border}`, borderRadius:12, padding:'20px 22px', position:'relative', overflow:'hidden'}}>
+      <div style={{position:'absolute', top:0, left:0, width:3, height:'100%', background:accent, borderRadius:'12px 0 0 12px'}}></div>
+      <div style={{fontSize:10.5, fontWeight:600, letterSpacing:'0.09em', color:t.muted, textTransform:'uppercase', marginBottom:10}}>{title}</div>
+      <div style={{fontSize:26, fontWeight:700, color:t.text, letterSpacing:'-0.02em', marginBottom:7, lineHeight:1}}>{value}</div>
+      <div style={{display:'flex', alignItems:'center', gap:6, flexWrap:'wrap'}}>
+        {trend && (
+          <span style={{display:'flex', alignItems:'center', gap:3, fontSize:11.5, fontWeight:600, color:trend==='up'?upColor:downColor}}>
+            <Ico n={trend==='up'?'up':'down'} s={11} c={trend==='up'?upColor:downColor}/>
+            {trendVal}
+          </span>
+        )}
+        <span style={{fontSize:11.5, color:t.textSub}}>{sub}</span>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ children, sub, action, t }) {
+  return (
+    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16}}>
+      <div>
+        <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>{children}</div>
+        {sub && <div style={{fontSize:12, color:t.textSub, marginTop:2}}>{sub}</div>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function Card({ children, t, p=24, style={} }) {
+  return (
+    <div style={{background:t.card, border:`1px solid ${t.border}`, borderRadius:12, padding:p, ...style}}>
+      {children}
+    </div>
+  );
+}
+
+function Th({ children }) {
+  return (
+    <th style={{textAlign:'left', padding:'9px 14px', fontSize:10.5, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', whiteSpace:'nowrap'}}>
+      {children}
+    </th>
+  );
+}
+
+function StatusBadge({ days, t }) {
+  const [bg, color, label] = days > 60
+    ? [t.redSoft, t.red, `${days}d overdue`]
+    : days > 30
+    ? [t.amberSoft, t.amber, `${days}d overdue`]
+    : [t.greenSoft, t.green, `${days}d overdue`];
+  return (
+    <span style={{background:bg, color, borderRadius:6, padding:'3px 9px', fontSize:11, fontWeight:600, display:'inline-block'}}>
+      {label}
+    </span>
+  );
+}
+
+function Btn({ children, onClick, variant='primary', accent, t, small }) {
+  const styles = {
+    primary: { background:accent, color:'#fff', border:'none' },
+    outline: { background:'none', color:t.textSub, border:`1px solid ${t.border}` },
+    ghost: { background:'none', color:accent, border:'none' },
+  };
+  return (
+    <button onClick={onClick} style={{
+      ...styles[variant],
+      display:'flex', alignItems:'center', gap:7,
+      padding: small ? '7px 13px' : '9px 16px',
+      borderRadius:8, fontSize: small ? 12 : 13, fontWeight:600,
+      cursor:'pointer', whiteSpace:'nowrap', fontFamily:'DM Sans',
+      ...styles[variant],
+    }}>{children}</button>
+  );
+}
+
+function SearchBar({ placeholder, t }) {
+  return (
+    <div style={{display:'flex', alignItems:'center', gap:8, background:t.bg, border:`1px solid ${t.border}`, borderRadius:8, padding:'7px 12px', minWidth:220}}>
+      <Ico n="search" s={14} c={t.muted}/>
+      <input style={{background:'none', border:'none', color:t.text, fontSize:13, outline:'none', width:'100%'}} placeholder={placeholder}/>
+    </div>
+  );
+}
+
+/* ── Bar Chart ──────────────────────────────────────────── */
+function BarChart({ t, accent }) {
+  const max = Math.max(...MONTHLY.flatMap(m=>[m.income,m.expenses]));
+  const H = 130, bw = 22, gap = 6, groupW = 78;
+  const total = MONTHLY.length * groupW;
+  return (
+    <div>
+      <svg width="100%" viewBox={`0 0 ${total} ${H+36}`} preserveAspectRatio="xMidYMax meet" style={{overflow:'visible'}}>
+        {/* Grid lines */}
+        {[0,.25,.5,.75,1].map((f,i)=>(
+          <line key={i} x1={0} y1={H-H*f} x2={total} y2={H-H*f}
+            stroke={t.border} strokeWidth={0.8} strokeDasharray={f===0?'none':'4,3'}/>
+        ))}
+        {MONTHLY.map((m,i)=>{
+          const incH = (m.income/max)*H;
+          const expH = (m.expenses/max)*H;
+          const x = i*groupW + 10;
+          return (
+            <g key={i}>
+              <rect x={x} y={H-incH} width={bw} height={incH} rx={4} fill={accent} opacity={0.88}/>
+              <rect x={x+bw+gap} y={H-expH} width={bw} height={expH} rx={4} fill={t.muted} opacity={0.38}/>
+              <text x={x+bw+gap/2} y={H+18} textAnchor="middle" fontSize={11} fill={t.muted} fontFamily="DM Sans, sans-serif">{m.month}</text>
+              <text x={x+bw/2} y={H-incH-5} textAnchor="middle" fontSize={9} fill={t.textSub} fontFamily="DM Sans, sans-serif">${(m.income/1000).toFixed(1)}k</text>
+            </g>
+          );
+        })}
+      </svg>
+      <div style={{display:'flex', gap:18, marginTop:6}}>
+        <div style={{display:'flex', alignItems:'center', gap:6, fontSize:12, color:t.textSub}}>
+          <div style={{width:10, height:10, borderRadius:2, background:accent}}></div>Income
+        </div>
+        <div style={{display:'flex', alignItems:'center', gap:6, fontSize:12, color:t.textSub}}>
+          <div style={{width:10, height:10, borderRadius:2, background:t.muted, opacity:.5}}></div>Expenses
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Donut Chart ────────────────────────────────────────── */
+function DonutChart({ t }) {
+  const total = EXP_CATEGORIES.reduce((s,c)=>s+c.amount,0);
+  let angle = -90;
+  const r=54, cx=70, cy=70;
+  const toRad = d => d*Math.PI/180;
+  const arc = (start, deg) => {
+    const end = start+deg-0.5;
+    const x1=cx+r*Math.cos(toRad(start)), y1=cy+r*Math.sin(toRad(start));
+    const x2=cx+r*Math.cos(toRad(end)), y2=cy+r*Math.sin(toRad(end));
+    const large = deg>180?1:0;
+    return `M${cx} ${cy} L${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2}Z`;
+  };
+  return (
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:12}}>
+      <svg width={180} height={180} viewBox="0 0 140 140" style={{flexShrink:0}}>
+        {EXP_CATEGORIES.map((c,i)=>{
+          const deg=(c.amount/total)*360;
+          const path=arc(angle,deg);
+          angle+=deg;
+          return <path key={i} d={path} fill={c.color} opacity={0.88}/>;
+        })}
+      </svg>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:22, fontWeight:700, color:t.text, letterSpacing:'-0.02em'}}>${total.toLocaleString()}</div>
+        <div style={{fontSize:11.5, color:t.muted, marginTop:2}}>Total Expenses · April 2026</div>
+      </div>
+      <div style={{width:'100%', display:'flex', flexDirection:'column', gap:10}}>
+        {EXP_CATEGORIES.map((c,i)=>{
+          const pct = Math.round((c.amount/total)*100);
+          return (
+          <div key={i}>
+            <div style={{display:'flex', alignItems:'center', gap:8, marginBottom:4}}>
+              <div style={{width:9, height:9, borderRadius:3, background:c.color, flexShrink:0}}></div>
+              <div style={{fontSize:12, color:t.textSub, flex:1}}>{c.name}</div>
+              <div style={{fontSize:12, fontWeight:600, color:t.text}}>${c.amount.toLocaleString()}</div>
+              <div style={{fontSize:11, color:t.muted, minWidth:28, textAlign:'right'}}>{pct}%</div>
+            </div>
+            <div style={{height:4, background:t.border, borderRadius:3, overflow:'hidden'}}>
+              <div style={{width:`${pct}%`, height:'100%', background:c.color, borderRadius:3, opacity:0.8}}></div>
+            </div>
+          </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Progress Bar ───────────────────────────────────────── */
+function ProgressBar({ pct, accent, t }) {
+  return (
+    <div style={{height:5, background:t.border, borderRadius:3, overflow:'hidden'}}>
+      <div style={{width:`${Math.min(pct,100)}%`, height:'100%', background:accent, borderRadius:3, transition:'width 0.4s'}}></div>
+    </div>
+  );
+}
+
+/* ── Screen: Overview ───────────────────────────────────── */
+function Overview({ t, accent, setScreen }) {
+  const outstanding = ARREARS.reduce((s,a)=>s+(a.fee-a.paid),0);
+  const todayPayments = PAYMENTS.filter(p=>p.date==='2026-04-28');
+  const todayTotal = todayPayments.reduce((s,p)=>s+p.amount,0);
+  const collectionRate = Math.round((12450/(12450+outstanding))*100);
+
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:22}}>
+      {/* KPIs */}
+      <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14}}>
+        <KPICard title="Today's Collections" value={`$${todayTotal.toLocaleString()}`} sub={`${todayPayments.length} payments · ${todayPayments.length} receipts`} trend="up" trendVal="+12%" t={t} accent={accent}/>
+        <KPICard title="April Income" value="$12,450" sub="vs $14,100 in March" trend="down" trendVal="-11.7%" t={t} accent={accent}/>
+        <KPICard title="Outstanding" value={`$${outstanding.toLocaleString()}`} sub={`${ARREARS.length} students in arrears`} t={t} accent={accent}/>
+        <KPICard title="Net (April)" value="+$6,855" sub="Income $12,450 · Exp $5,595" trend="up" trendVal="+22%" t={t} accent={accent}/>
+      </div>
+
+      {/* Charts row */}
+      <div style={{display:'grid', gridTemplateColumns:'1fr 320px', gap:14}}>
+        <Card t={t}>
+          <SectionTitle sub="Nov 2025 — Apr 2026" t={t}>Income vs Expenses</SectionTitle>
+          <BarChart t={t} accent={accent}/>
+        </Card>
+        <Card t={t}>
+          <SectionTitle sub="April 2026" t={t}>Expense Breakdown</SectionTitle>
+          <DonutChart t={t}/>
+        </Card>
+      </div>
+
+      {/* Collection progress */}
+      <Card t={t} p={20}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
+          <div style={{fontSize:14, fontWeight:600, color:t.text}}>Term Fee Collection Rate</div>
+          <span style={{fontSize:13, fontWeight:700, color:accent}}>{collectionRate}%</span>
+        </div>
+        <ProgressBar pct={collectionRate} accent={accent} t={t}/>
+        <div style={{display:'flex', justifyContent:'space-between', marginTop:10}}>
+          <span style={{fontSize:12, color:t.textSub}}>Collected: $12,450</span>
+          <span style={{fontSize:12, color:t.textSub}}>Outstanding: ${outstanding.toLocaleString()}</span>
+          <span style={{fontSize:12, color:t.textSub}}>Target: ${(12450+outstanding).toLocaleString()}</span>
+        </div>
+      </Card>
+
+      {/* Bottom row */}
+      <div style={{display:'grid', gridTemplateColumns:'1fr 340px', gap:14}}>
+        {/* Arrears */}
+        <Card t={t} p={0}>
+          <div style={{padding:'16px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <div>
+              <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>Students in Arrears</div>
+              <div style={{fontSize:12, color:t.textSub, marginTop:1}}>Top 5 by balance</div>
+            </div>
+            <button onClick={()=>setScreen('arrears')} style={{fontSize:12, color:accent, background:'none', border:'none', cursor:'pointer', fontWeight:600}}>View all {ARREARS.length} →</button>
+          </div>
+          <table style={{width:'100%', borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{background:t.cardAlt}}>
+                {['Student','Class','Balance','Status'].map(h=>(
+                  <th key={h} style={{textAlign:'left', padding:'9px 16px', fontSize:10.5, color:t.muted, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {ARREARS.slice(0,5).map(a=>(
+                <tr key={a.id} style={{borderTop:`1px solid ${t.border}`}}>
+                  <td style={{padding:'11px 16px', fontSize:13, color:t.text, fontWeight:500}}>{a.name}</td>
+                  <td style={{padding:'11px 16px', fontSize:12.5, color:t.textSub}}>{a.class}</td>
+                  <td style={{padding:'11px 16px', fontSize:13, fontWeight:700, color:a.days>60?t.red:t.text}}>${(a.fee-a.paid).toLocaleString()}</td>
+                  <td style={{padding:'11px 16px'}}><StatusBadge days={a.days} t={t}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+
+        {/* Recent payments */}
+        <Card t={t} p={0}>
+          <div style={{padding:'16px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>Recent Payments</div>
+            <button onClick={()=>setScreen('payments')} style={{fontSize:12, color:accent, background:'none', border:'none', cursor:'pointer', fontWeight:600}}>View all →</button>
+          </div>
+          <div style={{padding:'4px 0'}}>
+            {PAYMENTS.slice(0,6).map((p,i)=>(
+              <div key={p.id} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'11px 20px', borderBottom:i<5?`1px solid ${t.border}`:'none'}}>
+                <div>
+                  <div style={{fontSize:13, fontWeight:500, color:t.text}}>{p.name}</div>
+                  <div style={{fontSize:11, color:t.muted, marginTop:1}}>{p.class} · {p.receipt}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:13, fontWeight:700, color:accent}}>+${p.amount}</div>
+                  <div style={{fontSize:11, color:t.muted}}>{p.date.slice(5).replace('-','/')}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ── Screen: Payments ───────────────────────────────────── */
+function PaymentsScreen({ t, accent }) {
+  const [showForm, setShowForm] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(()=>{setSaved(false);setShowForm(false);}, 2000);
+  }
+
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:20}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div>
+          <div style={{fontSize:13, color:t.textSub}}>Record cash payments at the office and issue instant receipts</div>
+        </div>
+        <Btn onClick={()=>setShowForm(!showForm)} accent={accent} t={t}>
+          <Ico n="plus" s={15} c="#fff"/> Record Payment
+        </Btn>
+      </div>
+
+      {/* Quick stats */}
+      <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+        <KPICard title="April Total" value="$12,450" sub="47 payments" trend="up" trendVal="+8%" t={t} accent={accent}/>
+        <KPICard title="Today" value="$950" sub="2 payments · 2 receipts" t={t} accent={accent}/>
+        <KPICard title="Avg Payment" value="$265" sub="Per transaction" t={t} accent={accent}/>
+      </div>
+
+      {/* Record form */}
+      {showForm && (
+        <Card t={t} style={{border:`1px solid ${accent}55`}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18}}>
+            <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>New Payment</div>
+            <button onClick={()=>setShowForm(false)} style={{background:'none', border:'none', cursor:'pointer', color:t.muted}}><Ico n="x" s={16} c={t.muted}/></button>
+          </div>
+          <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+            {[
+              {label:'Student Name', placeholder:'Search student…', type:'text'},
+              {label:'Amount (USD)', placeholder:'0.00', type:'number'},
+              {label:'Date', placeholder:'', type:'date', def:'2026-04-28'},
+            ].map(f=>(
+              <div key={f.label}>
+                <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>{f.label}</label>
+                <input type={f.type} defaultValue={f.def} placeholder={f.placeholder} style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}/>
+              </div>
+            ))}
+            <div>
+              <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>Payment Method</label>
+              <select style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}>
+                <option>Cash</option><option>Bank Transfer</option><option>Mobile Money</option>
+              </select>
+            </div>
+            <div>
+              <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>Fee Type</label>
+              <select style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}>
+                <option>Term Fees</option><option>Examination Fee</option><option>Development Levy</option><option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>Notes (optional)</label>
+              <input placeholder="e.g. partial payment" style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}/>
+            </div>
+          </div>
+          <div style={{display:'flex', gap:10, marginTop:18}}>
+            <button onClick={handleSave} style={{background:accent, color:'#fff', border:'none', borderRadius:8, padding:'10px 20px', fontFamily:'DM Sans', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:7}}>
+              {saved ? <><Ico n="check" s={15} c="#fff"/>Saved! Receipt Issued</> : <><Ico n="send" s={15} c="#fff"/>Save & Issue Receipt</>}
+            </button>
+            <button onClick={()=>setShowForm(false)} style={{background:'none', border:`1px solid ${t.border}`, borderRadius:8, padding:'10px 16px', color:t.textSub, fontFamily:'DM Sans', fontSize:13, cursor:'pointer'}}>Cancel</button>
+          </div>
+        </Card>
+      )}
+
+      {/* Table */}
+      <Card t={t} p={0}>
+        <div style={{padding:'14px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', gap:12, alignItems:'center', justifyContent:'space-between'}}>
+          <SearchBar placeholder="Search by name or receipt…" t={t}/>
+          <div style={{display:'flex', gap:8, alignItems:'center'}}>
+            <span style={{fontSize:12, color:t.muted}}>{PAYMENTS.length} records</span>
+            <Btn variant="outline" accent={accent} t={t} small><Ico n="dl" s={13} c={t.muted}/> Export</Btn>
+          </div>
+        </div>
+        <table style={{width:'100%', borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:t.cardAlt}}>
+              {['Receipt #','Student','Class','Amount','Method','Date','Action'].map(h=>(
+                <th key={h} style={{textAlign:'left', padding:'9px 16px', fontSize:10.5, color:t.muted, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase'}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {PAYMENTS.map((p,i)=>(
+              <tr key={p.id} style={{borderTop:`1px solid ${t.border}`}}>
+                <td style={{padding:'12px 16px', fontSize:12, color:t.muted, fontWeight:500, fontVariantNumeric:'tabular-nums'}}>{p.receipt}</td>
+                <td style={{padding:'12px 16px', fontSize:13, color:t.text, fontWeight:500}}>{p.name}</td>
+                <td style={{padding:'12px 16px', fontSize:12.5, color:t.textSub}}>{p.class}</td>
+                <td style={{padding:'12px 16px', fontSize:13, fontWeight:700, color:accent}}>+${p.amount.toLocaleString()}</td>
+                <td style={{padding:'12px 16px'}}>
+                  <span style={{background:t.accentSoft, color:accent, borderRadius:6, padding:'3px 9px', fontSize:11, fontWeight:600}}>{p.method}</span>
+                </td>
+                <td style={{padding:'12px 16px', fontSize:12, color:t.textSub}}>{p.date}</td>
+                <td style={{padding:'12px 16px'}}>
+                  <button style={{display:'flex', alignItems:'center', gap:5, background:'none', border:'none', color:t.muted, cursor:'pointer', fontSize:12, fontFamily:'DM Sans'}}>
+                    <Ico n="dl" s={13} c={t.muted}/> Receipt
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ── Screen: Arrears ────────────────────────────────────── */
+function ArrearsScreen({ t, accent }) {
+  const [query, setQuery] = useState('');
+  const total = ARREARS.reduce((s,a)=>s+(a.fee-a.paid),0);
+  const critical = ARREARS.filter(a=>a.days>60).length;
+  const avgDays = Math.round(ARREARS.reduce((s,a)=>s+a.days,0)/ARREARS.length);
+  const filtered = ARREARS.filter(a=>
+    a.name.toLowerCase().includes(query.toLowerCase()) ||
+    a.class.toLowerCase().includes(query.toLowerCase())
+  );
+
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:20}}>
+      <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14}}>
+        <KPICard title="Total Outstanding" value={`$${total.toLocaleString()}`} sub={`${ARREARS.length} students`} t={t} accent={accent}/>
+        <KPICard title="Critical (>60 days)" value={critical} sub="Immediate follow-up needed" t={t} accent={accent}/>
+        <KPICard title="Moderate (30–60d)" value={ARREARS.filter(a=>a.days>30&&a.days<=60).length} sub="Send reminder notices" t={t} accent={accent}/>
+        <KPICard title="Avg. Days Overdue" value={`${avgDays}d`} sub="Across all arrears" t={t} accent={accent}/>
+      </div>
+
+      {/* Class breakdown */}
+      <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+        {['Form 1','Form 2','Form 3','Form 4','Form 5','Form 6'].map(f=>{
+          const students = ARREARS.filter(a=>a.class.startsWith(f));
+          if(!students.length) return null;
+          const bal = students.reduce((s,a)=>s+(a.fee-a.paid),0);
+          return (
+            <Card key={f} t={t} p={16}>
+              <div style={{fontSize:13, fontWeight:600, color:t.text, marginBottom:4}}>{f}</div>
+              <div style={{fontSize:20, fontWeight:700, color:t.text, marginBottom:2}}>${bal.toLocaleString()}</div>
+              <div style={{fontSize:12, color:t.textSub}}>{students.length} student{students.length>1?'s':''} in arrears</div>
+              <ProgressBar pct={100-Math.round(bal/students.reduce((s,a)=>s+a.fee,0)*100)} accent={accent} t={t}/>
+            </Card>
+          );
+        }).filter(Boolean)}
+      </div>
+
+      <Card t={t} p={0}>
+        <div style={{padding:'14px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', gap:12, alignItems:'center', justifyContent:'space-between'}}>
+          <div style={{display:'flex', alignItems:'center', gap:8, background:t.bg, border:`1px solid ${t.border}`, borderRadius:8, padding:'7px 12px', minWidth:240}}>
+            <Ico n="search" s={14} c={t.muted}/>
+            <input value={query} onChange={e=>setQuery(e.target.value)} style={{background:'none', border:'none', color:t.text, fontSize:13, outline:'none', width:'100%'}} placeholder="Search by name or class…"/>
+          </div>
+          <div style={{display:'flex', gap:8}}>
+            <Btn variant="outline" accent={accent} t={t} small><Ico n="send" s={13} c={t.muted}/> Send Reminders</Btn>
+            <Btn variant="outline" accent={accent} t={t} small><Ico n="dl" s={13} c={t.muted}/> Export CSV</Btn>
+          </div>
+        </div>
+        <table style={{width:'100%', borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:t.cardAlt}}>
+              {['Student','Class','Term Fee','Paid','Balance','Status','Action'].map(h=>(
+                <th key={h} style={{textAlign:'left', padding:'9px 16px', fontSize:10.5, color:t.muted, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase'}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(a=>(
+              <tr key={a.id} style={{borderTop:`1px solid ${t.border}`}}>
+                <td style={{padding:'12px 16px', fontSize:13, color:t.text, fontWeight:500}}>{a.name}</td>
+                <td style={{padding:'12px 16px', fontSize:12.5, color:t.textSub}}>{a.class}</td>
+                <td style={{padding:'12px 16px', fontSize:13, color:t.textSub}}>${a.fee}</td>
+                <td style={{padding:'12px 16px', fontSize:13, color:t.textSub}}>${a.paid}</td>
+                <td style={{padding:'12px 16px', fontSize:13, fontWeight:700, color:a.days>60?t.red:t.text}}>${a.fee-a.paid}</td>
+                <td style={{padding:'12px 16px'}}><StatusBadge days={a.days} t={t}/></td>
+                <td style={{padding:'12px 16px'}}>
+                  <button style={{background:t.accentSoft, color:accent, border:'none', borderRadius:7, padding:'6px 11px', fontSize:11.5, fontWeight:600, cursor:'pointer', fontFamily:'DM Sans', whiteSpace:'nowrap'}}>
+                    Record Payment
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filtered.length===0 && (
+          <div style={{padding:40, textAlign:'center', color:t.muted, fontSize:13}}>No students match your search.</div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+/* ── Screen: Expenses ───────────────────────────────────── */
+function ExpensesScreen({ t, accent }) {
+  const [showForm, setShowForm] = useState(false);
+  const total = EXPENSES.reduce((s,e)=>s+e.amount,0);
+  const catColors = {Payroll:'#6366f1', Utilities:'#f59e0b', Maintenance:'#ef4444', Supplies:'#8b5cf6', Operations:'#06b6d4'};
+
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:20}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div style={{fontSize:13, color:t.textSub}}>Track and categorise all school expenditure</div>
+        <Btn onClick={()=>setShowForm(!showForm)} accent={accent} t={t}>
+          <Ico n="plus" s={15} c="#fff"/> Add Expense
+        </Btn>
+      </div>
+
+      <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+        <KPICard title="Total Expenses (Apr)" value={`$${total.toLocaleString()}`} sub="10 transactions" t={t} accent={accent}/>
+        <KPICard title="Largest Category" value="Payroll" sub="$3,200 · 65% of total" t={t} accent={accent}/>
+        <KPICard title="vs Last Month" value="+$595" sub="$5,000 in March" trend="up" trendVal="+11.9%" t={t} accent={accent}/>
+      </div>
+
+      {showForm && (
+        <Card t={t} style={{border:`1px solid ${accent}55`}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18}}>
+            <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>Add Expense</div>
+            <button onClick={()=>setShowForm(false)} style={{background:'none', border:'none', cursor:'pointer'}}><Ico n="x" s={16} c={t.muted}/></button>
+          </div>
+          <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12}}>
+            {[
+              {label:'Date', type:'date', def:'2026-04-28'},
+              {label:'Description', type:'text', ph:'e.g. Electricity Bill'},
+              {label:'Amount (USD)', type:'number', ph:'0.00'},
+            ].map(f=>(
+              <div key={f.label}>
+                <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>{f.label}</label>
+                <input type={f.type} defaultValue={f.def} placeholder={f.ph} style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}/>
+              </div>
+            ))}
+            <div>
+              <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>Category</label>
+              <select style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}>
+                <option>Payroll</option><option>Utilities</option><option>Maintenance</option><option>Supplies</option><option>Operations</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div style={{marginTop:16, display:'flex', gap:10}}>
+            <button style={{background:accent, color:'#fff', border:'none', borderRadius:8, padding:'10px 20px', fontFamily:'DM Sans', fontSize:13, fontWeight:600, cursor:'pointer'}}>Save Expense</button>
+            <button onClick={()=>setShowForm(false)} style={{background:'none', border:`1px solid ${t.border}`, borderRadius:8, padding:'10px 16px', color:t.textSub, fontFamily:'DM Sans', fontSize:13, cursor:'pointer'}}>Cancel</button>
+          </div>
+        </Card>
+      )}
+
+      <div style={{display:'grid', gridTemplateColumns:'1fr 280px', gap:14}}>
+        <Card t={t} p={0}>
+          <div style={{padding:'14px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+            <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>Transactions</div>
+            <Btn variant="outline" accent={accent} t={t} small><Ico n="dl" s={13} c={t.muted}/> Export</Btn>
+          </div>
+          <table style={{width:'100%', borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{background:t.cardAlt}}>
+                {['Date','Description','Category','Amount'].map(h=>(
+                  <th key={h} style={{textAlign:'left', padding:'9px 16px', fontSize:10.5, color:t.muted, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {EXPENSES.map(e=>(
+                <tr key={e.id} style={{borderTop:`1px solid ${t.border}`}}>
+                  <td style={{padding:'12px 16px', fontSize:12, color:t.textSub}}>{e.date}</td>
+                  <td style={{padding:'12px 16px', fontSize:13, color:t.text, fontWeight:500}}>{e.desc}</td>
+                  <td style={{padding:'12px 16px'}}>
+                    <span style={{background:(catColors[e.category]||t.muted)+'22', color:catColors[e.category]||t.muted, borderRadius:6, padding:'3px 9px', fontSize:11, fontWeight:600}}>{e.category}</span>
+                  </td>
+                  <td style={{padding:'12px 16px', fontSize:13, fontWeight:700, color:t.red}}>−${e.amount.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+
+        <div style={{display:'flex', flexDirection:'column', gap:14}}>
+          <Card t={t}>
+            <SectionTitle sub="April 2026" t={t}>By Category</SectionTitle>
+            <DonutChart t={t}/>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Screen: Reports ────────────────────────────────────── */
+function ReportsScreen({ t, accent }) {
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:20}}>
+      <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14}}>
+        <KPICard title="YTD Income" value="$76,500" sub="6 months collected" trend="up" trendVal="+8%" t={t} accent={accent}/>
+        <KPICard title="YTD Expenses" value="$42,695" sub="6 months total" t={t} accent={accent}/>
+        <KPICard title="Net Surplus" value="+$33,805" sub="Cumulative 6 months" trend="up" trendVal="+14%" t={t} accent={accent}/>
+        <KPICard title="Avg. Net Margin" value="44.2%" sub="Per month average" trend="up" trendVal="+3.1%" t={t} accent={accent}/>
+      </div>
+
+      <Card t={t}>
+        <SectionTitle sub="November 2025 — April 2026 · Monthly comparison" t={t}>
+          Profit & Loss Overview
+        </SectionTitle>
+        <BarChart t={t} accent={accent}/>
+      </Card>
+
+      <Card t={t} p={0}>
+        <div style={{padding:'14px 20px', borderBottom:`1px solid ${t.border}`, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <div style={{fontSize:14.5, fontWeight:600, color:t.text}}>Monthly P&amp;L Summary</div>
+          <Btn variant="outline" accent={accent} t={t} small><Ico n="dl" s={13} c={t.muted}/> Export CSV</Btn>
+        </div>
+        <table style={{width:'100%', borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:t.cardAlt}}>
+              {['Month','Income','Expenses','Net Surplus','Margin'].map(h=>(
+                <th key={h} style={{textAlign:'left', padding:'9px 16px', fontSize:10.5, color:t.muted, fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase'}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[...MONTHLY].reverse().map((m,i)=>{
+              const net=m.income-m.expenses;
+              const margin=((net/m.income)*100).toFixed(1);
+              return (
+                <tr key={i} style={{borderTop:`1px solid ${t.border}`}}>
+                  <td style={{padding:'12px 16px', fontSize:13, color:t.text, fontWeight:500}}>{m.month} {m.month==='Nov'||m.month==='Dec'?2025:2026}</td>
+                  <td style={{padding:'12px 16px', fontSize:13, fontWeight:600, color:accent}}>${m.income.toLocaleString()}</td>
+                  <td style={{padding:'12px 16px', fontSize:13, color:t.red}}>${m.expenses.toLocaleString()}</td>
+                  <td style={{padding:'12px 16px', fontSize:13, fontWeight:700, color:net>0?accent:t.red}}>{net>0?'+':''}{net.toLocaleString()}</td>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{display:'flex', alignItems:'center', gap:8}}>
+                      <div style={{width:60, height:5, background:t.border, borderRadius:3, overflow:'hidden'}}>
+                        <div style={{width:`${margin}%`, height:'100%', background:accent, borderRadius:3}}></div>
+                      </div>
+                      <span style={{fontSize:12, fontWeight:600, color:t.textSub}}>{margin}%</span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ── Screen: Settings ───────────────────────────────────── */
+function SettingsScreen({ t, accent }) {
+  const [toggles, setToggles] = useState([true, true, false, true]);
+  const toggle = i => setToggles(prev => prev.map((v,idx)=>idx===i?!v:v));
+
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:18, maxWidth:740}}>
+      {[
+        {title:'School Information', fields:[
+          {label:'School Name', val:'Harare Academy'},
+          {label:'Registration Number', val:'ZW-EDU-8842'},
+          {label:'Address', val:'15 Churchill Ave, Harare'},
+          {label:'Phone Number', val:'+263 77 123 4567'},
+          {label:'Email Address', val:'admin@harareacademy.ac.zw'},
+          {label:'Academic Year', val:'2026'},
+        ]},
+        {title:'Fee Structure (USD)', fields:[
+          {label:'Form 1–3 Term Fee', val:'450'},
+          {label:'Form 4–5 Term Fee', val:'500'},
+          {label:'Form 6 Term Fee', val:'600'},
+          {label:'Development Levy', val:'50'},
+          {label:'Examination Fee', val:'80'},
+          {label:'Sports Levy', val:'30'},
+        ]},
+      ].map((section,si)=>(
+        <Card key={si} t={t}>
+          <div style={{fontSize:14.5, fontWeight:600, color:t.text, marginBottom:18}}>{section.title}</div>
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:14}}>
+            {section.fields.map((f,fi)=>(
+              <div key={fi}>
+                <label style={{fontSize:10.5, fontWeight:600, color:t.muted, letterSpacing:'0.08em', display:'block', marginBottom:6, textTransform:'uppercase'}}>{f.label}</label>
+                <input defaultValue={f.val} style={{width:'100%', background:t.bg, border:`1px solid ${t.border}`, borderRadius:7, padding:'9px 12px', color:t.text, fontSize:13}}/>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:16}}>
+            <button style={{background:accent, color:'#fff', border:'none', borderRadius:8, padding:'9px 20px', fontFamily:'DM Sans', fontSize:13, fontWeight:600, cursor:'pointer'}}>Save Changes</button>
+          </div>
+        </Card>
+      ))}
+
+      <Card t={t}>
+        <div style={{fontSize:14.5, fontWeight:600, color:t.text, marginBottom:16}}>Notifications & Integrations</div>
+        {[
+          'Send WhatsApp receipt immediately after payment',
+          'Email receipt to parent/guardian',
+          'Alert bursar when student is 30+ days overdue',
+          'Weekly P&L summary report via email',
+        ].map((item,i)=>(
+          <div key={i} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'13px 0', borderBottom:i<3?`1px solid ${t.border}`:'none'}}>
+            <span style={{fontSize:13, color:t.text}}>{item}</span>
+            <button onClick={()=>toggle(i)} style={{width:44, height:24, borderRadius:12, background:toggles[i]?accent:t.border, position:'relative', border:'none', cursor:'pointer', transition:'background 0.2s', flexShrink:0}}>
+              <div style={{width:18, height:18, borderRadius:9, background:'#fff', position:'absolute', top:3, left:toggles[i]?23:3, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}}></div>
+            </button>
+          </div>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+/* ── Sidebar ────────────────────────────────────────────── */
+function Sidebar({ screen, setScreen, dark, setDark, accent }) {
+  const nav = [
+    {id:'overview', label:'Overview', icon:'home'},
+    {id:'payments', label:'Payments', icon:'card'},
+    {id:'arrears', label:'Arrears', icon:'warn', badge:ARREARS.length},
+    {id:'expenses', label:'Expenses', icon:'file'},
+    {id:'reports', label:'Reports & P&L', icon:'bar'},
+    {id:'settings', label:'Settings', icon:'gear'},
+  ];
+  return (
+    <div style={{width:218, flexShrink:0, background:'#0b1f2e', display:'flex', flexDirection:'column', height:'100%'}}>
+      {/* Logo */}
+      <div style={{padding:'22px 18px 18px', borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+        <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:10}}>
+          <div style={{width:34, height:34, borderRadius:9, background:accent, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+            <svg width={19} height={19} viewBox="0 0 24 24" fill="none">
+              <path d="M21 12V7H5a2 2 0 010-4h14v4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 5v14a2 2 0 002 2h16v-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="18" cy="14" r="2" fill="#fff"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{fontWeight:700, fontSize:15, color:'#fff', lineHeight:1}}>School<span style={{color:accent}}>Purse</span></div>
+          </div>
+        </div>
+        <div style={{fontSize:10.5, color:'rgba(255,255,255,0.3)', letterSpacing:'0.04em'}}>Harare Academy</div>
+        <div style={{fontSize:10.5, color:'rgba(255,255,255,0.3)'}}>Term 1 · 2026</div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{flex:1, padding:'10px 10px', overflowY:'auto'}}>
+        <div style={{fontSize:9.5, color:'rgba(255,255,255,0.25)', letterSpacing:'0.1em', textTransform:'uppercase', padding:'10px 10px 6px', fontWeight:600}}>Main Menu</div>
+        {nav.map(item=>{
+          const active = screen===item.id;
+          return (
+            <button key={item.id} onClick={()=>setScreen(item.id)}
+              style={{width:'100%', display:'flex', alignItems:'center', gap:10, padding:'9px 11px', borderRadius:9, border:'none', background:active?accent+'25':'none', cursor:'pointer', marginBottom:2, textAlign:'left', transition:'background 0.15s'}}>
+              <Ico n={item.icon} s={16} c={active?accent:'rgba(255,255,255,0.45)'}/>
+              <span style={{fontSize:13, fontWeight:active?600:400, color:active?'#fff':'rgba(255,255,255,0.55)', flex:1}}>{item.label}</span>
+              {item.badge && (
+                <span style={{background:'#ef4444', color:'#fff', borderRadius:10, padding:'1px 6px', fontSize:10, fontWeight:700}}>{item.badge}</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Bottom */}
+      <div style={{padding:'12px 10px', borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+        <button onClick={()=>setDark(!dark)}
+          style={{width:'100%', display:'flex', alignItems:'center', gap:10, padding:'8px 11px', borderRadius:8, border:'none', background:'none', cursor:'pointer', marginBottom:4}}>
+          <Ico n={dark?'sun':'moon'} s={15} c="rgba(255,255,255,0.4)"/>
+          <span style={{fontSize:12, color:'rgba(255,255,255,0.4)'}}>{dark?'Light Mode':'Dark Mode'}</span>
+        </button>
+        <div style={{display:'flex', alignItems:'center', gap:10, padding:'8px 11px'}}>
+          <div style={{width:32, height:32, borderRadius:16, background:accent+'44', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:accent, flexShrink:0}}>BM</div>
+          <div>
+            <div style={{fontSize:12.5, fontWeight:600, color:'rgba(255,255,255,0.8)', lineHeight:1.2}}>Bursar Moyo</div>
+            <div style={{fontSize:10.5, color:'rgba(255,255,255,0.3)'}}>Administrator</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Top Header ─────────────────────────────────────────── */
+function TopBar({ screen, t, accent, setScreen }) {
+  const labels = {
+    overview: 'Dashboard Overview',
+    payments: 'Fee Payments & Receipts',
+    arrears: 'Students in Arrears',
+    expenses: 'Expense Tracker',
+    reports: 'Reports & P&L',
+    settings: 'Settings',
+  };
+  return (
+    <div style={{padding:'13px 26px', borderBottom:`1px solid ${t.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', background:t.card, flexShrink:0}}>
+      <div>
+        <div style={{fontSize:17, fontWeight:700, color:t.text, lineHeight:1}}>{labels[screen]}</div>
+        <div style={{fontSize:11.5, color:t.muted, marginTop:3}}>Monday, 28 April 2026</div>
+      </div>
+      <div style={{display:'flex', alignItems:'center', gap:10}}>
+        <Btn accent={accent} t={t} onClick={()=>setScreen('payments')}>
+          <Ico n="plus" s={14} c="#fff"/> Quick Payment
+        </Btn>
+        <div style={{position:'relative'}}>
+          <button style={{background:'none', border:`1px solid ${t.border}`, borderRadius:8, width:38, height:38, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer'}}>
+            <Ico n="bell" s={16} c={t.textSub}/>
+          </button>
+          <div style={{position:'absolute', top:7, right:7, width:8, height:8, borderRadius:4, background:'#ef4444', border:`2px solid ${t.card}`}}></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Tweaks Panel ───────────────────────────────────────── */
+function TweaksPanel({ accent, setAccent, dark, setDark, onClose }) {
+  const options = [
+    {label:'SchoolPurse Green', value:'#22c27a'},
+    {label:'SchoolPurse Blue', value:'#3b82f6'},
+    {label:'Warm Amber', value:'#f59e0b'},
+  ];
+  return (
+    <div style={{position:'fixed', bottom:24, right:24, background:'#0b1f2e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:20, width:230, zIndex:9999, boxShadow:'0 12px 40px rgba(0,0,0,0.5)'}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18}}>
+        <span style={{color:'#fff', fontWeight:700, fontSize:13, letterSpacing:'-0.01em'}}>Tweaks</span>
+        <button onClick={onClose} style={{background:'rgba(255,255,255,0.1)', border:'none', color:'rgba(255,255,255,0.7)', cursor:'pointer', borderRadius:6, width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center'}}>
+          <Ico n="x" s={13} c="rgba(255,255,255,0.7)"/>
+        </button>
+      </div>
+      <div style={{fontSize:9.5, color:'rgba(255,255,255,0.35)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:9}}>Accent Color</div>
+      {options.map(o=>(
+        <button key={o.value} onClick={()=>setAccent(o.value)}
+          style={{width:'100%', display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, border:accent===o.value?`1.5px solid ${o.value}`:'1.5px solid rgba(255,255,255,0.08)', background:accent===o.value?o.value+'22':'transparent', cursor:'pointer', marginBottom:5}}>
+          <div style={{width:13, height:13, borderRadius:4, background:o.value, flexShrink:0}}></div>
+          <span style={{fontSize:12, color:'rgba(255,255,255,0.8)', flex:1, textAlign:'left'}}>{o.label}</span>
+          {accent===o.value && <Ico n="check" s={12} c={o.value}/>}
+        </button>
+      ))}
+      <div style={{fontSize:9.5, color:'rgba(255,255,255,0.35)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:9, marginTop:16}}>Appearance</div>
+      <button onClick={()=>setDark(!dark)}
+        style={{width:'100%', display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:8, border:'1.5px solid rgba(255,255,255,0.08)', background:'transparent', cursor:'pointer'}}>
+        <Ico n={dark?'sun':'moon'} s={14} c="rgba(255,255,255,0.6)"/>
+        <span style={{fontSize:12, color:'rgba(255,255,255,0.8)'}}>{dark?'Switch to Light':'Switch to Dark'}</span>
+      </button>
+    </div>
+  );
+}
+
+/* ── App ────────────────────────────────────────────────── */
+function App() {
+  const [screen, setScreen] = useState('overview');
+  const [dark, setDark] = useState(false);
+  const [accent, setAccent] = useState('#22c27a');
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  useEffect(()=>{
+    const handler = e => {
+      if(e.data?.type==='__activate_edit_mode') setTweaksOpen(true);
+      if(e.data?.type==='__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({type:'__edit_mode_available'}, '*');
+    return ()=>window.removeEventListener('message', handler);
+  }, []);
+
+  const t = mkTheme(dark, accent);
+
+  const screenMap = {
+    overview: <Overview t={t} accent={accent} setScreen={setScreen}/>,
+    payments: <PaymentsScreen t={t} accent={accent}/>,
+    arrears:  <ArrearsScreen t={t} accent={accent}/>,
+    expenses: <ExpensesScreen t={t} accent={accent}/>,
+    reports:  <ReportsScreen t={t} accent={accent}/>,
+    settings: <SettingsScreen t={t} accent={accent}/>,
+  };
+
+  return (
+    <div style={{display:'flex', height:'100vh', overflow:'hidden', fontFamily:'DM Sans, sans-serif', background:t.bg}}>
+      <Sidebar screen={screen} setScreen={setScreen} dark={dark} setDark={setDark} accent={accent}/>
+      <div style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden'}}>
+        <TopBar screen={screen} t={t} accent={accent} setScreen={setScreen}/>
+        <div style={{flex:1, overflowY:'auto', padding:'24px 28px 40px'}}>
+          {screenMap[screen]}
+        </div>
+      </div>
+      {tweaksOpen && (
+        <TweaksPanel accent={accent} setAccent={setAccent} dark={dark} setDark={setDark}
+          onClose={()=>{setTweaksOpen(false); window.parent.postMessage({type:'__edit_mode_dismissed'},'*');}}/>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

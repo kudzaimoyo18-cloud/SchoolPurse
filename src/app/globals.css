@@ -1,0 +1,209 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* SchoolPurse-specific tokens (from design handoff) */
+  --color-sp-text-sub: var(--sp-text-sub);
+  --color-sp-muted: var(--sp-muted);
+  --color-sp-border-strong: var(--sp-border-strong);
+  --color-sp-card-alt: var(--sp-card-alt);
+  --color-sp-red: var(--sp-red);
+  --color-sp-red-soft: var(--sp-red-soft);
+  --color-sp-amber: var(--sp-amber);
+  --color-sp-amber-soft: var(--sp-amber-soft);
+  --color-sp-green: var(--sp-green);
+  --color-sp-green-soft: var(--sp-green-soft);
+  --color-sp-accent-soft: var(--sp-accent-soft);
+
+  --font-sans: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+  --font-heading: var(--font-dm-sans), system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Light theme — SchoolPurse design handoff */
+:root {
+  --background: #f0f3f7;
+  --foreground: #14263a;
+  --card: #ffffff;
+  --card-foreground: #14263a;
+  --popover: #ffffff;
+  --popover-foreground: #14263a;
+  --primary: #22c27a;
+  --primary-foreground: #ffffff;
+  --secondary: #f8fafc;
+  --secondary-foreground: #14263a;
+  --muted: #f8fafc;
+  --muted-foreground: #52697e;
+  --accent: #22c27a18;
+  --accent-foreground: #22c27a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f2;
+  --input: #e2e8f2;
+  --ring: #22c27a;
+
+  --chart-1: #22c27a;
+  --chart-2: #94a8bc;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #6366f1;
+
+  --radius: 0.5rem;
+
+  /* Sidebar — always dark regardless of theme */
+  --sidebar: #0b1f2e;
+  --sidebar-foreground: #dce8f5;
+  --sidebar-primary: #22c27a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(34, 194, 122, 0.18);
+  --sidebar-accent-foreground: #22c27a;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #22c27a;
+
+  /* Handoff-specific tokens */
+  --sp-text-sub: #52697e;
+  --sp-muted: #94a8bc;
+  --sp-border-strong: #d1d9e6;
+  --sp-card-alt: #f8fafc;
+  --sp-red: #ef4444;
+  --sp-red-soft: #fff2f2;
+  --sp-amber: #f59e0b;
+  --sp-amber-soft: #fffbeb;
+  --sp-green: #22c55e;
+  --sp-green-soft: #f0fdf4;
+  --sp-accent-soft: #22c27a18;
+}
+
+/* Dark theme — SchoolPurse design handoff */
+.dark {
+  --background: #0f1923;
+  --foreground: #dce8f5;
+  --card: #172535;
+  --card-foreground: #dce8f5;
+  --popover: #172535;
+  --popover-foreground: #dce8f5;
+  --primary: #22c27a;
+  --primary-foreground: #ffffff;
+  --secondary: #1e3045;
+  --secondary-foreground: #dce8f5;
+  --muted: #1e3045;
+  --muted-foreground: #8aa4be;
+  --accent: #22c27a28;
+  --accent-foreground: #22c27a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #243650;
+  --input: #243650;
+  --ring: #22c27a;
+
+  --chart-1: #22c27a;
+  --chart-2: #5e7a94;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #6366f1;
+
+  --sp-text-sub: #8aa4be;
+  --sp-muted: #5e7a94;
+  --sp-border-strong: #2e4560;
+  --sp-card-alt: #1e3045;
+  --sp-red: #ef4444;
+  --sp-red-soft: #3d1515;
+  --sp-amber: #f59e0b;
+  --sp-amber-soft: #3a2500;
+  --sp-green: #22c55e;
+  --sp-green-soft: #0b2d18;
+  --sp-accent-soft: #22c27a28;
+}
+
+/* Accent variants — user can override via data-accent on <html> */
+[data-accent="blue"] {
+  --primary: #3b82f6;
+  --accent-foreground: #3b82f6;
+  --accent: #3b82f618;
+  --ring: #3b82f6;
+  --sp-accent-soft: #3b82f618;
+  --sidebar-primary: #3b82f6;
+  --sidebar-accent: rgba(59, 130, 246, 0.18);
+  --sidebar-accent-foreground: #3b82f6;
+  --sidebar-ring: #3b82f6;
+  --chart-1: #3b82f6;
+}
+
+[data-accent="amber"] {
+  --primary: #f59e0b;
+  --accent-foreground: #f59e0b;
+  --accent: #f59e0b18;
+  --ring: #f59e0b;
+  --sp-accent-soft: #f59e0b18;
+  --sidebar-primary: #f59e0b;
+  --sidebar-accent: rgba(245, 158, 11, 0.18);
+  --sidebar-accent-foreground: #f59e0b;
+  --sidebar-ring: #f59e0b;
+  --chart-1: #f59e0b;
+}
+
+[data-accent="blue"].dark {
+  --accent: #3b82f628;
+  --sp-accent-soft: #3b82f628;
+}
+
+[data-accent="amber"].dark {
+  --accent: #f59e0b28;
+  --sp-accent-soft: #f59e0b28;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  html {
+    @apply font-sans;
+  }
+}
