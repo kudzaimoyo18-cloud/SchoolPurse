@@ -2,16 +2,8 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Palette, Check } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const ACCENTS = [
   { id: "green", label: "SchoolPurse Green", color: "#22c27a" },
@@ -42,8 +34,8 @@ function applyAccent(accent: AccentId) {
 }
 
 /**
- * Two-button toolbar in the sidebar footer: a light/dark icon toggle and
- * a palette dropdown for the accent color. Persists both to localStorage.
+ * Sidebar appearance toolbar: light/dark icon toggle + 3 inline accent swatches.
+ * Persists both to localStorage.
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -60,57 +52,59 @@ export function ThemeToggle() {
   function chooseAccent(next: AccentId) {
     setAccent(next);
     applyAccent(next);
-    window.localStorage.setItem(ACCENT_STORAGE_KEY, next);
+    try {
+      window.localStorage.setItem(ACCENT_STORAGE_KEY, next);
+    } catch {
+      // ignore storage errors (private mode etc.)
+    }
   }
 
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2">
       <button
         type="button"
         onClick={() => setTheme(isDark ? "light" : "dark")}
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        className="inline-flex size-9 items-center justify-center rounded-md text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
       >
         {!mounted ? (
-          <Sun className="size-4" />
+          <Sun className="size-3.5" />
         ) : isDark ? (
-          <Sun className="size-4" />
+          <Sun className="size-3.5" />
         ) : (
-          <Moon className="size-4" />
+          <Moon className="size-3.5" />
         )}
       </button>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="Choose accent color"
-          className="inline-flex size-9 items-center justify-center rounded-md text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
-          <Palette className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top" className="w-52">
-          <DropdownMenuLabel>Accent color</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {ACCENTS.map((a) => {
-            const active = accent === a.id;
-            return (
-              <DropdownMenuItem
-                key={a.id}
-                onSelect={() => chooseAccent(a.id)}
-                className={cn(active && "font-medium")}
-              >
-                <span
-                  className="size-3 rounded-full"
-                  style={{ background: a.color }}
-                />
-                <span className="flex-1">{a.label}</span>
-                {active ? <Check className="size-4" /> : null}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div
+        role="radiogroup"
+        aria-label="Accent color"
+        className="flex items-center gap-1"
+      >
+        {ACCENTS.map((a) => {
+          const active = mounted && accent === a.id;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={a.label}
+              title={a.label}
+              onClick={() => chooseAccent(a.id)}
+              className={cn(
+                "size-4 rounded-full ring-offset-2 ring-offset-sidebar transition",
+                active
+                  ? "ring-2 ring-white/80"
+                  : "opacity-70 hover:opacity-100",
+              )}
+              style={{ background: a.color }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
