@@ -3,13 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MoreHorizontal, Pencil, UserX, UserCheck } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Pencil, UserX, UserCheck, Loader2 } from "lucide-react";
 import { StudentDialog } from "./student-dialog";
 import { setStudentStatus } from "./actions";
 
@@ -32,6 +26,11 @@ interface Props {
   };
 }
 
+/**
+ * Inline icon buttons for each student row. Switched away from a dropdown
+ * menu because base-ui's Menu.Item.onSelect closes the menu and races with
+ * the Dialog mount, so the edit dialog never opens.
+ */
 export function StudentRowActions({ classes, student }: Props) {
   const router = useRouter();
   const [openEdit, setOpenEdit] = React.useState(false);
@@ -45,40 +44,44 @@ export function StudentRowActions({ classes, student }: Props) {
         toast.error(res.error);
         return;
       }
-      toast.success(next === "active" ? "Student reinstated" : "Student withdrawn");
+      toast.success(
+        next === "active" ? "Student reinstated" : "Student withdrawn",
+      );
       router.refresh();
     });
   }
 
+  const isActive = student.status === "active";
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="Row actions"
+      <div className="flex items-center justify-end gap-0.5">
+        <button
+          type="button"
+          onClick={() => setOpenEdit(true)}
+          aria-label="Edit student"
+          title="Edit"
           className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground"
         >
-          <MoreHorizontal className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setOpenEdit(true)}>
-            <Pencil className="size-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={toggleStatus} disabled={pending}>
-            {student.status === "active" ? (
-              <>
-                <UserX className="size-4" />
-                Withdraw
-              </>
-            ) : (
-              <>
-                <UserCheck className="size-4" />
-                Reinstate
-              </>
-            )}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <Pencil className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={toggleStatus}
+          disabled={pending}
+          aria-label={isActive ? "Withdraw student" : "Reinstate student"}
+          title={isActive ? "Withdraw" : "Reinstate"}
+          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground disabled:opacity-50"
+        >
+          {pending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : isActive ? (
+            <UserX className="size-3.5" />
+          ) : (
+            <UserCheck className="size-3.5" />
+          )}
+        </button>
+      </div>
       <StudentDialog
         open={openEdit}
         onOpenChange={setOpenEdit}
