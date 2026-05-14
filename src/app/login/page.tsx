@@ -43,6 +43,12 @@ export default async function LoginPage({
             Your account is authenticated but not linked to a school yet. Ask
             a platform admin to run the bootstrap seed.
           </p>
+        ) : error ? (
+          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error === "missing_code" || error === "oauth_failed"
+              ? "Sign-in didn't complete. Please try again."
+              : error}
+          </p>
         ) : null}
 
         <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
