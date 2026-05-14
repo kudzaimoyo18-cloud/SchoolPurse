@@ -22,7 +22,7 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
   const { data, error } = await supabase
     .from("invoices")
     .select(
-      "id, student_id, total_usd, due_date, status, students(first_name, last_name, classes(name)), invoice_lines(amount_usd, paid_usd)",
+      "id, student_id, total_usd, due_date, status, students(first_name, last_name, classes(name)), invoice_lines(amount_usd, paid_usd, payment_allocations(amount_usd, payments(status)))",
     )
     .in("status", ["open", "partial"])
     .limit(5000);
@@ -48,16 +48,43 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
       ? (classField[0]?.name ?? null)
       : (classField?.name ?? null);
 
-    const lines = (row.invoice_lines as
-      | Array<{ amount_usd?: number | string; paid_usd?: number | string }>
-      | null) ?? [];
+    type AllocRow = {
+      amount_usd?: number | string;
+      payments?:
+        | { status?: string }
+        | Array<{ status?: string }>
+        | null;
+    };
+    type LineRow = {
+      amount_usd?: number | string;
+      paid_usd?: number | string;
+      payment_allocations?: AllocRow[] | null;
+    };
+
+    const lines = (row.invoice_lines as LineRow[] | null) ?? [];
 
     const lineTotal = lines.reduce(
       (sum, ln) => sum + toNumber(ln.amount_usd),
       0,
     );
     const total = lineTotal > 0 ? lineTotal : toNumber(row.total_usd);
-    const paid = lines.reduce((sum, ln) => sum + toNumber(ln.paid_usd), 0);
+
+    // Sum: the materialized paid_usd column (in case it ever gets set)
+    // PLUS the sum of allocations from completed (non-void) payments.
+    // This handles the current DB where allocate_payment_to_invoice creates
+    // payment_allocations rows but doesn't bump invoice_lines.paid_usd.
+    const paid = lines.reduce((sum, ln) => {
+      const baseline = toNumber(ln.paid_usd);
+      const allocs = ln.payment_allocations ?? [];
+      const fromAllocs = allocs.reduce((a, alloc) => {
+        const pay = Array.isArray(alloc.payments)
+          ? alloc.payments[0]
+          : alloc.payments;
+        if (pay && pay.status === "void") return a;
+        return a + toNumber(alloc.amount_usd);
+      }, 0);
+      return sum + Math.max(baseline, fromAllocs);
+    }, 0);
     const balance = Math.max(total - paid, 0);
     if (balance <= 0.0001) continue;
 

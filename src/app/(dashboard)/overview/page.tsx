@@ -138,20 +138,45 @@ export default async function OverviewPage() {
   let termTarget = 0;
   let termCollected = 0;
   if (term) {
+    const termIdRes = await supabase
+      .from("terms")
+      .select("id")
+      .eq("is_current", true)
+      .maybeSingle();
+    const termId = (termIdRes.data as { id: string } | null)?.id ?? "";
     const { data: termInvoices } = await supabase
       .from("invoices")
-      .select("total_usd, invoice_lines(paid_usd)")
-      .eq("term_id", await supabase.from("terms").select("id").eq("is_current", true).maybeSingle().then((r) => (r.data as { id: string } | null)?.id ?? ""));
+      .select(
+        "total_usd, invoice_lines(amount_usd, paid_usd, payment_allocations(amount_usd, payments(status)))",
+      )
+      .eq("term_id", termId);
+    type AllocRow = {
+      amount_usd: number | string;
+      payments?: { status?: string } | Array<{ status?: string }> | null;
+    };
+    type LineRow = {
+      amount_usd?: number | string;
+      paid_usd: number | string;
+      payment_allocations?: AllocRow[] | null;
+    };
     const list = (termInvoices ?? []) as Array<{
       total_usd: number | string;
-      invoice_lines: Array<{ paid_usd: number | string }> | null;
+      invoice_lines: LineRow[] | null;
     }>;
     for (const inv of list) {
       termTarget += toNumber(inv.total_usd);
-      termCollected += (inv.invoice_lines ?? []).reduce(
-        (s, ln) => s + toNumber(ln.paid_usd),
-        0,
-      );
+      termCollected += (inv.invoice_lines ?? []).reduce((s, ln) => {
+        const baseline = toNumber(ln.paid_usd);
+        const allocs = ln.payment_allocations ?? [];
+        const fromAllocs = allocs.reduce((a, alloc) => {
+          const pay = Array.isArray(alloc.payments)
+            ? alloc.payments[0]
+            : alloc.payments;
+          if (pay && pay.status === "void") return a;
+          return a + toNumber(alloc.amount_usd);
+        }, 0);
+        return s + Math.max(baseline, fromAllocs);
+      }, 0);
     }
   }
   const termPct = termTarget > 0 ? (termCollected / termTarget) * 100 : 0;
