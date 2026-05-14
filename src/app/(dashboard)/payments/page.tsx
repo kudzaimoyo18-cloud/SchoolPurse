@@ -259,13 +259,14 @@ export default async function PaymentsPage({
       </SectionCard>
 
       <div className="flex justify-end">
-        <Link
+        <a
           href="/api/payments/export"
+          download
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
         >
           <Download className="size-3.5" />
           Export CSV
-        </Link>
+        </a>
       </div>
     </div>
   );

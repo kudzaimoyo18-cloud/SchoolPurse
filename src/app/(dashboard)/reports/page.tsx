@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Download } from "lucide-react";
 import { SectionCard } from "@/components/section-card";
 import { KpiCard } from "@/components/kpi-card";
@@ -75,13 +74,14 @@ export default async function ReportsPage() {
         title="Monthly P&L summary"
         subtitle="Newest first"
         action={
-          <Link
+          <a
             href="/api/reports/export"
+            download
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
           >
             <Download className="size-3.5" />
             Export CSV
-          </Link>
+          </a>
         }
         bodyClassName="p-0"
       >
