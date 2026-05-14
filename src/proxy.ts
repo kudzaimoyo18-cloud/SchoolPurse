@@ -48,10 +48,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated users hitting /login → /overview
+  // Authenticated users hitting /login → /overview.
+  // If the login URL still has ?error=no_profile, do NOT bounce them —
+  // /overview would just redirect back to /login with the same error,
+  // creating an infinite loop. Let /login render so they see the message.
   if (user && pathname === "/login") {
+    if (request.nextUrl.searchParams.get("error") === "no_profile") {
+      return response;
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/overview";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
