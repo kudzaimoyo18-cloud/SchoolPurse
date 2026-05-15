@@ -82,9 +82,11 @@ export async function provisionMySchool(
     };
   }
 
-  // Call provision_school: creates the school + a school_admin user
-  // row linked to auth.users.id, and a receipt_sequences row.
-  const { data: rpcResult, error: rpcErr } = await admin.rpc(
+  // Call provision_school from the user's AUTHED client — the function is
+  // SECURITY DEFINER but checks auth.uid() == p_user_id internally.
+  // It creates schools + users rows AND seeds defaults (fee items,
+  // classes, expense categories, current academic year + term).
+  const { data: rpcResult, error: rpcErr } = await supabase.rpc(
     "provision_school",
     {
       p_user_id: user.id,
@@ -100,8 +102,8 @@ export async function provisionMySchool(
     return { error: rpcErr.message };
   }
 
-  // Look up the school we just created to get its id (provision_school may
-  // not return a uuid directly depending on its signature).
+  // provision_school returns the new school's uuid. Fall back to a slug
+  // lookup if the result shape is unexpected.
   let schoolId =
     typeof rpcResult === "string" && rpcResult.length === 36
       ? rpcResult
@@ -122,8 +124,9 @@ export async function provisionMySchool(
     };
   }
 
-  // Apply the additional details the RPC doesn't accept (address, phone,
-  // currency, terms_per_year, receipt_prefix).
+  // Apply the extra fields provision_school doesn't accept and flip the
+  // school out of 'trial' into 'active' since the user has actively
+  // signed up. Service-role bypasses RLS for this update.
   await admin
     .from("schools")
     .update({
@@ -132,19 +135,18 @@ export async function provisionMySchool(
       currency: parsed.data.currency || "USD",
       terms_per_year: parsed.data.terms_per_year,
       receipt_prefix: parsed.data.receipt_prefix,
+      status: "active",
     })
     .eq("id", schoolId);
 
-  // Optionally pre-fill default fee items, classes, expense categories,
-  // current academic year + current term.
-  if (parsed.data.seed_defaults) {
-    const { error: seedErr } = await admin.rpc("seed_school_defaults", {
-      p_school_id: schoolId,
-    });
-    if (seedErr) {
-      // Non-fatal: the school still exists; surface a softer message.
-      console.error("seed_school_defaults failed:", seedErr.message);
-    }
+  // If the user opted OUT of default seed, wipe the data
+  // provision_school just seeded so they get a blank slate.
+  if (!parsed.data.seed_defaults) {
+    await admin.from("fee_items").delete().eq("school_id", schoolId);
+    await admin.from("expense_categories").delete().eq("school_id", schoolId);
+    await admin.from("classes").delete().eq("school_id", schoolId);
+    await admin.from("terms").delete().eq("school_id", schoolId);
+    await admin.from("academic_years").delete().eq("school_id", schoolId);
   }
 
   redirect("/overview");
