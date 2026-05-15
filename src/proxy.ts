@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // Routes that do NOT require authentication.
+// `/onboarding` requires auth but NOT a public.users profile — the page
+// itself checks both and renders the school-creation form for new signups.
 const PUBLIC_PATHS = ["/login", "/auth"];
 
 function isPublic(pathname: string) {
@@ -48,14 +50,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated users hitting /login → /overview.
-  // If the login URL still has ?error=no_profile, do NOT bounce them —
-  // /overview would just redirect back to /login with the same error,
-  // creating an infinite loop. Let /login render so they see the message.
+  // Authed users hitting /login → /overview (the dashboard layout will
+  // route them onward to /onboarding if they don't have a profile yet).
   if (user && pathname === "/login") {
-    if (request.nextUrl.searchParams.get("error") === "no_profile") {
-      return response;
-    }
     const url = request.nextUrl.clone();
     url.pathname = "/overview";
     url.search = "";

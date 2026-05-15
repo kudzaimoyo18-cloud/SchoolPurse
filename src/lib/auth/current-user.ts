@@ -48,8 +48,9 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   }
 
   if (!profile) {
-    // Auth user exists but no linked public.users row — likely missing seed.
-    redirect("/login?error=no_profile");
+    // Auth user exists but no linked public.users row — they're a new
+    // signup. Route them to the onboarding flow to create their school.
+    redirect("/onboarding");
   }
 
   const schoolName = Array.isArray(profile.schools)

@@ -1,35 +1,51 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { SectionCard } from "@/components/section-card";
 import { SchoolInfoForm } from "./school-info-form";
 import { FeeItemsSection } from "./fee-items-section";
 import { GenerateInvoicesButton } from "./generate-invoices-button";
+import { TeamSection } from "./team-section";
 
 export const metadata = { title: "Settings — SchoolPurse" };
 
 export default async function SettingsPage() {
+  const me = await getCurrentUser();
   const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const [schoolRes, feeItemsRes, classesRes, termRes] = await Promise.all([
-    supabase
-      .from("schools")
-      .select("name, address, phone, currency, receipt_prefix, terms_per_year")
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("fee_items")
-      .select(
-        "id, name, type, amount_usd, recurrence, applicable_class_ids, active, include_on_registration",
-      )
-      .order("active", { ascending: false })
-      .order("name"),
-    supabase.from("classes").select("id, name").order("name"),
-    supabase
-      .from("terms")
-      .select("name, start_date, end_date")
-      .eq("is_current", true)
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const [schoolRes, feeItemsRes, classesRes, termRes, teammatesRes] =
+    await Promise.all([
+      supabase
+        .from("schools")
+        .select("name, address, phone, currency, receipt_prefix, terms_per_year")
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("fee_items")
+        .select(
+          "id, name, type, amount_usd, recurrence, applicable_class_ids, active, include_on_registration",
+        )
+        .order("active", { ascending: false })
+        .order("name"),
+      supabase.from("classes").select("id, name").order("name"),
+      supabase
+        .from("terms")
+        .select("name, start_date, end_date")
+        .eq("is_current", true)
+        .limit(1)
+        .maybeSingle(),
+      // Service-role read of teammates so we always see every row on the
+      // school, regardless of RLS policies that might restrict cross-row
+      // user reads to platform_admin only.
+      me.schoolId
+        ? admin
+            .from("users")
+            .select("id, name, email, role, status")
+            .eq("school_id", me.schoolId)
+            .order("name")
+        : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    ]);
 
   const school = (schoolRes.data ?? {
     name: "",
@@ -63,6 +79,16 @@ export default async function SettingsPage() {
     | { name: string; start_date: string; end_date: string }
     | null;
 
+  const teammates = ((teammatesRes.data ?? []) as Record<string, unknown>[]).map(
+    (t) => ({
+      id: t.id as string,
+      name: t.name as string,
+      email: t.email as string,
+      role: t.role as "platform_admin" | "school_admin" | "bursar" | "teacher",
+      status: (t.status as string) ?? "active",
+    }),
+  );
+
   return (
     <div className="space-y-6">
       <SectionCard
@@ -74,6 +100,10 @@ export default async function SettingsPage() {
 
       <SectionCard bodyClassName="p-0">
         <FeeItemsSection feeItems={feeItems} classes={classes} />
+      </SectionCard>
+
+      <SectionCard bodyClassName="p-0">
+        <TeamSection teammates={teammates} currentUserId={me.id} />
       </SectionCard>
 
       <SectionCard
