@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   const supabase = await createClient();
-  const [termRes, arrears] = await Promise.all([
+  const [termRes, arrears, classesRes, feeItemsRes] = await Promise.all([
     supabase
       .from("terms")
       .select("name, academic_years(name)")
@@ -20,6 +20,13 @@ export default async function DashboardLayout({
       .limit(1)
       .maybeSingle(),
     fetchArrears(),
+    supabase.from("classes").select("id, name").order("name"),
+    supabase
+      .from("fee_items")
+      .select("id, name, type, amount_usd, applicable_class_ids, active, include_on_registration")
+      .eq("active", true)
+      .eq("include_on_registration", true)
+      .order("name"),
   ]);
 
   const term = termRes.data;
@@ -35,6 +42,15 @@ export default async function DashboardLayout({
       }`
     : undefined;
 
+  const classes = (classesRes.data ?? []) as { id: string; name: string }[];
+  const feeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
+    id: f.id as string,
+    name: f.name as string,
+    type: f.type as string,
+    amount_usd: Number(f.amount_usd),
+    applicable_class_ids: (f.applicable_class_ids as string[]) ?? [],
+  }));
+
   return (
     <div className="flex min-h-svh">
       <Sidebar
@@ -47,7 +63,11 @@ export default async function DashboardLayout({
         arrearsCount={arrears.length}
       />
       <div className="flex flex-1 flex-col pl-[218px]">
-        <TopBar hasNotifications={arrears.length > 0} />
+        <TopBar
+          hasNotifications={arrears.length > 0}
+          classes={classes}
+          feeItems={feeItems}
+        />
         <main className="flex-1 px-7 pb-10 pt-6">{children}</main>
       </div>
     </div>

@@ -1,14 +1,20 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Plus } from "lucide-react";
+import { Bell } from "lucide-react";
 import { format } from "date-fns";
 import { NAV_ITEMS } from "./nav-items";
+import { NewChildButton } from "./new-child-button";
+import type {
+  ClassOption,
+  RegistrationFee,
+} from "./new-child-dialog";
 
 interface TopBarProps {
   hasNotifications?: boolean;
+  classes: ClassOption[];
+  feeItems: RegistrationFee[];
 }
 
 function titleFromPath(pathname: string): string {
@@ -18,7 +24,11 @@ function titleFromPath(pathname: string): string {
   return match?.label ?? "SchoolPurse";
 }
 
-export function TopBar({ hasNotifications }: TopBarProps) {
+export function TopBar({
+  hasNotifications,
+  classes,
+  feeItems,
+}: TopBarProps) {
   const pathname = usePathname();
   const title = titleFromPath(pathname);
   const today = React.useMemo(
@@ -37,13 +47,7 @@ export function TopBar({ hasNotifications }: TopBarProps) {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Link
-            href="/payments?new=1"
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[12.5px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
-          >
-            <Plus className="size-3.5" strokeWidth={2.5} />
-            Quick Payment
-          </Link>
+          <NewChildButton classes={classes} feeItems={feeItems} />
 
           <button
             type="button"
