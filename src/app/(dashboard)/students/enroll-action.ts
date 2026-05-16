@@ -147,6 +147,16 @@ export async function enrollChild(
 
   const total = eligible.reduce((sum, f) => sum + Number(f.amount_usd), 0);
 
+  // Due date: 14 days after enrolment, or the term start date if that's later.
+  // Avoids marking mid-term enrolments as instantly CRITICAL.
+  const enrollDate = parsed.data.enrollment_date;
+  const enrollPlus14 = new Date(enrollDate + "T00:00:00Z");
+  enrollPlus14.setUTCDate(enrollPlus14.getUTCDate() + 14);
+  const dueDate =
+    term?.start_date && term.start_date > enrollPlus14.toISOString().slice(0, 10)
+      ? term.start_date
+      : enrollPlus14.toISOString().slice(0, 10);
+
   // 4. Create the invoice + lines. We don't use provision_registration_invoice
   //    because we need to honour the bursar's checkbox choices.
   const { data: invoiceRow, error: invErr } = await supabase
@@ -156,7 +166,7 @@ export async function enrollChild(
       student_id: student.id,
       term_id: term?.id ?? null,
       period_label: periodLabel,
-      due_date: term?.start_date ?? parsed.data.enrollment_date,
+      due_date: dueDate,
       total_usd: total,
       status: "open",
       is_registration: true,

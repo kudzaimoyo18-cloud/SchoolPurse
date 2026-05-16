@@ -93,7 +93,7 @@ export default async function ReceiptPage({
     supabase
       .from("payments")
       .select(
-        "id, receipt_number, amount_usd, method, paid_at, status, payer_name_snapshot, recorded_by_name_snapshot, students(first_name, last_name, classes(name))",
+        "id, receipt_number, amount_usd, method, paid_at, status, payer_name_snapshot, recorded_by_name_snapshot, student_id, students(first_name, last_name, classes(name))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -109,6 +109,26 @@ export default async function ReceiptPage({
     notFound();
   }
   const p = payment as Record<string, unknown>;
+
+  // Compute the student's outstanding balance after this payment is applied.
+  // We sum amount_usd - paid_usd across all OPEN/PARTIAL invoices for the
+  // student, where paid_usd is the post-trigger materialised value.
+  const studentId = p.student_id as string;
+  const { data: balanceLines } = await supabase
+    .from("invoice_lines")
+    .select(
+      "amount_usd, paid_usd, invoices!inner(id, student_id, status)",
+    )
+    .eq("invoices.student_id", studentId)
+    .in("invoices.status", ["open", "partial"]);
+  type BalLine = {
+    amount_usd: number | string;
+    paid_usd: number | string;
+  };
+  const outstanding = ((balanceLines as BalLine[] | null) ?? []).reduce(
+    (sum, ln) => sum + Math.max(toNumber(ln.amount_usd) - toNumber(ln.paid_usd), 0),
+    0,
+  );
   const school = (schoolRes.data ?? {
     name: "SchoolPurse",
     address: null,
@@ -236,6 +256,27 @@ export default async function ReceiptPage({
                 {amountInWords(amount)}
               </p>
             </div>
+
+            {/* Balance summary — hidden for void receipts */}
+            {p.status !== "void" ? (
+              <div className="rounded-md border border-border px-5 py-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sp-text-sub">
+                    Balance remaining
+                  </p>
+                  <p
+                    className={`text-lg font-bold tabular-nums ${outstanding > 0 ? "text-sp-red" : "text-sp-green"}`}
+                  >
+                    {formatMoney(outstanding)}
+                  </p>
+                </div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {outstanding > 0
+                    ? "Across all open invoices for this student after this payment."
+                    : "All open invoices for this student are now paid in full."}
+                </p>
+              </div>
+            ) : null}
 
             <div className="grid grid-cols-2 gap-6 pt-6">
               <div>

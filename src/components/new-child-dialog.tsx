@@ -112,6 +112,12 @@ export function NewChildDialog({
           ? `${name} enrolled — ${formatMoney(res.total)} invoice created`
           : `${name} enrolled (no fees billed yet)`,
       );
+      // Open the printable invoice in a new tab so the bursar can hand it
+      // to the parent immediately. Closing the dialog and refreshing the
+      // current page keeps the bursar's place for the next enrolment.
+      if (res.invoiceId) {
+        window.open(`/invoices/${res.invoiceId}`, "_blank", "noopener,noreferrer");
+      }
       reset();
       onOpenChange(false);
       router.refresh();
