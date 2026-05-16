@@ -13,16 +13,41 @@ const InviteSchema = z.object({
   role: z.enum(["school_admin", "bursar", "teacher"]),
 });
 
-async function currentSchoolId(): Promise<string | null> {
+type Caller = { userId: string; schoolId: string; role: string };
+
+/**
+ * Returns the caller's id, school and role. Returns null if not signed in,
+ * not linked to a school, or not an admin (school_admin / platform_admin).
+ * Every team action MUST gate on the admin requirement because team-actions
+ * use the service-role client (which bypasses RLS).
+ */
+async function requireAdminCaller(): Promise<
+  { ok: true; caller: Caller } | { ok: false; error: string }
+> {
   const supabase = await createClient();
   const { data: user } = await supabase.auth.getUser();
-  if (!user.user) return null;
+  if (!user.user) return { ok: false, error: "Not authenticated." };
+
   const { data: profile } = await supabase
     .from("users")
-    .select("school_id")
+    .select("id, school_id, role")
     .eq("id", user.user.id)
     .maybeSingle();
-  return (profile?.school_id as string | undefined) ?? null;
+
+  if (!profile || !(profile as { school_id?: string }).school_id) {
+    return { ok: false, error: "No school assigned." };
+  }
+  const p = profile as { id: string; school_id: string; role: string };
+  if (p.role !== "school_admin" && p.role !== "platform_admin") {
+    return {
+      ok: false,
+      error: "Only school admins can manage the team.",
+    };
+  }
+  return {
+    ok: true,
+    caller: { userId: p.id, schoolId: p.school_id, role: p.role },
+  };
 }
 
 export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
@@ -35,8 +60,9 @@ export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const schoolId = await currentSchoolId();
-  if (!schoolId) return { ok: false, error: "No school assigned" };
+  const auth = await requireAdminCaller();
+  if (!auth.ok) return auth;
+  const schoolId = auth.caller.schoolId;
 
   const admin = createAdminClient();
 
@@ -73,16 +99,22 @@ export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
   let authUserId = authCreate?.user?.id ?? null;
 
   if (authErr) {
-    // If the user already exists in auth.users, find them by listing — there's
-    // no direct "get by email" admin API, so we approximate with a search.
     if (/already.*registered|already.*exists|already been registered/i.test(authErr.message)) {
-      const { data: list } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-      });
-      const found = list?.users?.find(
-        (u) => u.email?.toLowerCase() === parsed.data.email,
-      );
+      // Page through auth.users to find them by email. Caps at ~10000 users
+      // (50 pages * 200/page) — more than enough headroom for our scale.
+      const target = parsed.data.email;
+      const PER_PAGE = 200;
+      const MAX_PAGES = 50;
+      let found: { id: string; email?: string | null } | null = null;
+      for (let page = 1; page <= MAX_PAGES && !found; page++) {
+        const { data: list, error: listErr } =
+          await admin.auth.admin.listUsers({ page, perPage: PER_PAGE });
+        if (listErr) return { ok: false, error: listErr.message };
+        if (!list?.users?.length) break;
+        found =
+          list.users.find((u) => u.email?.toLowerCase() === target) ?? null;
+        if (list.users.length < PER_PAGE) break;
+      }
       authUserId = found?.id ?? null;
       if (!authUserId) {
         return {
@@ -119,15 +151,12 @@ export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
 }
 
 export async function removeTeammate(userId: string): Promise<TeamResult> {
-  const supabase = await createClient();
-  const { data: meAuth } = await supabase.auth.getUser();
-  if (!meAuth.user) return { ok: false, error: "Not authenticated" };
-  if (meAuth.user.id === userId) {
+  const auth = await requireAdminCaller();
+  if (!auth.ok) return auth;
+  if (auth.caller.userId === userId) {
     return { ok: false, error: "You can't remove yourself." };
   }
-
-  const schoolId = await currentSchoolId();
-  if (!schoolId) return { ok: false, error: "No school assigned" };
+  const schoolId = auth.caller.schoolId;
 
   const admin = createAdminClient();
 
@@ -153,15 +182,12 @@ export async function changeTeammateRole(
   userId: string,
   role: "school_admin" | "bursar" | "teacher",
 ): Promise<TeamResult> {
-  const supabase = await createClient();
-  const { data: meAuth } = await supabase.auth.getUser();
-  if (!meAuth.user) return { ok: false, error: "Not authenticated" };
-  if (meAuth.user.id === userId) {
+  const auth = await requireAdminCaller();
+  if (!auth.ok) return auth;
+  if (auth.caller.userId === userId) {
     return { ok: false, error: "You can't change your own role." };
   }
-
-  const schoolId = await currentSchoolId();
-  if (!schoolId) return { ok: false, error: "No school assigned" };
+  const schoolId = auth.caller.schoolId;
 
   const admin = createAdminClient();
   const { data: target } = await admin

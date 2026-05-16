@@ -37,6 +37,11 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   // doesn't block us. Catches the case where the seeded public.users row
   // uses a different UUID than what Supabase assigned when the user
   // actually signed in.
+  //
+  // When the row's id != auth.users.id we MUST also sync the id, because
+  // every downstream RLS policy uses auth.uid() to scope. Without the sync
+  // the user lands in an empty dashboard. ON UPDATE CASCADE was added to
+  // every FK referencing users.id in a prior migration so this is safe.
   if (!profile && user.email) {
     const admin = createAdminClient();
     const res = await admin
@@ -45,6 +50,20 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       .eq("email", user.email)
       .maybeSingle();
     profile = res.data;
+
+    if (profile && (profile as { id?: string }).id !== user.id) {
+      const oldId = (profile as { id: string }).id;
+      const { error: syncErr } = await admin
+        .from("users")
+        .update({ id: user.id })
+        .eq("id", oldId);
+      if (!syncErr) {
+        (profile as { id: string }).id = user.id;
+      }
+      // On error, leave the profile id mismatched — downstream RLS reads
+      // will return empty, but at least the user sees the no_profile flow
+      // and we don't 500.
+    }
   }
 
   if (!profile) {

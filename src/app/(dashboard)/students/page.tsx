@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/format";
+import { sanitizeOrLiteral } from "@/lib/security";
 import { StudentsToolbar } from "./students-toolbar";
 import { StudentRowActions } from "./row-actions";
 
@@ -54,10 +55,12 @@ export default async function StudentsPage({
         .order("last_name", { ascending: true })
         .limit(500);
       if (q && q.trim()) {
-        const term = q.trim();
-        query = query.or(
-          `first_name.ilike.%${term}%,last_name.ilike.%${term}%`,
-        );
+        const term = sanitizeOrLiteral(q);
+        if (term) {
+          query = query.or(
+            `first_name.ilike.%${term}%,last_name.ilike.%${term}%`,
+          );
+        }
       }
       return query;
     })(),

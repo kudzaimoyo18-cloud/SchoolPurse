@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatDateTime, formatMoney, toNumber } from "@/lib/format";
+import { sanitizeOrLiteral } from "@/lib/security";
 import { NewPaymentForm } from "./new-payment-form";
 
 export const metadata = { title: "Payments — SchoolPurse" };
@@ -59,10 +60,12 @@ export default async function PaymentsPage({
         .order("paid_at", { ascending: false })
         .limit(200);
       if (q && q.trim()) {
-        const term = q.trim();
-        query = query.or(
-          `receipt_number.ilike.%${term}%,payer_name_snapshot.ilike.%${term}%`,
-        );
+        const term = sanitizeOrLiteral(q);
+        if (term) {
+          query = query.or(
+            `receipt_number.ilike.%${term}%,payer_name_snapshot.ilike.%${term}%`,
+          );
+        }
       }
       return query;
     })(),

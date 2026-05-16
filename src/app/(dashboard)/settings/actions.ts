@@ -29,6 +29,28 @@ async function getCurrentSchoolId() {
   return (profile?.school_id as string | undefined) ?? null;
 }
 
+/** Returns the caller's profile only if they are an admin of their school. */
+async function getAdminContext(): Promise<
+  { schoolId: string } | { error: string }
+> {
+  const supabase = await createClient();
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return { error: "Not authenticated" };
+  const { data: profile } = await supabase
+    .from("users")
+    .select("school_id, role")
+    .eq("id", user.user.id)
+    .maybeSingle();
+  const p = profile as
+    | { school_id?: string; role?: string }
+    | null;
+  if (!p?.school_id) return { error: "No school assigned" };
+  if (p.role !== "school_admin" && p.role !== "platform_admin") {
+    return { error: "Only school admins can change settings." };
+  }
+  return { schoolId: p.school_id };
+}
+
 export async function updateSchoolInfo(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -45,8 +67,9 @@ export async function updateSchoolInfo(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const schoolId = await getCurrentSchoolId();
-  if (!schoolId) return { ok: false, error: "No school assigned" };
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { schoolId } = ctx;
 
   const supabase = await createClient();
   const { error } = await supabase

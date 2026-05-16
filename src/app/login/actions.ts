@@ -28,7 +28,11 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: error.message };
+    // Don't leak whether the email exists, the password is wrong, the user
+    // is locked, etc. — all of those look identical to a casual attacker.
+    // Log the real error server-side for our own diagnostics.
+    console.error("[signIn] auth error:", error.message);
+    return { error: "Invalid email or password." };
   }
 
   redirect("/overview");

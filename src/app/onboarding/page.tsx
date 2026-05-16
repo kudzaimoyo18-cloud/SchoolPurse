@@ -17,14 +17,20 @@ export default async function OnboardingPage() {
     redirect("/login");
   }
 
-  // If they already have a school, send them home.
+  // If they already have a school, send them home. Two separate queries
+  // avoid interpolating user.email into PostgREST's .or() filter syntax.
   const admin = createAdminClient();
-  const { data: existing } = await admin
-    .from("users")
-    .select("id, school_id")
-    .or(`id.eq.${user.id},email.eq.${user.email ?? ""}`)
-    .maybeSingle();
-  if (existing) {
+  const [byId, byEmail] = await Promise.all([
+    admin.from("users").select("id").eq("id", user.id).maybeSingle(),
+    user.email
+      ? admin
+          .from("users")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (byId.data || byEmail.data) {
     redirect("/overview");
   }
 

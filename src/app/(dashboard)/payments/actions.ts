@@ -54,6 +54,22 @@ export async function recordPayment(
   if (!ctx) return { ok: false, error: "Not authenticated" };
   const { supabase, schoolId, userId, userName } = ctx;
 
+  // 0. Defense in depth: verify the student belongs to this school before
+  //    inserting. RLS would already block cross-school inserts via the
+  //    payments.school_id check, but this gives a friendlier error and
+  //    prevents inserting a payment pointing at an unrelated student.
+  const { data: studentRow } = await supabase
+    .from("students")
+    .select("id, school_id")
+    .eq("id", parsed.data.student_id)
+    .maybeSingle();
+  if (
+    !studentRow ||
+    (studentRow as { school_id: string }).school_id !== schoolId
+  ) {
+    return { ok: false, error: "Student not found in this school." };
+  }
+
   // 1. Issue a receipt number via the RPC
   const { data: receipt, error: rcptErr } = await supabase.rpc(
     "next_receipt_number",
@@ -126,7 +142,22 @@ export async function voidPayment(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const ctx = await getContext();
   if (!ctx) return { ok: false, error: "Not authenticated" };
-  const { supabase, userId } = ctx;
+  const { supabase, schoolId, userId } = ctx;
+
+  // Defense in depth: confirm the payment is on this school before mutating.
+  // RLS UPDATE policy on payments already enforces school_id = auth_school_id()
+  // AND is_finance_user(), but a cleaner error here helps debugging.
+  const { data: existing } = await supabase
+    .from("payments")
+    .select("id, school_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (
+    !existing ||
+    (existing as { school_id: string }).school_id !== schoolId
+  ) {
+    return { ok: false, error: "Payment not found in this school." };
+  }
 
   const { error } = await supabase
     .from("payments")

@@ -58,15 +58,16 @@ export async function provisionMySchool(
     return { error: "Not authenticated. Please sign in again." };
   }
 
-  // Guard: if the user already has a public.users row (maybe via the email
-  // fallback in getCurrentUser), don't double-provision.
+  // Guard: if the user already has a public.users row (matched either by
+  // their auth id OR by email), don't double-provision. Two separate
+  // queries — avoids interpolating user.email into PostgREST's .or() filter
+  // syntax even though auth.users.email is RFC-validated.
   const admin = createAdminClient();
-  const { data: existing } = await admin
-    .from("users")
-    .select("id, school_id")
-    .or(`id.eq.${user.id},email.eq.${user.email}`)
-    .maybeSingle();
-  if (existing) {
+  const [byId, byEmail] = await Promise.all([
+    admin.from("users").select("id").eq("id", user.id).maybeSingle(),
+    admin.from("users").select("id").eq("email", user.email).maybeSingle(),
+  ]);
+  if (byId.data || byEmail.data) {
     redirect("/overview");
   }
 

@@ -146,6 +146,23 @@ function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
 
+const MAX_CSV_BYTES = 5_000_000; // 5 MB hard cap
+const MAX_CSV_ROWS = 5000; // including header
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const ALLOWED_GENDERS = new Set(["male", "female", "other"]);
+
+/** Validate a yyyy-mm-dd string. Returns the string if valid, else null. */
+function parseIsoDate(value: string | undefined): string | null {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v) return null;
+  if (!ISO_DATE.test(v)) return null;
+  const d = new Date(v + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  return v;
+}
+
 export async function importStudentsCsv(
   formData: FormData,
 ): Promise<ActionResult & { count?: number }> {
@@ -153,11 +170,23 @@ export async function importStudentsCsv(
   if (!(file instanceof File)) {
     return { ok: false, error: "No file uploaded" };
   }
+  if (file.size > MAX_CSV_BYTES) {
+    return {
+      ok: false,
+      error: `CSV is too large (${Math.round(file.size / 1024)} KB). Maximum is ${Math.round(MAX_CSV_BYTES / 1024)} KB.`,
+    };
+  }
 
   const text = await file.text();
   const rows = parseCsv(text);
   if (rows.length < 2) {
     return { ok: false, error: "CSV is empty or missing rows" };
+  }
+  if (rows.length > MAX_CSV_ROWS) {
+    return {
+      ok: false,
+      error: `CSV has ${rows.length} rows; maximum is ${MAX_CSV_ROWS}. Split into smaller files.`,
+    };
   }
 
   const headers = rows[0].map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
@@ -191,27 +220,68 @@ export async function importStudentsCsv(
 
   const today = new Date().toISOString().slice(0, 10);
   const inserts: Record<string, unknown>[] = [];
+  const errors: string[] = [];
+
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     const first = r[idx("first_name")]?.trim();
     const last = r[idx("last_name")]?.trim();
     if (!first || !last) continue;
+
     const className = idx("class") >= 0 ? r[idx("class")]?.trim() : "";
+    const dobRaw = idx("dob") >= 0 ? r[idx("dob")]?.trim() : "";
+    const enrollRaw =
+      idx("enrollment_date") >= 0
+        ? r[idx("enrollment_date")]?.trim()
+        : "";
+    const genderRaw =
+      idx("gender") >= 0 ? r[idx("gender")]?.trim().toLowerCase() : "";
+
+    const dob = dobRaw ? parseIsoDate(dobRaw) : null;
+    if (dobRaw && !dob) {
+      errors.push(
+        `Row ${i + 1}: DOB "${dobRaw}" is not a valid YYYY-MM-DD date.`,
+      );
+      continue;
+    }
+
+    const enroll = enrollRaw ? parseIsoDate(enrollRaw) : today;
+    if (enrollRaw && !enroll) {
+      errors.push(
+        `Row ${i + 1}: Enrollment date "${enrollRaw}" is not a valid YYYY-MM-DD date.`,
+      );
+      continue;
+    }
+
+    let gender: string | null = null;
+    if (genderRaw) {
+      if (!ALLOWED_GENDERS.has(genderRaw)) {
+        errors.push(
+          `Row ${i + 1}: Gender "${genderRaw}" must be male, female, or other.`,
+        );
+        continue;
+      }
+      gender = genderRaw;
+    }
+
     inserts.push({
       school_id: profile.school_id,
       first_name: first,
       last_name: last,
       class_id: className ? classMap.get(className.toLowerCase()) ?? null : null,
-      dob:
-        idx("dob") >= 0 ? r[idx("dob")]?.trim() || null : null,
-      gender:
-        idx("gender") >= 0 ? r[idx("gender")]?.trim() || null : null,
-      enrollment_date:
-        idx("enrollment_date") >= 0
-          ? r[idx("enrollment_date")]?.trim() || today
-          : today,
+      dob,
+      gender,
+      enrollment_date: enroll ?? today,
       status: "active",
     });
+  }
+
+  if (errors.length > 0) {
+    // Fail loudly with the first few errors so the user can fix the file.
+    return {
+      ok: false,
+      error: `${errors.length} row(s) had errors. First: ${errors.slice(0, 3).join(" ")}`,
+    };
   }
 
   if (inserts.length === 0) {
