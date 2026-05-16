@@ -15,6 +15,13 @@ const PaymentSchema = z.object({
   paid_at: z.string().min(1, "Date is required"),
   payer_name: z.string().trim().optional().or(z.literal("")),
   notes: z.string().trim().optional().or(z.literal("")),
+  // Optional: when the bursar picks "Paying for", we allocate this payment
+  // directly to that invoice_line rather than falling back to oldest-first.
+  invoice_line_id: z
+    .string()
+    .uuid()
+    .nullish()
+    .or(z.literal("")),
 });
 
 async function getContext() {
@@ -45,6 +52,7 @@ export async function recordPayment(
     paid_at: formData.get("paid_at"),
     payer_name: formData.get("payer_name") || "",
     notes: formData.get("notes") || "",
+    invoice_line_id: formData.get("invoice_line_id") || null,
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -107,26 +115,134 @@ export async function recordPayment(
   }
   const pay = payment as { id: string };
 
-  // 3. Find oldest open or partial invoice for this student and allocate via RPC
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("id, status, due_date, created_at")
-    .eq("student_id", parsed.data.student_id)
-    .in("status", ["open", "partial"])
-    .order("due_date", { ascending: true })
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  // 3. Allocate the payment. Two paths:
+  //    (a) Bursar picked a specific invoice_line ("Paying for") → insert one
+  //        payment_allocations row against that line. Any leftover (overpayment
+  //        beyond the line's balance) falls back to oldest-first on remaining
+  //        open invoices for the student.
+  //    (b) No line picked (rare — student has no outstanding fees) → fall
+  //        back to the existing oldest-first allocation against the oldest
+  //        open/partial invoice.
+  const paymentAmount = parsed.data.amount_usd;
+  const chosenLineId = parsed.data.invoice_line_id || null;
 
-  if (invoice) {
-    const inv = invoice as { id: string };
-    const { error: allocErr } = await supabase.rpc(
-      "allocate_payment_to_invoice",
-      { p_payment_id: pay.id, p_invoice_id: inv.id },
-    );
-    // Even if allocation fails, the payment is recorded — surface a soft warning
-    if (allocErr) {
-      console.error("allocate_payment_to_invoice failed:", allocErr.message);
+  if (chosenLineId) {
+    // Validate the chosen line: must belong to this school, this student,
+    // and have a positive remaining balance. We pull the parent invoice via
+    // an inner-join so school/student scoping is enforced server-side.
+    const { data: lineRow, error: lineErr } = await supabase
+      .from("invoice_lines")
+      .select(
+        "id, amount_usd, paid_usd, invoices!inner(id, school_id, student_id, status)",
+      )
+      .eq("id", chosenLineId)
+      .maybeSingle();
+
+    type LineShape = {
+      id: string;
+      amount_usd: number | string;
+      paid_usd: number | string;
+      invoices:
+        | { id: string; school_id: string; student_id: string; status: string }
+        | Array<{
+            id: string;
+            school_id: string;
+            student_id: string;
+            status: string;
+          }>;
+    };
+    const line = lineRow as LineShape | null;
+    const inv = line
+      ? Array.isArray(line.invoices)
+        ? line.invoices[0]
+        : line.invoices
+      : null;
+
+    if (
+      lineErr ||
+      !line ||
+      !inv ||
+      inv.school_id !== schoolId ||
+      inv.student_id !== parsed.data.student_id
+    ) {
+      // Soft-fail: the payment is recorded, just unallocated.
+      console.error(
+        "Invoice line check failed:",
+        lineErr?.message ?? "line not in this school/student",
+      );
+    } else {
+      const lineBalance = Math.max(
+        Number(line.amount_usd) - Number(line.paid_usd),
+        0,
+      );
+      const toAllocate = Math.min(paymentAmount, lineBalance);
+
+      if (toAllocate > 0) {
+        const { error: allocErr } = await supabase
+          .from("payment_allocations")
+          .insert({
+            payment_id: pay.id,
+            invoice_line_id: line.id,
+            amount_usd: toAllocate,
+          });
+        if (allocErr) {
+          console.error(
+            "payment_allocations insert failed:",
+            allocErr.message,
+          );
+        }
+      }
+
+      // Overpayment leftover → drop it onto the next oldest open/partial
+      // invoice via the existing RPC so it doesn't sit unallocated.
+      const leftover = paymentAmount - toAllocate;
+      if (leftover > 0.0001) {
+        const { data: nextInv } = await supabase
+          .from("invoices")
+          .select("id, status, due_date, created_at")
+          .eq("student_id", parsed.data.student_id)
+          .in("status", ["open", "partial"])
+          .neq("id", inv.id)
+          .order("due_date", { ascending: true })
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (nextInv) {
+          const next = nextInv as { id: string };
+          const { error: allocErr2 } = await supabase.rpc(
+            "allocate_payment_to_invoice",
+            { p_payment_id: pay.id, p_invoice_id: next.id },
+          );
+          if (allocErr2) {
+            console.error(
+              "leftover allocate_payment_to_invoice failed:",
+              allocErr2.message,
+            );
+          }
+        }
+      }
+    }
+  } else {
+    // Fallback: oldest-first allocation against the oldest open invoice.
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .select("id, status, due_date, created_at")
+      .eq("student_id", parsed.data.student_id)
+      .in("status", ["open", "partial"])
+      .order("due_date", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (invoice) {
+      const inv = invoice as { id: string };
+      const { error: allocErr } = await supabase.rpc(
+        "allocate_payment_to_invoice",
+        { p_payment_id: pay.id, p_invoice_id: inv.id },
+      );
+      if (allocErr) {
+        console.error("allocate_payment_to_invoice failed:", allocErr.message);
+      }
     }
   }
 

@@ -8,12 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/format";
 import { recordPayment } from "./actions";
+
+export interface OutstandingLine {
+  id: string;
+  description: string;
+  balance: number;
+  invoice_period: string | null;
+  due_date: string | null;
+}
 
 interface StudentOption {
   id: string;
   name: string;
   class_name: string | null;
+  outstanding_lines: OutstandingLine[];
 }
 
 export function NewPaymentForm({
@@ -31,7 +41,25 @@ export function NewPaymentForm({
   const [studentLabel, setStudentLabel] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [showResults, setShowResults] = React.useState(false);
+  const [invoiceLineId, setInvoiceLineId] = React.useState("");
   const formRef = React.useRef<HTMLFormElement>(null);
+
+  const selectedStudent = React.useMemo(
+    () => students.find((s) => s.id === studentId) ?? null,
+    [students, studentId],
+  );
+  const outstandingLines = selectedStudent?.outstanding_lines ?? [];
+
+  // Auto-select the only outstanding line so the bursar doesn't have to click.
+  // When there are multiple lines, default to the first (oldest due) so a
+  // hidden value is always sent — the picker is visible for them to change.
+  React.useEffect(() => {
+    if (outstandingLines.length === 0) {
+      setInvoiceLineId("");
+      return;
+    }
+    setInvoiceLineId(outstandingLines[0].id);
+  }, [outstandingLines]);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -56,6 +84,7 @@ export function NewPaymentForm({
     setStudentId("");
     setStudentLabel("");
     setSearch("");
+    setInvoiceLineId("");
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -66,6 +95,9 @@ export function NewPaymentForm({
     }
     const formData = new FormData(event.currentTarget);
     formData.set("student_id", studentId);
+    if (invoiceLineId) {
+      formData.set("invoice_line_id", invoiceLineId);
+    }
     startTransition(async () => {
       const res = await recordPayment(formData);
       if (!res.ok) {
@@ -186,6 +218,45 @@ export function NewPaymentForm({
             />
           </div>
         </div>
+
+        {/* Paying-for picker — appears once a student is chosen. Hidden
+            entirely when the student has no outstanding fees (rare). When the
+            student has exactly one outstanding line, render it as a read-only
+            chip so the bursar can see what they're allocating to. */}
+        {studentId ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="invoice_line_id">Paying for</Label>
+            {outstandingLines.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border bg-sp-card-alt px-3 py-2 text-xs text-muted-foreground">
+                No outstanding fees on file. This will be recorded as a credit
+                payment with no allocation.
+              </p>
+            ) : outstandingLines.length === 1 ? (
+              <div className="flex items-center justify-between rounded-md border border-border bg-sp-card-alt px-3 py-2 text-sm">
+                <span className="font-medium">
+                  {outstandingLines[0].description}
+                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  Balance {formatMoney(outstandingLines[0].balance)}
+                </span>
+              </div>
+            ) : (
+              <select
+                id="invoice_line_id"
+                value={invoiceLineId}
+                onChange={(e) => setInvoiceLineId(e.target.value)}
+                disabled={pending}
+                className="flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {outstandingLines.map((ln) => (
+                  <option key={ln.id} value={ln.id}>
+                    {ln.description} · Balance {formatMoney(ln.balance)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="space-y-1.5">

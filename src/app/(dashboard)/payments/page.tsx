@@ -41,6 +41,7 @@ export default async function PaymentsPage({
 
   const [
     studentsRes,
+    outstandingLinesRes,
     paymentsRes,
     monthRes,
     todayRes,
@@ -51,6 +52,15 @@ export default async function PaymentsPage({
       .eq("status", "active")
       .order("last_name")
       .limit(2000),
+    // Outstanding invoice lines so the bursar can pick what the payment is for.
+    // RLS scopes both invoice_lines and invoices to this school. We filter for
+    // open/partial invoices and let the form drop lines whose balance is 0.
+    supabase
+      .from("invoice_lines")
+      .select(
+        "id, description, amount_usd, paid_usd, invoices!inner(id, student_id, status, period_label, due_date)",
+      )
+      .in("invoices.status", ["open", "partial"]),
     (async () => {
       let query = supabase
         .from("payments")
@@ -81,6 +91,68 @@ export default async function PaymentsPage({
       .eq("status", "completed"),
   ]);
 
+  // Group outstanding lines by student so the form can show "what is owed"
+  // when a bursar picks a student. We compute balance here once and drop
+  // lines that are fully paid (paid_usd >= amount_usd) — those happen briefly
+  // until the trigger flips invoice.status to "paid".
+  type RawLine = {
+    id: string;
+    description: string;
+    amount_usd: number | string;
+    paid_usd: number | string;
+    invoices:
+      | {
+          id: string;
+          student_id: string;
+          status: string;
+          period_label: string | null;
+          due_date: string | null;
+        }
+      | Array<{
+          id: string;
+          student_id: string;
+          status: string;
+          period_label: string | null;
+          due_date: string | null;
+        }>
+      | null;
+  };
+  const outstandingByStudent = new Map<
+    string,
+    Array<{
+      id: string;
+      description: string;
+      balance: number;
+      invoice_period: string | null;
+      due_date: string | null;
+    }>
+  >();
+  for (const raw of (outstandingLinesRes.data ?? []) as RawLine[]) {
+    const inv = Array.isArray(raw.invoices) ? raw.invoices[0] : raw.invoices;
+    if (!inv) continue;
+    const balance = toNumber(raw.amount_usd) - toNumber(raw.paid_usd);
+    if (balance <= 0.0001) continue;
+    const list = outstandingByStudent.get(inv.student_id) ?? [];
+    list.push({
+      id: raw.id,
+      description: raw.description,
+      balance,
+      invoice_period: inv.period_label,
+      due_date: inv.due_date,
+    });
+    outstandingByStudent.set(inv.student_id, list);
+  }
+  // Sort each student's lines: oldest due first, then by description so the
+  // dropdown order is stable.
+  for (const lines of outstandingByStudent.values()) {
+    lines.sort((a, b) => {
+      const da = a.due_date ?? "9999-12-31";
+      const db = b.due_date ?? "9999-12-31";
+      if (da !== db) return da.localeCompare(db);
+      return a.description.localeCompare(b.description);
+    });
+  }
+
   const students = (studentsRes.data ?? []).map(
     (s: Record<string, unknown>) => {
       const classesField = s.classes as
@@ -90,10 +162,12 @@ export default async function PaymentsPage({
       const className = Array.isArray(classesField)
         ? (classesField[0]?.name ?? null)
         : (classesField?.name ?? null);
+      const id = s.id as string;
       return {
-        id: s.id as string,
+        id,
         name: `${s.first_name} ${s.last_name}`,
         class_name: className,
+        outstanding_lines: outstandingByStudent.get(id) ?? [],
       };
     },
   );
