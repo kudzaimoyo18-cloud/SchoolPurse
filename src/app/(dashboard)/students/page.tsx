@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getStudentPhotoUrls } from "@/lib/storage";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
@@ -27,7 +29,12 @@ interface StudentRow {
   gender: string | null;
   enrollment_date: string;
   status: "active" | "withdrawn";
+  photo_path: string | null;
   classes: { name: string } | { name: string }[] | null;
+}
+
+function getInitials(first: string, last: string) {
+  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase() || "?";
 }
 
 function classNameOf(row: StudentRow): string | null {
@@ -50,7 +57,7 @@ export default async function StudentsPage({
       let query = supabase
         .from("students")
         .select(
-          "id, first_name, last_name, class_id, dob, gender, enrollment_date, status, classes(name)",
+          "id, first_name, last_name, class_id, dob, gender, enrollment_date, status, photo_path, classes(name)",
         )
         .order("last_name", { ascending: true })
         .limit(500);
@@ -68,6 +75,13 @@ export default async function StudentsPage({
 
   const students = (studentsRes.data ?? []) as StudentRow[];
   const classOptions = (classes ?? []) as { id: string; name: string }[];
+
+  // Batch sign all photo URLs in a single Supabase call. Falls back to
+  // an empty Map if nobody has a photo yet.
+  const photoPaths = students
+    .map((s) => s.photo_path)
+    .filter((p): p is string => !!p);
+  const photoUrls = await getStudentPhotoUrls(photoPaths);
 
   return (
     <div className="space-y-6">
@@ -106,10 +120,32 @@ export default async function StudentsPage({
               <TableBody>
                 {students.map((s) => {
                   const className = classNameOf(s);
+                  const photoUrl = s.photo_path
+                    ? (photoUrls.get(s.photo_path) ?? null)
+                    : null;
                   return (
                     <TableRow key={s.id}>
                       <TableCell className="pl-5 font-medium">
-                        {s.first_name} {s.last_name}
+                        <Link
+                          href={`/students/${s.id}`}
+                          className="flex items-center gap-2.5 hover:underline"
+                        >
+                          <span className="inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sp-card-alt text-[10.5px] font-semibold text-muted-foreground">
+                            {photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={photoUrl}
+                                alt=""
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              getInitials(s.first_name, s.last_name)
+                            )}
+                          </span>
+                          <span>
+                            {s.first_name} {s.last_name}
+                          </span>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {className ?? "—"}

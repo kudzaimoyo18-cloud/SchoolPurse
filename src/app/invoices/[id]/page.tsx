@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney, toNumber } from "@/lib/format";
+import { getLogoUrl } from "@/lib/storage";
 import { PrintButton } from "@/app/receipts/[id]/print-button";
 
 export const metadata = { title: "Invoice — SchoolPurse" };
@@ -41,7 +42,7 @@ export default async function InvoicePage({
       .maybeSingle(),
     supabase
       .from("schools")
-      .select("name, address, phone, receipt_prefix")
+      .select("name, address, phone, receipt_prefix, logo_path")
       .limit(1)
       .maybeSingle(),
   ]);
@@ -54,12 +55,15 @@ export default async function InvoicePage({
     address: null,
     phone: null,
     receipt_prefix: "SP",
+    logo_path: null,
   }) as {
     name: string;
     address: string | null;
     phone: string | null;
     receipt_prefix: string;
+    logo_path: string | null;
   };
+  const logoUrl = await getLogoUrl(school.logo_path);
 
   const studentField = inv.students as
     | { first_name?: string; last_name?: string; classes?: unknown }
@@ -133,9 +137,18 @@ export default async function InvoicePage({
           {/* Header */}
           <div className="flex items-start justify-between gap-6 border-b border-border pb-6">
             <div>
-              <div className="mb-2 inline-flex size-9 items-center justify-center rounded-md bg-sidebar text-primary">
-                <Briefcase className="size-4" strokeWidth={2.2} />
-              </div>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt={`${school.name} logo`}
+                  className="mb-2 max-h-14 max-w-[160px] object-contain"
+                />
+              ) : (
+                <div className="mb-2 inline-flex size-9 items-center justify-center rounded-md bg-sidebar text-primary">
+                  <Briefcase className="size-4" strokeWidth={2.2} />
+                </div>
+              )}
               <h1 className="text-xl font-bold tracking-tight">
                 {school.name}
               </h1>

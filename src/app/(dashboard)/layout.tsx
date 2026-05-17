@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
+import { getLogoUrl } from "@/lib/storage";
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { fetchArrears } from "@/lib/queries/arrears";
@@ -12,22 +13,30 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   const supabase = await createClient();
-  const [termRes, arrears, classesRes, feeItemsRes] = await Promise.all([
-    supabase
-      .from("terms")
-      .select("name, academic_years(name)")
-      .eq("is_current", true)
-      .limit(1)
-      .maybeSingle(),
-    fetchArrears(),
-    supabase.from("classes").select("id, name").order("name"),
-    supabase
-      .from("fee_items")
-      .select("id, name, type, amount_usd, applicable_class_ids, active, include_on_registration")
-      .eq("active", true)
-      .eq("include_on_registration", true)
-      .order("name"),
-  ]);
+  const [termRes, arrears, classesRes, feeItemsRes, schoolRes] =
+    await Promise.all([
+      supabase
+        .from("terms")
+        .select("name, academic_years(name)")
+        .eq("is_current", true)
+        .limit(1)
+        .maybeSingle(),
+      fetchArrears(),
+      supabase.from("classes").select("id, name").order("name"),
+      supabase
+        .from("fee_items")
+        .select(
+          "id, name, type, amount_usd, applicable_class_ids, active, include_on_registration",
+        )
+        .eq("active", true)
+        .eq("include_on_registration", true)
+        .order("name"),
+      supabase.from("schools").select("logo_path").limit(1).maybeSingle(),
+    ]);
+  const logoUrl = await getLogoUrl(
+    (schoolRes.data as { logo_path?: string | null } | null)?.logo_path ??
+      null,
+  );
 
   const term = termRes.data;
   const termLabel = term
@@ -61,6 +70,7 @@ export default async function DashboardLayout({
         }}
         termLabel={termLabel}
         arrearsCount={arrears.length}
+        logoUrl={logoUrl}
       />
       <div className="flex flex-1 flex-col pl-[218px]">
         <TopBar

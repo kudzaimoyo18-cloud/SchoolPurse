@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getLogoUrl } from "@/lib/storage";
 import { SectionCard } from "@/components/section-card";
 import { SchoolInfoForm } from "./school-info-form";
 import { FeeItemsSection } from "./fee-items-section";
 import { GenerateInvoicesButton } from "./generate-invoices-button";
 import { TeamSection } from "./team-section";
+import { LogoSection } from "./logo-section";
 
 export const metadata = { title: "Settings — SchoolPurse" };
 
@@ -18,7 +20,7 @@ export default async function SettingsPage() {
     await Promise.all([
       supabase
         .from("schools")
-        .select("name, address, phone, currency, receipt_prefix, terms_per_year")
+        .select("name, address, phone, currency, receipt_prefix, terms_per_year, logo_path")
         .limit(1)
         .maybeSingle(),
       supabase
@@ -54,6 +56,7 @@ export default async function SettingsPage() {
     currency: "USD",
     receipt_prefix: "SP",
     terms_per_year: 3,
+    logo_path: null,
   }) as {
     name: string;
     address: string | null;
@@ -61,7 +64,10 @@ export default async function SettingsPage() {
     currency: string;
     receipt_prefix: string;
     terms_per_year: number;
+    logo_path: string | null;
   };
+
+  const logoUrl = await getLogoUrl(school.logo_path);
 
   const feeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
     id: f.id as string,
@@ -91,6 +97,13 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <SectionCard
+        title="Branding"
+        subtitle="Your school logo appears on receipts, invoices, and the sidebar."
+      >
+        <LogoSection logoUrl={logoUrl} />
+      </SectionCard>
+
       <SectionCard
         title="School information"
         subtitle="Visible on receipts, statements, and reports."

@@ -23,20 +23,38 @@ interface SidebarProps {
   };
   arrearsCount?: number;
   termLabel?: string;
+  logoUrl?: string | null;
 }
 
-export function Sidebar({ user, arrearsCount = 0, termLabel }: SidebarProps) {
+export function Sidebar({
+  user,
+  arrearsCount = 0,
+  termLabel,
+  logoUrl,
+}: SidebarProps) {
   const pathname = usePathname();
   const initials = getInitials(user.name);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-[218px] flex-col bg-sidebar text-sidebar-foreground">
-      {/* Logo block */}
+      {/* Logo block — falls back to the SchoolPurse mark when no school
+          logo is uploaded. Logo, when present, is the school's branding. */}
       <div className="border-b border-sidebar-border px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex size-8 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
-            <Briefcase className="size-4" strokeWidth={2.2} />
-          </span>
+          {logoUrl ? (
+            <span className="inline-flex size-9 items-center justify-center overflow-hidden rounded-md bg-sidebar-accent">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoUrl}
+                alt={`${user.schoolName ?? "School"} logo`}
+                className="size-full object-contain p-0.5"
+              />
+            </span>
+          ) : (
+            <span className="inline-flex size-8 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
+              <Briefcase className="size-4" strokeWidth={2.2} />
+            </span>
+          )}
           <div className="leading-tight">
             <p className="text-[15px] font-semibold tracking-tight">
               School
