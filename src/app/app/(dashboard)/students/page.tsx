@@ -127,7 +127,7 @@ export default async function StudentsPage({
                     <TableRow key={s.id}>
                       <TableCell className="pl-5 font-medium">
                         <Link
-                          href={`/students/${s.id}`}
+                          href={`/app/students/${s.id}`}
                           className="flex items-center gap-2.5 hover:underline"
                         >
                           <span className="inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sp-card-alt text-[10.5px] font-semibold text-muted-foreground">

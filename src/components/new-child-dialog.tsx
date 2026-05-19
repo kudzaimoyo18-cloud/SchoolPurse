@@ -129,7 +129,7 @@ export function NewChildDialog({
       // to the parent immediately. Closing the dialog and refreshing the
       // current page keeps the bursar's place for the next enrolment.
       if (res.invoiceId) {
-        window.open(`/invoices/${res.invoiceId}`, "_blank", "noopener,noreferrer");
+        window.open(`/app/invoices/${res.invoiceId}`, "_blank", "noopener,noreferrer");
       }
       reset();
       onOpenChange(false);

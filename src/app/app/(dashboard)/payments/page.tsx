@@ -318,7 +318,7 @@ export default async function PaymentsPage({
                       </TableCell>
                       <TableCell className="pr-5 text-right">
                         <Link
-                          href={`/receipts/${p.id}`}
+                          href={`/app/receipts/${p.id}`}
                           target="_blank"
                           className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
                         >

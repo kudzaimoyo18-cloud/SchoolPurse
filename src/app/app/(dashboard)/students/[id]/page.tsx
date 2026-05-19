@@ -360,7 +360,7 @@ export default async function StudentProfilePage({
                     <TableCell className="pl-5 font-medium">
                       {ln.invoice_id ? (
                         <Link
-                          href={`/invoices/${ln.invoice_id}`}
+                          href={`/app/invoices/${ln.invoice_id}`}
                           target="_blank"
                           className="hover:underline"
                         >
@@ -438,7 +438,7 @@ export default async function StudentProfilePage({
                     </TableCell>
                     <TableCell className="pr-5 text-right">
                       <Link
-                        href={`/receipts/${h.id}`}
+                        href={`/app/receipts/${h.id}`}
                         target="_blank"
                         className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
                       >

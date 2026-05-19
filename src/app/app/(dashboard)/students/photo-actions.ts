@@ -108,7 +108,7 @@ export async function uploadStudentPhoto(
     await supabase.storage.from("student-photos").remove([s.photo_path]);
   }
 
-  revalidatePath(`/students/${studentId}`);
+  revalidatePath(`/app/students/${studentId}`);
   revalidatePath("/app/students");
   return { ok: true, path };
 }
@@ -144,7 +144,7 @@ export async function removeStudentPhoto(
 
   await supabase.storage.from("student-photos").remove([s.photo_path]);
 
-  revalidatePath(`/students/${studentId}`);
+  revalidatePath(`/app/students/${studentId}`);
   revalidatePath("/app/students");
   return { ok: true };
 }
