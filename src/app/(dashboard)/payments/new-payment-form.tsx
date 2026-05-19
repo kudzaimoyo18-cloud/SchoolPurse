@@ -41,7 +41,14 @@ export function NewPaymentForm({
   const [studentLabel, setStudentLabel] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [showResults, setShowResults] = React.useState(false);
-  const [invoiceLineId, setInvoiceLineId] = React.useState("");
+  // Per-line allocation amounts as strings (input.value is always string).
+  // Empty string = "not entered yet" = $0. We parse to numeric at submit.
+  const [allocations, setAllocations] = React.useState<Record<string, string>>(
+    {},
+  );
+  // Credit-payment amount: used only when the student has NO outstanding
+  // lines — the bursar can still record an advance/credit payment.
+  const [creditAmount, setCreditAmount] = React.useState("");
   const formRef = React.useRef<HTMLFormElement>(null);
 
   const selectedStudent = React.useMemo(
@@ -49,18 +56,29 @@ export function NewPaymentForm({
     [students, studentId],
   );
   const outstandingLines = selectedStudent?.outstanding_lines ?? [];
+  const hasOutstanding = outstandingLines.length > 0;
 
-  // Auto-select the only outstanding line so the bursar doesn't have to click.
-  // When there are multiple lines, default to the first (oldest due) so a
-  // hidden value is always sent — the picker is visible for them to change.
+  // Reset allocations whenever the picked student changes. We don't pre-fill
+  // amounts — the bursar always types what the parent actually paid per line.
   React.useEffect(() => {
-    if (outstandingLines.length === 0) {
-      setInvoiceLineId("");
-      return;
-    }
-    setInvoiceLineId(outstandingLines[0].id);
-  }, [outstandingLines]);
+    setAllocations({});
+    setCreditAmount("");
+  }, [studentId]);
 
+  // Live total = sum of per-line allocations. This is what gets stored as the
+  // payment.amount_usd (so the receipt total always matches the breakdown).
+  const allocationsTotal = React.useMemo(() => {
+    return outstandingLines.reduce((sum, ln) => {
+      const v = parseFloat(allocations[ln.id] ?? "");
+      return sum + (Number.isFinite(v) && v > 0 ? v : 0);
+    }, 0);
+  }, [allocations, outstandingLines]);
+
+  const totalForSubmit = hasOutstanding
+    ? allocationsTotal
+    : parseFloat(creditAmount) || 0;
+
+  // Filter the student dropdown by typed search term.
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return students.slice(0, 8);
@@ -84,7 +102,26 @@ export function NewPaymentForm({
     setStudentId("");
     setStudentLabel("");
     setSearch("");
-    setInvoiceLineId("");
+    setAllocations({});
+    setCreditAmount("");
+  }
+
+  function updateAllocation(lineId: string, value: string) {
+    setAllocations((prev) => {
+      const next = { ...prev };
+      if (!value || value === "0") {
+        delete next[lineId];
+      } else {
+        next[lineId] = value;
+      }
+      return next;
+    });
+  }
+
+  // Convenience: clicking "Pay full balance" on a row fills that row with the
+  // exact outstanding balance so the bursar doesn't have to retype it.
+  function fillFullBalance(line: OutstandingLine) {
+    updateAllocation(line.id, line.balance.toFixed(2));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -93,11 +130,25 @@ export function NewPaymentForm({
       toast.error("Pick a student first");
       return;
     }
+    if (totalForSubmit <= 0) {
+      toast.error("Enter at least one payment amount");
+      return;
+    }
+    // Build the allocations payload from per-line entries.
+    const allocationsPayload = outstandingLines
+      .map((ln) => {
+        const amount = parseFloat(allocations[ln.id] ?? "");
+        return Number.isFinite(amount) && amount > 0
+          ? { invoice_line_id: ln.id, amount_usd: amount }
+          : null;
+      })
+      .filter((a): a is { invoice_line_id: string; amount_usd: number } => !!a);
+
     const formData = new FormData(event.currentTarget);
     formData.set("student_id", studentId);
-    if (invoiceLineId) {
-      formData.set("invoice_line_id", invoiceLineId);
-    }
+    formData.set("amount_usd", String(totalForSubmit));
+    formData.set("allocations", JSON.stringify(allocationsPayload));
+
     startTransition(async () => {
       const res = await recordPayment(formData);
       if (!res.ok) {
@@ -109,7 +160,6 @@ export function NewPaymentForm({
       formRef.current?.reset();
       clearStudent();
       router.refresh();
-      // Auto-hide success after a moment
       setTimeout(() => setSuccess(null), 4000);
     });
   }
@@ -145,9 +195,11 @@ export function NewPaymentForm({
       ) : null}
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {/* Top row: student autocomplete + payment date (the amount field
+            now lives inside the per-line allocation table below). */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {/* Student autocomplete */}
-          <div className="relative space-y-1.5 md:col-span-1">
+          <div className="relative space-y-1.5">
             <Label htmlFor="student_search">Student</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -194,19 +246,6 @@ export function NewPaymentForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="amount_usd">Amount (USD)</Label>
-            <Input
-              id="amount_usd"
-              name="amount_usd"
-              type="number"
-              step="0.01"
-              min="0.01"
-              required
-              disabled={pending}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="paid_at">Date</Label>
             <Input
               id="paid_at"
@@ -219,43 +258,128 @@ export function NewPaymentForm({
           </div>
         </div>
 
-        {/* Paying-for picker — appears once a student is chosen. Hidden
-            entirely when the student has no outstanding fees (rare). When the
-            student has exactly one outstanding line, render it as a read-only
-            chip so the bursar can see what they're allocating to. */}
+        {/* Per-line allocation table. The bursar enters how much of the
+            payment goes against each outstanding fee item. Total at the
+            bottom is the receipt amount. */}
         {studentId ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="invoice_line_id">Paying for</Label>
-            {outstandingLines.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border bg-sp-card-alt px-3 py-2 text-xs text-muted-foreground">
-                No outstanding fees on file. This will be recorded as a credit
-                payment with no allocation.
-              </p>
-            ) : outstandingLines.length === 1 ? (
-              <div className="flex items-center justify-between rounded-md border border-border bg-sp-card-alt px-3 py-2 text-sm">
-                <span className="font-medium">
-                  {outstandingLines[0].description}
-                </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  Balance {formatMoney(outstandingLines[0].balance)}
-                </span>
+          hasOutstanding ? (
+            <div className="rounded-lg border border-border">
+              <div className="flex items-center justify-between border-b border-border bg-sp-card-alt px-4 py-2.5">
+                <div>
+                  <p className="text-[13px] font-semibold">Paying for</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Enter how much the parent is paying against each item.
+                    Leave a row blank to skip it.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                    Receipt total
+                  </p>
+                  <p
+                    className={cn(
+                      "text-lg font-bold tabular-nums",
+                      allocationsTotal > 0 ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {formatMoney(allocationsTotal)}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <select
-                id="invoice_line_id"
-                value={invoiceLineId}
-                onChange={(e) => setInvoiceLineId(e.target.value)}
+              <ul className="divide-y divide-border">
+                {outstandingLines.map((ln) => {
+                  const value = allocations[ln.id] ?? "";
+                  const numeric = parseFloat(value);
+                  const overpay =
+                    Number.isFinite(numeric) && numeric > ln.balance;
+                  return (
+                    <li
+                      key={ln.id}
+                      className="grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {ln.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <span>
+                            Balance{" "}
+                            <span className="tabular-nums">
+                              {formatMoney(ln.balance)}
+                            </span>
+                          </span>
+                          {ln.invoice_period ? (
+                            <>
+                              <span className="text-border">·</span>
+                              <span className="truncate">
+                                {ln.invoice_period}
+                              </span>
+                            </>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => fillFullBalance(ln)}
+                            disabled={pending}
+                            className="ml-auto text-primary transition hover:underline disabled:opacity-40"
+                          >
+                            Pay full
+                          </button>
+                        </div>
+                      </div>
+                      <div className="w-32">
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            $
+                          </span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            inputMode="decimal"
+                            placeholder="0.00"
+                            value={value}
+                            onChange={(e) =>
+                              updateAllocation(ln.id, e.target.value)
+                            }
+                            disabled={pending}
+                            className={cn(
+                              "h-9 pl-6 text-right tabular-nums",
+                              overpay && "border-sp-red focus:ring-sp-red",
+                            )}
+                            aria-label={`Amount paid for ${ln.description}`}
+                          />
+                        </div>
+                        {overpay ? (
+                          <p className="mt-1 text-right text-[10px] text-sp-red">
+                            Exceeds balance
+                          </p>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="credit_amount">Credit amount (USD)</Label>
+              <Input
+                id="credit_amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                inputMode="decimal"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(e.target.value)}
                 disabled={pending}
-                className="flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {outstandingLines.map((ln) => (
-                  <option key={ln.id} value={ln.id}>
-                    {ln.description} · Balance {formatMoney(ln.balance)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                No outstanding fees on file — this will be recorded as a credit
+                payment with no line allocation.
+              </p>
+            </div>
+          )
         ) : null}
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -304,13 +428,16 @@ export function NewPaymentForm({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={pending}>
+          <Button
+            type="submit"
+            disabled={pending || !studentId || totalForSubmit <= 0}
+          >
             {pending ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Check className="size-4" />
             )}
-            Record &amp; issue receipt
+            Record {formatMoney(totalForSubmit)} &amp; issue receipt
           </Button>
         </div>
       </form>

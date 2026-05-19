@@ -22,7 +22,7 @@ export default async function DashboardLayout({
         .limit(1)
         .maybeSingle(),
       fetchArrears(),
-      supabase.from("classes").select("id, name").order("name"),
+      supabase.from("classes").select("id, name, level").order("name"),
       supabase
         .from("fee_items")
         .select(
@@ -51,7 +51,11 @@ export default async function DashboardLayout({
       }`
     : undefined;
 
-  const classes = (classesRes.data ?? []) as { id: string; name: string }[];
+  const classes = (classesRes.data ?? []) as {
+    id: string;
+    name: string;
+    level: "primary" | "secondary" | "tertiary";
+  }[];
   const feeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
     id: f.id as string,
     name: f.name as string,

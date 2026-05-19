@@ -21,7 +21,20 @@ import { enrollChild } from "@/app/(dashboard)/students/enroll-action";
 export interface ClassOption {
   id: string;
   name: string;
+  level?: "primary" | "secondary" | "tertiary";
 }
+
+const LEVEL_LABEL: Record<NonNullable<ClassOption["level"]>, string> = {
+  primary: "Primary",
+  secondary: "Secondary",
+  tertiary: "Tertiary",
+};
+
+const LEVEL_ORDER: Array<NonNullable<ClassOption["level"]>> = [
+  "primary",
+  "secondary",
+  "tertiary",
+];
 
 export interface RegistrationFee {
   id: string;
@@ -173,11 +186,35 @@ export function NewChildDialog({
                 className="flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">— No class —</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {/* Group classes by level so the bursar can see Primary /
+                    Secondary / Tertiary sections clearly. Classes with no
+                    level fall back to an "Other" group. */}
+                {LEVEL_ORDER.map((level) => {
+                  const group = classes.filter((c) => c.level === level);
+                  if (group.length === 0) return null;
+                  return (
+                    <optgroup key={level} label={LEVEL_LABEL[level]}>
+                      {group.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
+                {(() => {
+                  const ungrouped = classes.filter((c) => !c.level);
+                  if (ungrouped.length === 0) return null;
+                  return (
+                    <optgroup label="Other">
+                      {ungrouped.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })()}
               </select>
             </div>
             <div className="space-y-1.5">

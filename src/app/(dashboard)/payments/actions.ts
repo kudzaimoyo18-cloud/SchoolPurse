@@ -8,6 +8,14 @@ export type RecordPaymentResult =
   | { ok: true; paymentId: string; receiptNumber: string }
   | { ok: false; error: string };
 
+// Each allocation tells the server "put $X of this payment against this
+// invoice_line". Multiple allocations let the bursar split one payment
+// across several fees (school fees + registration + extras, etc).
+const AllocationSchema = z.object({
+  invoice_line_id: z.string().uuid(),
+  amount_usd: z.coerce.number().positive(),
+});
+
 const PaymentSchema = z.object({
   student_id: z.string().uuid("Pick a student"),
   amount_usd: z.coerce.number().positive("Amount must be greater than 0"),
@@ -15,13 +23,9 @@ const PaymentSchema = z.object({
   paid_at: z.string().min(1, "Date is required"),
   payer_name: z.string().trim().optional().or(z.literal("")),
   notes: z.string().trim().optional().or(z.literal("")),
-  // Optional: when the bursar picks "Paying for", we allocate this payment
-  // directly to that invoice_line rather than falling back to oldest-first.
-  invoice_line_id: z
-    .string()
-    .uuid()
-    .nullish()
-    .or(z.literal("")),
+  // Multi-line allocations. Empty array = credit payment (no line allocation).
+  // Sum of allocations must equal amount_usd (validated below).
+  allocations: z.array(AllocationSchema).default([]),
 });
 
 async function getContext() {
@@ -45,6 +49,18 @@ async function getContext() {
 export async function recordPayment(
   formData: FormData,
 ): Promise<RecordPaymentResult> {
+  // Parse allocations JSON sent from the form. Tolerate bad JSON by falling
+  // back to an empty array — the schema validator will reject other issues.
+  let parsedAllocations: unknown = [];
+  const rawAllocations = formData.get("allocations");
+  if (typeof rawAllocations === "string" && rawAllocations.trim()) {
+    try {
+      parsedAllocations = JSON.parse(rawAllocations);
+    } catch {
+      parsedAllocations = [];
+    }
+  }
+
   const parsed = PaymentSchema.safeParse({
     student_id: formData.get("student_id"),
     amount_usd: formData.get("amount_usd"),
@@ -52,7 +68,7 @@ export async function recordPayment(
     paid_at: formData.get("paid_at"),
     payer_name: formData.get("payer_name") || "",
     notes: formData.get("notes") || "",
-    invoice_line_id: formData.get("invoice_line_id") || null,
+    allocations: parsedAllocations,
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -61,6 +77,31 @@ export async function recordPayment(
   const ctx = await getContext();
   if (!ctx) return { ok: false, error: "Not authenticated" };
   const { supabase, schoolId, userId, userName } = ctx;
+
+  const { allocations } = parsed.data;
+  const paymentAmount = parsed.data.amount_usd;
+
+  // Sanity check: if allocations were provided, their sum must match the
+  // recorded payment amount (within a cent). Otherwise the receipt total
+  // and the line breakdown would disagree.
+  if (allocations.length > 0) {
+    const allocSum = allocations.reduce((s, a) => s + a.amount_usd, 0);
+    if (Math.abs(allocSum - paymentAmount) > 0.01) {
+      return {
+        ok: false,
+        error: `Allocation total ($${allocSum.toFixed(2)}) doesn't match payment amount ($${paymentAmount.toFixed(2)}).`,
+      };
+    }
+    // No duplicate lines — would create two allocation rows against the same
+    // line which the trigger would mis-attribute.
+    const seen = new Set<string>();
+    for (const a of allocations) {
+      if (seen.has(a.invoice_line_id)) {
+        return { ok: false, error: "Duplicate fee item in allocations." };
+      }
+      seen.add(a.invoice_line_id);
+    }
+  }
 
   // 0. Defense in depth: verify the student belongs to this school before
   //    inserting. RLS would already block cross-school inserts via the
@@ -76,6 +117,74 @@ export async function recordPayment(
     (studentRow as { school_id: string }).school_id !== schoolId
   ) {
     return { ok: false, error: "Student not found in this school." };
+  }
+
+  // 0b. If allocations were provided, fetch all referenced lines in one query
+  //     and verify they all belong to this student in this school, with
+  //     sufficient remaining balance. We do this BEFORE inserting the payment
+  //     so we never half-commit.
+  type LineRow = {
+    id: string;
+    amount_usd: number | string;
+    paid_usd: number | string;
+    invoices:
+      | { id: string; school_id: string; student_id: string; status: string }
+      | Array<{
+          id: string;
+          school_id: string;
+          student_id: string;
+          status: string;
+        }>;
+  };
+  let validatedLines: Map<string, { id: string; balance: number }> = new Map();
+  if (allocations.length > 0) {
+    const lineIds = allocations.map((a) => a.invoice_line_id);
+    const { data: lineRows, error: linesErr } = await supabase
+      .from("invoice_lines")
+      .select(
+        "id, amount_usd, paid_usd, invoices!inner(id, school_id, student_id, status)",
+      )
+      .in("id", lineIds);
+
+    if (linesErr) {
+      return {
+        ok: false,
+        error: "Could not load fee items: " + linesErr.message,
+      };
+    }
+    const rows = (lineRows ?? []) as LineRow[];
+    if (rows.length !== lineIds.length) {
+      return { ok: false, error: "Some fee items couldn't be found." };
+    }
+    for (const ln of rows) {
+      const inv = Array.isArray(ln.invoices) ? ln.invoices[0] : ln.invoices;
+      if (
+        !inv ||
+        inv.school_id !== schoolId ||
+        inv.student_id !== parsed.data.student_id
+      ) {
+        return {
+          ok: false,
+          error: "One of the fee items isn't on this student's invoice.",
+        };
+      }
+      const balance = Math.max(
+        Number(ln.amount_usd) - Number(ln.paid_usd),
+        0,
+      );
+      validatedLines.set(ln.id, { id: ln.id, balance });
+    }
+    // Per-allocation overpay check.
+    for (const a of allocations) {
+      const ln = validatedLines.get(a.invoice_line_id);
+      if (!ln) continue;
+      if (a.amount_usd > ln.balance + 0.01) {
+        return {
+          ok: false,
+          error: `One allocation ($${a.amount_usd.toFixed(2)}) exceeds the line balance ($${ln.balance.toFixed(2)}).`,
+        };
+      }
+    }
   }
 
   // 1. Issue a receipt number via the RPC
@@ -99,7 +208,7 @@ export async function recordPayment(
       school_id: schoolId,
       student_id: parsed.data.student_id,
       payer_name_snapshot: parsed.data.payer_name || null,
-      amount_usd: parsed.data.amount_usd,
+      amount_usd: paymentAmount,
       method: parsed.data.method,
       paid_at: paidAtIso,
       receipt_number: receiptNumber,
@@ -115,134 +224,29 @@ export async function recordPayment(
   }
   const pay = payment as { id: string };
 
-  // 3. Allocate the payment. Two paths:
-  //    (a) Bursar picked a specific invoice_line ("Paying for") → insert one
-  //        payment_allocations row against that line. Any leftover (overpayment
-  //        beyond the line's balance) falls back to oldest-first on remaining
-  //        open invoices for the student.
-  //    (b) No line picked (rare — student has no outstanding fees) → fall
-  //        back to the existing oldest-first allocation against the oldest
-  //        open/partial invoice.
-  const paymentAmount = parsed.data.amount_usd;
-  const chosenLineId = parsed.data.invoice_line_id || null;
-
-  if (chosenLineId) {
-    // Validate the chosen line: must belong to this school, this student,
-    // and have a positive remaining balance. We pull the parent invoice via
-    // an inner-join so school/student scoping is enforced server-side.
-    const { data: lineRow, error: lineErr } = await supabase
-      .from("invoice_lines")
-      .select(
-        "id, amount_usd, paid_usd, invoices!inner(id, school_id, student_id, status)",
-      )
-      .eq("id", chosenLineId)
-      .maybeSingle();
-
-    type LineShape = {
-      id: string;
-      amount_usd: number | string;
-      paid_usd: number | string;
-      invoices:
-        | { id: string; school_id: string; student_id: string; status: string }
-        | Array<{
-            id: string;
-            school_id: string;
-            student_id: string;
-            status: string;
-          }>;
-    };
-    const line = lineRow as LineShape | null;
-    const inv = line
-      ? Array.isArray(line.invoices)
-        ? line.invoices[0]
-        : line.invoices
-      : null;
-
-    if (
-      lineErr ||
-      !line ||
-      !inv ||
-      inv.school_id !== schoolId ||
-      inv.student_id !== parsed.data.student_id
-    ) {
-      // Soft-fail: the payment is recorded, just unallocated.
-      console.error(
-        "Invoice line check failed:",
-        lineErr?.message ?? "line not in this school/student",
-      );
-    } else {
-      const lineBalance = Math.max(
-        Number(line.amount_usd) - Number(line.paid_usd),
-        0,
-      );
-      const toAllocate = Math.min(paymentAmount, lineBalance);
-
-      if (toAllocate > 0) {
-        const { error: allocErr } = await supabase
-          .from("payment_allocations")
-          .insert({
-            payment_id: pay.id,
-            invoice_line_id: line.id,
-            amount_usd: toAllocate,
-          });
-        if (allocErr) {
-          console.error(
-            "payment_allocations insert failed:",
-            allocErr.message,
-          );
-        }
-      }
-
-      // Overpayment leftover → drop it onto the next oldest open/partial
-      // invoice via the existing RPC so it doesn't sit unallocated.
-      const leftover = paymentAmount - toAllocate;
-      if (leftover > 0.0001) {
-        const { data: nextInv } = await supabase
-          .from("invoices")
-          .select("id, status, due_date, created_at")
-          .eq("student_id", parsed.data.student_id)
-          .in("status", ["open", "partial"])
-          .neq("id", inv.id)
-          .order("due_date", { ascending: true })
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        if (nextInv) {
-          const next = nextInv as { id: string };
-          const { error: allocErr2 } = await supabase.rpc(
-            "allocate_payment_to_invoice",
-            { p_payment_id: pay.id, p_invoice_id: next.id },
-          );
-          if (allocErr2) {
-            console.error(
-              "leftover allocate_payment_to_invoice failed:",
-              allocErr2.message,
-            );
-          }
-        }
-      }
-    }
-  } else {
-    // Fallback: oldest-first allocation against the oldest open invoice.
-    const { data: invoice } = await supabase
-      .from("invoices")
-      .select("id, status, due_date, created_at")
-      .eq("student_id", parsed.data.student_id)
-      .in("status", ["open", "partial"])
-      .order("due_date", { ascending: true })
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (invoice) {
-      const inv = invoice as { id: string };
-      const { error: allocErr } = await supabase.rpc(
-        "allocate_payment_to_invoice",
-        { p_payment_id: pay.id, p_invoice_id: inv.id },
-      );
-      if (allocErr) {
-        console.error("allocate_payment_to_invoice failed:", allocErr.message);
-      }
+  // 3. Allocate. Two paths:
+  //    (a) Bursar provided allocations → bulk-insert one payment_allocations
+  //        row per line. The sync_invoice_line_paid trigger updates each
+  //        invoice_line.paid_usd, which in turn promotes invoice.status.
+  //    (b) No allocations (credit payment) → leave the payment unallocated.
+  //        The student's lifetime-paid still goes up but no specific line is
+  //        credited; the bursar can apply the credit later.
+  if (allocations.length > 0) {
+    const rows = allocations.map((a) => ({
+      payment_id: pay.id,
+      invoice_line_id: a.invoice_line_id,
+      amount_usd: a.amount_usd,
+    }));
+    const { error: allocErr } = await supabase
+      .from("payment_allocations")
+      .insert(rows);
+    if (allocErr) {
+      // Don't unwind the payment insert — surface as a clear error so the
+      // bursar can void+retry. RLS would have already blocked cross-school.
+      return {
+        ok: false,
+        error: "Payment saved but allocation failed: " + allocErr.message,
+      };
     }
   }
 

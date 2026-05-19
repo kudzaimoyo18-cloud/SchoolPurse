@@ -318,3 +318,213 @@ export async function generateInvoicesForCurrentTerm(): Promise<
   revalidatePath("/overview");
   return { ok: true, invoices: created, skipped };
 }
+
+// =============================================================================
+// School levels + classes
+// =============================================================================
+
+const LEVELS = ["primary", "secondary", "tertiary"] as const;
+type Level = (typeof LEVELS)[number];
+
+// Default class catalogue per level. When a school enables Secondary, we
+// seed Form 1–6 etc. so the admin doesn't have to type them in. We skip any
+// names that already exist (idempotent).
+const DEFAULT_CLASSES: Record<Level, string[]> = {
+  primary: [
+    "ECD A",
+    "ECD B",
+    "Grade 1",
+    "Grade 2",
+    "Grade 3",
+    "Grade 4",
+    "Grade 5",
+    "Grade 6",
+    "Grade 7",
+  ],
+  secondary: [
+    "Form 1",
+    "Form 2",
+    "Form 3",
+    "Form 4",
+    "Form 5 (Lower 6)",
+    "Form 6 (Upper 6)",
+  ],
+  tertiary: ["Year 1", "Year 2", "Year 3", "Year 4"],
+};
+
+const LevelsSchema = z.object({
+  levels: z
+    .array(z.enum(LEVELS))
+    .min(1, "At least one level must be enabled."),
+});
+
+/**
+ * Update which levels the school operates and seed default classes for any
+ * newly enabled level. Disabling a level keeps existing classes intact (the
+ * DB trigger would block adding NEW classes for the disabled level, but
+ * students/invoices stay safe).
+ */
+export async function updateSchoolLevels(
+  formData: FormData,
+): Promise<ActionResult<{ seeded: number }>> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { schoolId } = ctx;
+
+  const submitted = formData.getAll("levels").map(String);
+  const parsed = LevelsSchema.safeParse({ levels: submitted });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+
+  // Load the current set so we can detect which levels are newly enabled and
+  // need their default classes seeded.
+  const { data: current } = await supabase
+    .from("schools")
+    .select("levels")
+    .eq("id", schoolId)
+    .maybeSingle();
+  const currentLevels = ((current as { levels?: Level[] } | null)?.levels ??
+    []) as Level[];
+
+  const nextLevels = parsed.data.levels;
+  const newlyEnabled = nextLevels.filter(
+    (l) => !currentLevels.includes(l),
+  );
+
+  // 1. Update the schools row first so the class-insert trigger sees the
+  //    new levels as valid before we try to add classes for them.
+  const { error: updateErr } = await supabase
+    .from("schools")
+    .update({ levels: nextLevels })
+    .eq("id", schoolId);
+  if (updateErr) return { ok: false, error: updateErr.message };
+
+  // 2. Seed default classes for any newly enabled level. Skip names that
+  //    already exist (e.g. admin already typed in their own Form 1).
+  let seeded = 0;
+  if (newlyEnabled.length > 0) {
+    const { data: existing } = await supabase
+      .from("classes")
+      .select("name")
+      .eq("school_id", schoolId);
+    const existingNames = new Set(
+      ((existing ?? []) as { name: string }[]).map((c) =>
+        c.name.trim().toLowerCase(),
+      ),
+    );
+    const toInsert: { school_id: string; name: string; level: Level }[] = [];
+    for (const level of newlyEnabled) {
+      for (const className of DEFAULT_CLASSES[level]) {
+        if (!existingNames.has(className.trim().toLowerCase())) {
+          toInsert.push({ school_id: schoolId, name: className, level });
+          existingNames.add(className.trim().toLowerCase());
+        }
+      }
+    }
+    if (toInsert.length > 0) {
+      const { error: insertErr } = await supabase
+        .from("classes")
+        .insert(toInsert);
+      if (insertErr) {
+        return {
+          ok: false,
+          error: "Levels saved but class seeding failed: " + insertErr.message,
+        };
+      }
+      seeded = toInsert.length;
+    }
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/(dashboard)", "layout");
+  return { ok: true, seeded };
+}
+
+const ClassSchema = z.object({
+  name: z.string().trim().min(1, "Class name is required"),
+  level: z.enum(LEVELS),
+});
+
+export async function createClass(
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { schoolId } = ctx;
+
+  const parsed = ClassSchema.safeParse({
+    name: formData.get("name"),
+    level: formData.get("level"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("classes")
+    .insert({
+      school_id: schoolId,
+      name: parsed.data.name,
+      level: parsed.data.level,
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/settings");
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+export async function updateClass(
+  id: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+
+  const parsed = ClassSchema.safeParse({
+    name: formData.get("name"),
+    level: formData.get("level"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("classes")
+    .update({ name: parsed.data.name, level: parsed.data.level })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
+export async function deleteClass(id: string): Promise<ActionResult> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+
+  const supabase = await createClient();
+  // Defensive: refuse to delete a class that still has students assigned.
+  // FK on students.class_id is SET NULL, so deletion wouldn't break data —
+  // but the bursar likely meant to reassign, not orphan, so we surface the
+  // count.
+  const { count } = await supabase
+    .from("students")
+    .select("id", { count: "exact", head: true })
+    .eq("class_id", id);
+  if ((count ?? 0) > 0) {
+    return {
+      ok: false,
+      error: `Can't delete — ${count} student${count === 1 ? " is" : "s are"} still in this class. Reassign them first.`,
+    };
+  }
+
+  const { error } = await supabase.from("classes").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/settings");
+  return { ok: true };
+}

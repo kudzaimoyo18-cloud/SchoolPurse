@@ -8,6 +8,8 @@ import { FeeItemsSection } from "./fee-items-section";
 import { GenerateInvoicesButton } from "./generate-invoices-button";
 import { TeamSection } from "./team-section";
 import { LogoSection } from "./logo-section";
+import { SchoolLevelsSection, type Level } from "./school-levels-section";
+import { ClassesSection } from "./classes-section";
 
 export const metadata = { title: "Settings — SchoolPurse" };
 
@@ -20,7 +22,7 @@ export default async function SettingsPage() {
     await Promise.all([
       supabase
         .from("schools")
-        .select("name, address, phone, currency, receipt_prefix, terms_per_year, logo_path")
+        .select("name, address, phone, currency, receipt_prefix, terms_per_year, logo_path, levels")
         .limit(1)
         .maybeSingle(),
       supabase
@@ -30,7 +32,7 @@ export default async function SettingsPage() {
         )
         .order("active", { ascending: false })
         .order("name"),
-      supabase.from("classes").select("id, name").order("name"),
+      supabase.from("classes").select("id, name, level").order("name"),
       supabase
         .from("terms")
         .select("name, start_date, end_date")
@@ -57,6 +59,7 @@ export default async function SettingsPage() {
     receipt_prefix: "SP",
     terms_per_year: 3,
     logo_path: null,
+    levels: ["primary"],
   }) as {
     name: string;
     address: string | null;
@@ -65,6 +68,7 @@ export default async function SettingsPage() {
     receipt_prefix: string;
     terms_per_year: number;
     logo_path: string | null;
+    levels: Level[];
   };
 
   const logoUrl = await getLogoUrl(school.logo_path);
@@ -80,7 +84,11 @@ export default async function SettingsPage() {
     include_on_registration: f.include_on_registration as boolean,
   }));
 
-  const classes = (classesRes.data ?? []) as { id: string; name: string }[];
+  const classes = (classesRes.data ?? []) as {
+    id: string;
+    name: string;
+    level: Level;
+  }[];
   const term = termRes.data as
     | { name: string; start_date: string; end_date: string }
     | null;
@@ -109,6 +117,17 @@ export default async function SettingsPage() {
         subtitle="Visible on receipts, statements, and reports."
       >
         <SchoolInfoForm school={school} />
+      </SectionCard>
+
+      <SectionCard
+        title="School levels"
+        subtitle="Which sections does your school run? Toggling a level on auto-seeds its standard class list (you can rename or remove afterwards)."
+      >
+        <SchoolLevelsSection enabledLevels={school.levels} />
+      </SectionCard>
+
+      <SectionCard bodyClassName="p-0">
+        <ClassesSection classes={classes} enabledLevels={school.levels} />
       </SectionCard>
 
       <SectionCard bodyClassName="p-0">
