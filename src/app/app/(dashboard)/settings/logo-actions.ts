@@ -110,10 +110,10 @@ export async function uploadSchoolLogo(
     await supabase.storage.from("school-logos").remove([oldPath]);
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   revalidatePath("/(dashboard)", "layout");
-  revalidatePath("/receipts", "layout");
-  revalidatePath("/invoices", "layout");
+  revalidatePath("/app/receipts", "layout");
+  revalidatePath("/app/invoices", "layout");
   return { ok: true, path };
 }
 
@@ -133,9 +133,9 @@ export async function removeSchoolLogo(): Promise<
 
   await supabase.storage.from("school-logos").remove([logoPath]);
 
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   revalidatePath("/(dashboard)", "layout");
-  revalidatePath("/receipts", "layout");
-  revalidatePath("/invoices", "layout");
+  revalidatePath("/app/receipts", "layout");
+  revalidatePath("/app/invoices", "layout");
   return { ok: true };
 }

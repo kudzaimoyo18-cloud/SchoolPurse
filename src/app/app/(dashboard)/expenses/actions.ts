@@ -57,9 +57,9 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
   });
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/expenses");
-  revalidatePath("/overview");
-  revalidatePath("/reports");
+  revalidatePath("/app/expenses");
+  revalidatePath("/app/overview");
+  revalidatePath("/app/reports");
   return { ok: true };
 }
 
@@ -68,9 +68,9 @@ export async function deleteExpense(id: string): Promise<ActionResult> {
   if (!ctx) return { ok: false, error: "Not authenticated" };
   const { error } = await ctx.supabase.from("expenses").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/expenses");
-  revalidatePath("/overview");
-  revalidatePath("/reports");
+  revalidatePath("/app/expenses");
+  revalidatePath("/app/overview");
+  revalidatePath("/app/reports");
   return { ok: true };
 }
 
@@ -83,6 +83,6 @@ export async function createCategory(name: string): Promise<ActionResult> {
     name: name.trim(),
   });
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/expenses");
+  revalidatePath("/app/expenses");
   return { ok: true };
 }

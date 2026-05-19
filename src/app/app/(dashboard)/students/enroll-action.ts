@@ -93,9 +93,9 @@ export async function enrollChild(
   // No items selected → enrol with no opening invoice. The bursar can
   // charge specific fees later via the existing payment flow.
   if (parsed.data.fee_item_ids.length === 0) {
-    revalidatePath("/students");
-    revalidatePath("/arrears");
-    revalidatePath("/overview");
+    revalidatePath("/app/students");
+    revalidatePath("/app/arrears");
+    revalidatePath("/app/overview");
     return { ok: true, studentId: student.id, invoiceId: null, total: 0 };
   }
 
@@ -124,9 +124,9 @@ export async function enrollChild(
 
   if (eligible.length === 0) {
     // Student saved but no eligible fees — non-fatal.
-    revalidatePath("/students");
-    revalidatePath("/arrears");
-    revalidatePath("/overview");
+    revalidatePath("/app/students");
+    revalidatePath("/app/arrears");
+    revalidatePath("/app/overview");
     return { ok: true, studentId: student.id, invoiceId: null, total: 0 };
   }
 
@@ -203,10 +203,10 @@ export async function enrollChild(
     };
   }
 
-  revalidatePath("/students");
-  revalidatePath("/arrears");
-  revalidatePath("/overview");
-  revalidatePath("/payments");
+  revalidatePath("/app/students");
+  revalidatePath("/app/arrears");
+  revalidatePath("/app/overview");
+  revalidatePath("/app/payments");
 
   return {
     ok: true,

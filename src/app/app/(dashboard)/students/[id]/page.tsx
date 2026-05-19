@@ -241,7 +241,7 @@ export default async function StudentProfilePage({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/students"
+          href="/app/students"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />

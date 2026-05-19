@@ -68,7 +68,7 @@ export async function provisionMySchool(
     admin.from("users").select("id").eq("email", user.email).maybeSingle(),
   ]);
   if (byId.data || byEmail.data) {
-    redirect("/overview");
+    redirect("/app/overview");
   }
 
   // Pre-flight: slug must be unique across all schools.
@@ -150,5 +150,5 @@ export async function provisionMySchool(
     await admin.from("academic_years").delete().eq("school_id", schoolId);
   }
 
-  redirect("/overview");
+  redirect("/app/overview");
 }

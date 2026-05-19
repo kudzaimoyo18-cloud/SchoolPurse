@@ -31,7 +31,7 @@ export default async function OnboardingPage() {
       : Promise.resolve({ data: null }),
   ]);
   if (byId.data || byEmail.data) {
-    redirect("/overview");
+    redirect("/app/overview");
   }
 
   const defaultName =

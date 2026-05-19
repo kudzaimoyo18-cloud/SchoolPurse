@@ -373,7 +373,7 @@ export default async function OverviewPage() {
           action={
             arrears.length > 5 ? (
               <Link
-                href="/arrears"
+                href="/app/arrears"
                 className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
               >
                 View all {arrears.length}

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatMoney, toNumber } from "@/lib/format";
-import { enrollChild } from "@/app/(dashboard)/students/enroll-action";
+import { enrollChild } from "@/app/app/(dashboard)/students/enroll-action";
 
 export interface ClassOption {
   id: string;

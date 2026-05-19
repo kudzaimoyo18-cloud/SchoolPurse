@@ -213,7 +213,7 @@ export default async function ArrearsPage({
                     </TableCell>
                     <TableCell className="pr-5 text-right">
                       <Link
-                        href="/payments?new=1"
+                        href="/app/payments?new=1"
                         className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11.5px] font-semibold text-primary-foreground transition hover:opacity-90"
                       >
                         Record payment

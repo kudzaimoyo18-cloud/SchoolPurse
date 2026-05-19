@@ -2,12 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // Routes that do NOT require authentication.
+// `/` is the public marketing landing page.
 // `/onboarding` requires auth but NOT a public.users profile — the page
 // itself checks both and renders the school-creation form for new signups.
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATH_PREFIXES = ["/login", "/auth"];
+const PUBLIC_EXACT_PATHS = new Set(["/"]);
 
 function isPublic(pathname: string) {
-  return PUBLIC_PATHS.some(
+  if (PUBLIC_EXACT_PATHS.has(pathname)) return true;
+  return PUBLIC_PATH_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   );
 }
@@ -54,7 +57,7 @@ export async function proxy(request: NextRequest) {
   // route them onward to /onboarding if they don't have a profile yet).
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/overview";
+    url.pathname = "/app/overview";
     url.search = "";
     return NextResponse.redirect(url);
   }

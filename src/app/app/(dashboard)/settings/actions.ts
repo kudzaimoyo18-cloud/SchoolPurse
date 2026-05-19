@@ -85,7 +85,7 @@ export async function updateSchoolInfo(
     .eq("id", schoolId);
 
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   revalidatePath("/(dashboard)", "layout");
   return { ok: true };
 }
@@ -133,7 +133,7 @@ export async function createFeeItem(
   });
 
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -170,7 +170,7 @@ export async function updateFeeItem(
     .eq("id", id);
 
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -184,7 +184,7 @@ export async function toggleFeeItem(
     .update({ active })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -313,9 +313,9 @@ export async function generateInvoicesForCurrentTerm(): Promise<
     created++;
   }
 
-  revalidatePath("/payments");
-  revalidatePath("/arrears");
-  revalidatePath("/overview");
+  revalidatePath("/app/payments");
+  revalidatePath("/app/arrears");
+  revalidatePath("/app/overview");
   return { ok: true, invoices: created, skipped };
 }
 
@@ -438,7 +438,7 @@ export async function updateSchoolLevels(
     }
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   revalidatePath("/(dashboard)", "layout");
   return { ok: true, seeded };
 }
@@ -474,7 +474,7 @@ export async function createClass(
     .select("id")
     .single();
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true, id: (data as { id: string }).id };
 }
 
@@ -499,7 +499,7 @@ export async function updateClass(
     .update({ name: parsed.data.name, level: parsed.data.level })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -525,6 +525,6 @@ export async function deleteClass(id: string): Promise<ActionResult> {
 
   const { error } = await supabase.from("classes").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }

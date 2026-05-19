@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/overview";
+  const next = searchParams.get("next") || "/app/overview";
   const errorParam = searchParams.get("error");
   const errorDesc =
     searchParams.get("error_description") || searchParams.get("error");
@@ -34,6 +34,6 @@ export async function GET(request: NextRequest) {
   }
 
   // Ensure the next path is local (prevent open-redirect)
-  const safeNext = next.startsWith("/") ? next : "/overview";
+  const safeNext = next.startsWith("/") ? next : "/app/overview";
   return NextResponse.redirect(`${origin}${safeNext}`);
 }

@@ -3,7 +3,7 @@ import { Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney, toNumber } from "@/lib/format";
 import { getLogoUrl } from "@/lib/storage";
-import { PrintButton } from "@/app/receipts/[id]/print-button";
+import { PrintButton } from "@/app/app/receipts/[id]/print-button";
 
 export const metadata = { title: "Invoice — SchoolPurse" };
 
@@ -125,7 +125,7 @@ export default async function InvoicePage({
       <div className="mx-auto w-full max-w-2xl space-y-4 px-4 print:px-0">
         <div className="no-print flex items-center justify-between">
           <a
-            href="/arrears"
+            href="/app/arrears"
             className="text-sm text-muted-foreground transition hover:text-foreground"
           >
             ← Back to arrears

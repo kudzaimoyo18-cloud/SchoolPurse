@@ -18,7 +18,7 @@ export default async function LoginPage({
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/overview");
+    redirect("/app/overview");
   }
 
   const { error } = await searchParams;

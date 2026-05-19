@@ -146,7 +146,7 @@ export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
     return { ok: false, error: insertErr.message };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -174,7 +174,7 @@ export async function removeTeammate(userId: string): Promise<TeamResult> {
   const { error } = await admin.from("users").delete().eq("id", userId);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }
 
@@ -202,6 +202,6 @@ export async function changeTeammateRole(
 
   const { error } = await admin.from("users").update({ role }).eq("id", userId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
   return { ok: true };
 }

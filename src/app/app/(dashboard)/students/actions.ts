@@ -58,7 +58,7 @@ export async function createStudent(formData: FormData): Promise<ActionResult> {
 
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/students");
+  revalidatePath("/app/students");
   return { ok: true };
 }
 
@@ -86,7 +86,7 @@ export async function updateStudent(
 
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/students");
+  revalidatePath("/app/students");
   return { ok: true };
 }
 
@@ -100,7 +100,7 @@ export async function setStudentStatus(
     .update({ status })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/students");
+  revalidatePath("/app/students");
   return { ok: true };
 }
 
@@ -291,6 +291,6 @@ export async function importStudentsCsv(
   const { error } = await supabase.from("students").insert(inserts);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath("/students");
+  revalidatePath("/app/students");
   return { ok: true, count: inserts.length };
 }

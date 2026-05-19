@@ -211,7 +211,7 @@ export default async function ReceiptPage({
       <div className="mx-auto w-full max-w-2xl space-y-4 px-4 print:px-0">
         <div className="no-print flex items-center justify-between">
           <a
-            href="/payments"
+            href="/app/payments"
             className="text-sm text-muted-foreground transition hover:text-foreground"
           >
             ← Back to payments

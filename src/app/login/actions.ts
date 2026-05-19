@@ -35,7 +35,7 @@ export async function signIn(
     return { error: "Invalid email or password." };
   }
 
-  redirect("/overview");
+  redirect("/app/overview");
 }
 
 /**
