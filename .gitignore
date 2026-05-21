@@ -56,3 +56,7 @@ Thumbs.db
 /test-*.png
 /test-*.jpg
 /test-*.jpeg
+
+# scratch commit-message files used by PowerShell git workflow
+.commit-msg.tmp
+*.commit-msg.tmp
