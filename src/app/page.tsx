@@ -4,6 +4,7 @@ import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { Hero } from "@/components/marketing/hero";
 import { Features } from "@/components/marketing/features";
 import { HowItWorks } from "@/components/marketing/how-it-works";
+import { LocalContext } from "@/components/marketing/local-context";
 import { Pricing } from "@/components/marketing/pricing";
 import { Testimonials } from "@/components/marketing/testimonials";
 import { Faq } from "@/components/marketing/faq";
@@ -38,6 +39,7 @@ export default async function Home() {
         <Hero isAuthed={isAuthed} />
         <Features />
         <HowItWorks />
+        <LocalContext />
         <Pricing />
         <Testimonials />
         <Faq />

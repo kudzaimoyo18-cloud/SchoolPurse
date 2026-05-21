@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { DashboardPreview } from "./dashboard-preview";
 
 export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
@@ -16,8 +17,14 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
 
       <div className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:px-6 sm:pt-16 lg:pb-24 lg:pt-20">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
-            <Sparkles className="size-3 text-primary" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
+            <Image
+              src="/marketing/zimbabwe-flag.svg"
+              alt="Flag of Zimbabwe"
+              width={18}
+              height={11}
+              className="size-auto rounded-[2px] border border-border/40"
+            />
             Built for Zimbabwean schools
           </span>
 
