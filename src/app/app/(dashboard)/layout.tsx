@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLogoUrl } from "@/lib/storage";
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { fetchArrears } from "@/lib/queries/arrears";
 
 export default async function DashboardLayout({
@@ -13,7 +14,7 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   const supabase = await createClient();
-  const [termRes, arrears, classesRes, feeItemsRes, schoolRes] =
+  const [termRes, arrears, classesRes, feeItemsRes, schoolRes, announcementRes] =
     await Promise.all([
       supabase
         .from("terms")
@@ -32,6 +33,14 @@ export default async function DashboardLayout({
         .or("include_on_registration.eq.true,type.eq.uniform")
         .order("name"),
       supabase.from("schools").select("logo_path").limit(1).maybeSingle(),
+      // Latest active announcement
+      supabase
+        .from("announcements")
+        .select("id, title, body, type, created_at")
+        .eq("active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
   const logoUrl = await getLogoUrl(
     (schoolRes.data as { logo_path?: string | null } | null)?.logo_path ??
@@ -50,6 +59,25 @@ export default async function DashboardLayout({
         })()
       }`
     : undefined;
+
+  // Resolve the latest active announcement (skip if user already dismissed it)
+  const rawAnnouncement = announcementRes.data as {
+    id: string;
+    title: string;
+    body: string;
+    type: "info" | "warning" | "success" | "update";
+    created_at: string;
+  } | null;
+
+  let announcement = rawAnnouncement;
+  if (rawAnnouncement) {
+    const { data: dismissal } = await supabase
+      .from("announcement_dismissals")
+      .select("id")
+      .eq("announcement_id", rawAnnouncement.id)
+      .maybeSingle();
+    if (dismissal) announcement = null;
+  }
 
   const classes = (classesRes.data ?? []) as {
     id: string;
@@ -82,6 +110,7 @@ export default async function DashboardLayout({
           classes={classes}
           feeItems={feeItems}
         />
+        <AnnouncementBanner announcement={announcement} />
         <main className="flex-1 px-7 pb-10 pt-6">{children}</main>
       </div>
     </div>

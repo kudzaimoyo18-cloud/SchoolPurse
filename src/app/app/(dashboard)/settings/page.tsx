@@ -11,6 +11,7 @@ import { TeamSection } from "./team-section";
 import { LogoSection } from "./logo-section";
 import { SchoolLevelsSection, type Level } from "./school-levels-section";
 import { ClassesSection } from "./classes-section";
+import { AnnouncementsSection } from "./announcements-section";
 
 export const metadata = { title: "Settings — SchoolPurse" };
 
@@ -19,7 +20,7 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [schoolRes, feeItemsRes, classesRes, termRes, teammatesRes] =
+  const [schoolRes, feeItemsRes, classesRes, termRes, teammatesRes, announcementsRes] =
     await Promise.all([
       supabase
         .from("schools")
@@ -49,6 +50,15 @@ export default async function SettingsPage() {
             .select("id, name, email, role, status")
             .eq("school_id", me.schoolId)
             .order("name")
+        : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+      // Announcements — only platform_admin sees this section, but fetch
+      // unconditionally; the data is small and RLS allows read for all.
+      me.role === "platform_admin"
+        ? admin
+            .from("announcements")
+            .select("id, title, body, type, active, email_sent, created_at")
+            .order("created_at", { ascending: false })
+            .limit(20)
         : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     ]);
 
@@ -107,6 +117,18 @@ export default async function SettingsPage() {
     }),
   );
 
+  const announcements = ((announcementsRes.data ?? []) as Record<string, unknown>[]).map(
+    (a) => ({
+      id: a.id as string,
+      title: a.title as string,
+      body: (a.body as string) ?? "",
+      type: a.type as string,
+      active: a.active as boolean,
+      email_sent: a.email_sent as boolean,
+      created_at: a.created_at as string,
+    }),
+  );
+
   return (
     <div className="space-y-6">
       <SectionCard
@@ -145,6 +167,12 @@ export default async function SettingsPage() {
       <SectionCard bodyClassName="p-0">
         <TeamSection teammates={teammates} currentUserId={me.id} />
       </SectionCard>
+
+      {me.role === "platform_admin" && (
+        <SectionCard bodyClassName="p-0">
+          <AnnouncementsSection announcements={announcements} />
+        </SectionCard>
+      )}
 
       <SectionCard
         title="Term operations"
