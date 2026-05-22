@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { GooeyFilter } from "@/components/ui/gooey-toggle";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -41,6 +42,7 @@ export default function RootLayout({
             <TooltipProvider delay={200}>
               {children}
               <Toaster richColors position="top-right" />
+              <GooeyFilter />
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>

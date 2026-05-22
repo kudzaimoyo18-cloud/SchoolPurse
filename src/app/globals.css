@@ -61,6 +61,18 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+
+  /* Aurora background animation (used on /login and /onboarding) */
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
 }
 
 /* Light theme — SchoolPurse Navy design system */
@@ -115,6 +127,32 @@
   --sp-green: #16a34a;
   --sp-green-soft: #f0fdf4;
   --sp-accent-soft: #0ea5e90f;
+
+  /* Aurora gradient layers — navy/sky palette so it matches the design system */
+  --sp-aurora-sheet-light: repeating-linear-gradient(
+    100deg,
+    #ffffff 0%,
+    #ffffff 7%,
+    transparent 10%,
+    transparent 12%,
+    #ffffff 16%
+  );
+  --sp-aurora-sheet-dark: repeating-linear-gradient(
+    100deg,
+    #0b1221 0%,
+    #0b1221 7%,
+    transparent 10%,
+    transparent 12%,
+    #0b1221 16%
+  );
+  --sp-aurora-chromatic: repeating-linear-gradient(
+    100deg,
+    #1e3a5f 10%,
+    #38bdf8 15%,
+    #0ea5e9 20%,
+    #c7d2fe 25%,
+    #60a5fa 30%
+  );
 }
 
 /* Dark theme — SchoolPurse Navy design system */
@@ -208,4 +246,100 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  GlassButton — glassmorphic style (used for hero/auth CTAs)         */
+/*  The .glass-button-* classes are referenced by                      */
+/*  src/components/ui/glass-button.tsx                                 */
+/* ------------------------------------------------------------------ */
+
+.glass-button-wrap {
+  display: inline-block;
+  position: relative;
+}
+
+.glass-button {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 58, 95, 0.92) 0%,
+    rgba(15, 23, 42, 0.92) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  /* Inner highlight at the top + bottom shadow lip = glass look */
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.18),
+    0 1px 0 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.glass-button:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.22),
+    0 2px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-button:active {
+  transform: translateY(1px);
+}
+
+.glass-button-text {
+  /* Subtle text glow that survives backdrop-filter */
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Floating shadow underneath — soft, navy-tinted, offset down */
+.glass-button-shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform: translateY(6px) scale(0.94);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(15, 23, 42, 0.35) 0%,
+    rgba(15, 23, 42, 0) 70%
+  );
+  filter: blur(12px);
+  opacity: 0.7;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  pointer-events: none;
+}
+
+.glass-button-wrap:hover .glass-button-shadow {
+  transform: translateY(9px) scale(0.92);
+  opacity: 0.85;
+}
+
+/* Dark mode: lift the inner highlight and lighten the base so it reads as
+   a luminous capsule rather than a black pill. */
+.dark .glass-button {
+  background: linear-gradient(
+    180deg,
+    rgba(96, 165, 250, 0.18) 0%,
+    rgba(30, 58, 95, 0.55) 100%
+  );
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.32),
+    0 1px 0 0 rgba(96, 165, 250, 0.12);
+}
+
+.dark .glass-button-shadow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(56, 189, 248, 0) 70%
+  );
 }

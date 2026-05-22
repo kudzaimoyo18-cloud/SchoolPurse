@@ -5,6 +5,10 @@ import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { fetchArrears } from "@/lib/queries/arrears";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 
 export default async function DashboardLayout({
   children,
@@ -93,7 +97,17 @@ export default async function DashboardLayout({
   }));
 
   return (
-    <div className="flex min-h-svh">
+    <SidebarProvider
+      defaultOpen
+      style={
+        {
+          // Match the previous fixed sidebar width so other screens still feel
+          // familiar even with the new collapsible block.
+          "--sidebar-width": "218px",
+          "--sidebar-width-icon": "3.25rem",
+        } as React.CSSProperties
+      }
+    >
       <Sidebar
         user={{
           name: user.name,
@@ -104,7 +118,7 @@ export default async function DashboardLayout({
         arrearsCount={arrears.length}
         logoUrl={logoUrl}
       />
-      <div className="flex flex-1 flex-col pl-[218px]">
+      <SidebarInset className="flex min-h-svh flex-col">
         <TopBar
           hasNotifications={arrears.length > 0}
           classes={classes}
@@ -112,7 +126,7 @@ export default async function DashboardLayout({
         />
         <AnnouncementBanner announcement={announcement} />
         <main className="flex-1 px-7 pb-10 pt-6">{children}</main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

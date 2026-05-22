@@ -3,6 +3,7 @@ import { Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
+import { AuroraBackground } from "@/components/ui/aurora-background";
 import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = { title: "Set up your school — SchoolPurse" };
@@ -40,12 +41,7 @@ export default async function OnboardingPage() {
     (user.email?.split("@")[0] ?? "");
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center bg-secondary/50 px-6 py-10">
-      {/* Background decoration */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent dark:from-primary/[0.06]" />
-      </div>
-
+    <AuroraBackground className="px-6 py-10">
       <div className="w-full max-w-xl space-y-6">
         <div className="space-y-3 text-center">
           <div className="inline-flex items-center justify-center rounded-2xl bg-primary p-3.5 text-primary-foreground shadow-lg shadow-primary/15">
@@ -60,7 +56,7 @@ export default async function OnboardingPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-7 shadow-xl shadow-primary/[0.04]">
+        <div className="rounded-2xl border border-border bg-card/95 p-7 shadow-xl shadow-primary/[0.04] backdrop-blur-md">
           <OnboardingForm
             defaultName={defaultName}
             defaultEmail={user.email ?? ""}
@@ -80,6 +76,6 @@ export default async function OnboardingPage() {
           </form>
         </p>
       </div>
-    </div>
+    </AuroraBackground>
   );
 }

@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { GlassButton } from "@/components/ui/glass-button";
 import { signIn, signInWithGoogle, type LoginState } from "./actions";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -112,7 +113,12 @@ export function LoginForm() {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={pending} className="w-full">
+        <GlassButton
+          type="submit"
+          disabled={pending}
+          wrapClassName="w-full"
+          className="w-full"
+        >
           {pending ? (
             <>
               <Loader2 className="size-4 animate-spin" />
@@ -121,7 +127,7 @@ export function LoginForm() {
           ) : (
             "Sign in"
           )}
-        </Button>
+        </GlassButton>
       </form>
     </div>
   );

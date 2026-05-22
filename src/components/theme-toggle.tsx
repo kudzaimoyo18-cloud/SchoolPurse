@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GooeyToggle } from "@/components/ui/gooey-toggle";
 
 const ACCENTS = [
   { id: "navy", label: "SchoolPurse Navy", color: "#1e3a5f" },
@@ -62,21 +62,12 @@ export function ThemeToggle() {
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => setTheme(isDark ? "light" : "dark")}
+    <div className="flex items-center gap-2.5">
+      <GooeyToggle
+        checked={isDark}
+        onCheckedChange={(next) => setTheme(next ? "dark" : "light")}
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        className="inline-flex size-7 items-center justify-center rounded-lg text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
-      >
-        {!mounted ? (
-          <Sun className="size-3.5" />
-        ) : isDark ? (
-          <Sun className="size-3.5" />
-        ) : (
-          <Moon className="size-3.5" />
-        )}
-      </button>
+      />
 
       <div
         role="radiogroup"

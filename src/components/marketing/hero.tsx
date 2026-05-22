@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { GlassButton } from "@/components/ui/glass-button";
 import { DashboardPreview } from "./dashboard-preview";
 
 export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
@@ -55,14 +56,18 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
           </p>
 
           {/* CTAs */}
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href={isAuthed ? "/app/overview" : "/login"}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/25 hover:brightness-110 sm:w-auto"
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <GlassButton
+              asChild
+              size="default"
+              wrapClassName="w-full sm:w-auto"
+              className="group w-full sm:w-auto"
             >
-              {isAuthed ? "Open dashboard" : "Sign in to your school"}
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+              <Link href={isAuthed ? "/app/overview" : "/login"}>
+                {isAuthed ? "Open dashboard" : "Sign in to your school"}
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </GlassButton>
             <a
               href="#features"
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-secondary sm:w-auto"

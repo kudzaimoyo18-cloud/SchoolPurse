@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { format } from "date-fns";
 import { NAV_ITEMS } from "./nav-items";
 import { NewChildButton } from "./new-child-button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import type {
   ClassOption,
   RegistrationFee,
@@ -39,11 +40,16 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur-xl supports-[backdrop-filter]:bg-card/70">
       <div className="flex items-center justify-between gap-4 px-7 py-3.5">
-        <div className="min-w-0">
-          <h1 className="truncate text-[17px] font-bold tracking-tight text-foreground">
-            {title}
-          </h1>
-          <p className="text-[11.5px] text-muted-foreground">{today}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <SidebarTrigger
+            className="size-8 shrink-0 rounded-lg border border-border text-muted-foreground hover:text-foreground"
+          />
+          <div className="min-w-0">
+            <h1 className="truncate text-[17px] font-bold tracking-tight text-foreground">
+              {title}
+            </h1>
+            <p className="text-[11.5px] text-muted-foreground">{today}</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5">

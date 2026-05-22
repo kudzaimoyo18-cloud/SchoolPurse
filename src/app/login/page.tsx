@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { AuroraBackground } from "@/components/ui/aurora-background";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
@@ -24,13 +25,7 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <div className="relative flex flex-1 items-center justify-center px-6 py-12">
-      {/* Background decoration */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-background to-background dark:from-primary/[0.06]" />
-        <div className="absolute left-1/2 top-1/3 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.03] blur-[80px] dark:bg-primary/[0.06]" />
-      </div>
-
+    <AuroraBackground className="flex-1 px-6 py-12">
       <div className="w-full max-w-sm space-y-6">
         {/* Branding */}
         <div className="space-y-3 text-center">
@@ -55,7 +50,7 @@ export default async function LoginPage({
         ) : null}
 
         {/* Login card */}
-        <div className="rounded-2xl border border-border bg-card p-7 shadow-xl shadow-primary/[0.04]">
+        <div className="rounded-2xl border border-border bg-card/95 p-7 shadow-xl shadow-primary/[0.04] backdrop-blur-md">
           <LoginForm />
         </div>
 
@@ -64,6 +59,6 @@ export default async function LoginPage({
           school right after.
         </p>
       </div>
-    </div>
+    </AuroraBackground>
   );
 }
