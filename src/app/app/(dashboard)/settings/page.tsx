@@ -5,6 +5,7 @@ import { getLogoUrl } from "@/lib/storage";
 import { SectionCard } from "@/components/section-card";
 import { SchoolInfoForm } from "./school-info-form";
 import { FeeItemsSection } from "./fee-items-section";
+import { UniformsSection } from "./uniforms-section";
 import { GenerateInvoicesButton } from "./generate-invoices-button";
 import { TeamSection } from "./team-section";
 import { LogoSection } from "./logo-section";
@@ -73,7 +74,7 @@ export default async function SettingsPage() {
 
   const logoUrl = await getLogoUrl(school.logo_path);
 
-  const feeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
+  const allFeeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
     id: f.id as string,
     name: f.name as string,
     type: f.type as string,
@@ -83,6 +84,9 @@ export default async function SettingsPage() {
     active: f.active as boolean,
     include_on_registration: f.include_on_registration as boolean,
   }));
+
+  const feeItems = allFeeItems.filter((f) => f.type !== "uniform");
+  const uniformItems = allFeeItems.filter((f) => f.type === "uniform");
 
   const classes = (classesRes.data ?? []) as {
     id: string;
@@ -132,6 +136,10 @@ export default async function SettingsPage() {
 
       <SectionCard bodyClassName="p-0">
         <FeeItemsSection feeItems={feeItems} classes={classes} />
+      </SectionCard>
+
+      <SectionCard bodyClassName="p-0">
+        <UniformsSection uniforms={uniformItems} classes={classes} />
       </SectionCard>
 
       <SectionCard bodyClassName="p-0">

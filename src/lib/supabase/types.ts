@@ -20,5 +20,16 @@ export type PaymentMethod = "cash" | "bank_transfer" | "mobile_money";
 export type PaymentStatus = "completed" | "void";
 export type InvoiceStatus = "open" | "partial" | "paid" | "void";
 export type FeeRecurrence = "per_term" | "per_month" | "one_off";
+export type FeeType =
+  | "tuition"
+  | "levy"
+  | "sports"
+  | "transport"
+  | "trip"
+  | "uniform"
+  | "exam"
+  | "ict"
+  | "boarding"
+  | "other";
 
 export type Database = any;

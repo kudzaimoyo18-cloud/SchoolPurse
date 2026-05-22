@@ -92,7 +92,18 @@ export async function updateSchoolInfo(
 
 const FeeItemSchema = z.object({
   name: z.string().trim().min(1),
-  type: z.enum(["tuition", "levy", "sports", "transport", "exam", "other"]),
+  type: z.enum([
+    "tuition",
+    "levy",
+    "sports",
+    "transport",
+    "trip",
+    "uniform",
+    "exam",
+    "ict",
+    "boarding",
+    "other",
+  ]),
   amount_usd: z.coerce.number().min(0),
   recurrence: z.enum(["per_term", "per_month", "one_off"]),
   active: z.coerce.boolean().optional(),

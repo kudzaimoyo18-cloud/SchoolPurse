@@ -45,7 +45,11 @@ const FEE_TYPES = [
   { value: "levy", label: "Levy" },
   { value: "sports", label: "Sports" },
   { value: "transport", label: "Transport" },
+  { value: "trip", label: "Trip" },
+  { value: "uniform", label: "Uniform" },
   { value: "exam", label: "Exam" },
+  { value: "ict", label: "ICT" },
+  { value: "boarding", label: "Boarding" },
   { value: "other", label: "Other" },
 ];
 
