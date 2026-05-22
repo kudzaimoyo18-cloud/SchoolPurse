@@ -23,36 +23,44 @@ const QUOTES = [
 
 export function Testimonials() {
   return (
-    <section className="border-t border-border bg-sp-card-alt">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-24">
+    <section className="border-t border-border bg-secondary/50">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-foreground">
+          <span className="inline-block rounded-full bg-primary/[0.08] px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-primary dark:bg-primary/20">
             What schools are saying
           </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Built with bursars, head teachers, and treasurers
           </h2>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
           {QUOTES.map((q) => (
             <figure
               key={q.author}
-              className="flex flex-col rounded-xl border border-border bg-card p-6"
+              className="group flex flex-col rounded-2xl border border-border bg-card p-7 transition-all hover:shadow-md hover:shadow-primary/[0.03]"
             >
               <Quote
-                className="size-5 text-primary/40"
+                className="size-6 text-primary/25"
                 strokeWidth={2}
                 aria-hidden
               />
-              <blockquote className="mt-3 flex-1 text-[14.5px] leading-relaxed text-foreground">
+              <blockquote className="mt-4 flex-1 text-[14.5px] leading-relaxed text-foreground">
                 {q.quote}
               </blockquote>
-              <figcaption className="mt-5 border-t border-border pt-3">
-                <p className="text-[13px] font-semibold tracking-tight">
-                  {q.author}
-                </p>
-                <p className="text-[11.5px] text-muted-foreground">{q.role}</p>
+              <figcaption className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                {/* Avatar placeholder */}
+                <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/[0.08] text-xs font-semibold text-primary dark:bg-primary/20">
+                  {q.author.charAt(0)}
+                </span>
+                <div>
+                  <p className="text-[13px] font-semibold tracking-tight">
+                    {q.author}
+                  </p>
+                  <p className="text-[11.5px] text-muted-foreground">
+                    {q.role}
+                  </p>
+                </div>
               </figcaption>
             </figure>
           ))}

@@ -52,12 +52,12 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-4 py-4 text-left transition hover:text-primary"
+        className="flex w-full items-center justify-between gap-4 py-5 text-left transition hover:text-primary"
       >
         <span className="text-[14.5px] font-semibold">{q}</span>
         <ChevronDown
           className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform",
+            "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
             open && "rotate-180 text-primary",
           )}
         />
@@ -67,7 +67,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         role="region"
         aria-labelledby={headingId}
         hidden={!open}
-        className={cn(open ? "pb-4 pr-8" : "")}
+        className={cn(open ? "pb-5 pr-8" : "")}
       >
         <p className="text-[13.5px] leading-relaxed text-muted-foreground">
           {a}
@@ -80,12 +80,12 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 export function Faq() {
   return (
     <section id="faq" className="border-t border-border bg-background">
-      <div className="mx-auto max-w-3xl px-5 py-20 sm:px-6 lg:py-24">
+      <div className="mx-auto max-w-3xl px-5 py-20 sm:px-6 lg:py-28">
         <div className="text-center">
-          <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-foreground">
+          <span className="inline-block rounded-full bg-primary/[0.08] px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-primary dark:bg-primary/20">
             FAQ
           </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Questions schools ask us
           </h2>
           <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
@@ -94,7 +94,7 @@ export function Faq() {
           </p>
         </div>
 
-        <ul className="mt-10 divide-y divide-border rounded-xl border border-border bg-card px-5">
+        <ul className="mt-12 divide-y divide-border rounded-2xl border border-border bg-card px-6 shadow-sm">
           {QUESTIONS.map((item, i) => (
             <FaqItem key={item.q} q={item.q} a={item.a} index={i} />
           ))}

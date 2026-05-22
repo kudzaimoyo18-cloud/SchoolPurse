@@ -32,22 +32,22 @@ const COLUMNS = [
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <Link
               href="/"
-              className="flex items-center gap-2 text-foreground"
+              className="flex items-center gap-2.5 text-foreground"
               aria-label="SchoolPurse home"
             >
-              <span className="inline-flex size-8 items-center justify-center rounded-md bg-sidebar text-primary">
+              <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Briefcase className="size-4" strokeWidth={2.2} />
               </span>
-              <span className="text-[15px] font-semibold tracking-tight">
+              <span className="text-[15px] font-bold tracking-tight">
                 School<span className="text-primary">Purse</span>
               </span>
             </Link>
-            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
               Internal finance dashboards for schools in Zimbabwe — and
               anywhere else cash and arrears need to be tracked properly.
             </p>
@@ -58,7 +58,7 @@ export function MarketingFooter() {
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sp-text-sub">
                 {c.heading}
               </p>
-              <ul className="mt-3 space-y-2.5">
+              <ul className="mt-4 space-y-3">
                 {c.links.map((l) => (
                   <li key={l.label}>
                     {l.href.startsWith("/") || l.href.startsWith("#") ? (
@@ -83,13 +83,13 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
           <p className="text-[12px] text-muted-foreground">
-            © {new Date().getFullYear()} SchoolPurse. Built in Harare, for
+            &copy; {new Date().getFullYear()} SchoolPurse. Built in Harare, for
             Zimbabwean schools.
           </p>
           <p className="text-[12px] text-muted-foreground">
-            Multi-tenant. Audit-logged. Made with care.
+            Multi-tenant &middot; Audit-logged &middot; Made with care.
           </p>
         </div>
       </div>

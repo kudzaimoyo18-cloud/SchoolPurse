@@ -266,7 +266,7 @@ function buildInviteEmailHtml({
 <head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);">
-    <div style="padding:24px 28px;border-bottom:3px solid #10b981;">
+    <div style="padding:24px 28px;border-bottom:3px solid #1e3a5f;">
       <img src="https://schoolpurse.vercel.app/logo.png" alt="SchoolPurse" width="140" style="margin-bottom:16px;"/>
       <h1 style="margin:0;font-size:20px;color:#18181b;">You&rsquo;re invited!</h1>
     </div>
@@ -281,7 +281,7 @@ function buildInviteEmailHtml({
         payments, receipts, and arrears. Click below to sign in and get started:
       </p>
       <a href="${esc(loginUrl)}"
-         style="display:inline-block;background:#10b981;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+         style="display:inline-block;background:#1e3a5f;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
         Sign in to SchoolPurse
       </a>
       <p style="margin:20px 0 0;font-size:13px;color:#71717a;">

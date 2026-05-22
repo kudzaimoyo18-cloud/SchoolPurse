@@ -37,12 +37,11 @@ export function Sidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-[218px] flex-col bg-sidebar text-sidebar-foreground">
-      {/* Logo block — falls back to the SchoolPurse mark when no school
-          logo is uploaded. Logo, when present, is the school's branding. */}
+      {/* Logo block */}
       <div className="border-b border-sidebar-border px-5 py-5">
         <div className="flex items-center gap-2.5">
           {logoUrl ? (
-            <span className="inline-flex size-9 items-center justify-center overflow-hidden rounded-md bg-sidebar-accent">
+            <span className="inline-flex size-9 items-center justify-center overflow-hidden rounded-lg bg-sidebar-accent">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={logoUrl}
@@ -51,23 +50,23 @@ export function Sidebar({
               />
             </span>
           ) : (
-            <span className="inline-flex size-8 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
+            <span className="inline-flex size-9 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
               <Briefcase className="size-4" strokeWidth={2.2} />
             </span>
           )}
           <div className="leading-tight">
-            <p className="text-[15px] font-semibold tracking-tight">
+            <p className="text-[15px] font-bold tracking-tight">
               School
               <span className="text-sidebar-primary">Purse</span>
             </p>
-            <p className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+            <p className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
               Finance Tracker
             </p>
           </div>
         </div>
         {user.schoolName ? (
-          <div className="mt-3 space-y-0.5 text-[11.5px] text-sidebar-foreground/65">
-            <p className="font-medium text-sidebar-foreground/85">
+          <div className="mt-3 space-y-0.5 text-[11.5px] text-sidebar-foreground/55">
+            <p className="font-medium text-sidebar-foreground/80">
               {user.schoolName}
             </p>
             {termLabel ? <p>{termLabel}</p> : null}
@@ -87,10 +86,10 @@ export function Sidebar({
                 <Link
                   href={item.href}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition",
+                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition",
                     active
                       ? "bg-sidebar-accent text-sidebar-foreground"
-                      : "text-sidebar-foreground/75 hover:bg-white/5 hover:text-sidebar-foreground",
+                      : "text-sidebar-foreground/65 hover:bg-white/[0.04] hover:text-sidebar-foreground",
                   )}
                 >
                   <Icon
@@ -98,9 +97,9 @@ export function Sidebar({
                       "size-4 shrink-0 transition",
                       active
                         ? "text-sidebar-primary"
-                        : "text-sidebar-foreground/65 group-hover:text-sidebar-foreground",
+                        : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
                     )}
-                    strokeWidth={2}
+                    strokeWidth={1.8}
                   />
                   <span className="flex-1">{item.label}</span>
                   {item.badge === "arrears" && arrearsCount > 0 ? (
@@ -118,21 +117,21 @@ export function Sidebar({
       {/* Footer: theme toggle + user block */}
       <div className="border-t border-sidebar-border px-3 py-3 space-y-3">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/55">
+          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
             Appearance
           </span>
           <ThemeToggle />
         </div>
 
-        <div className="flex items-center gap-2.5 rounded-md bg-white/5 px-3 py-2">
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
+        <div className="flex items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 py-2.5">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-sidebar-primary text-xs font-semibold">
             {initials}
           </span>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-[12.5px] font-medium text-sidebar-foreground">
               {user.name}
             </p>
-            <p className="truncate text-[10.5px] text-sidebar-foreground/60">
+            <p className="truncate text-[10.5px] text-sidebar-foreground/50">
               {ROLE_LABELS[user.role] ?? user.role}
             </p>
           </div>
@@ -140,7 +139,7 @@ export function Sidebar({
             <button
               type="submit"
               aria-label="Sign out"
-              className="inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/60 transition hover:bg-white/10 hover:text-sidebar-foreground"
+              className="inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/50 transition hover:bg-white/[0.06] hover:text-sidebar-foreground"
             >
               <LogOut className="size-3.5" />
             </button>

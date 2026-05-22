@@ -40,22 +40,27 @@ export default async function OnboardingPage() {
     (user.email?.split("@")[0] ?? "");
 
   return (
-    <div className="flex min-h-svh flex-col items-center bg-sp-card-alt px-6 py-10">
+    <div className="relative flex min-h-svh flex-col items-center bg-secondary/50 px-6 py-10">
+      {/* Background decoration */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent dark:from-primary/[0.06]" />
+      </div>
+
       <div className="w-full max-w-xl space-y-6">
         <div className="space-y-3 text-center">
-          <div className="inline-flex items-center justify-center rounded-xl bg-sidebar p-3 text-primary">
-            <Briefcase className="size-6" strokeWidth={2} />
+          <div className="inline-flex items-center justify-center rounded-2xl bg-primary p-3.5 text-primary-foreground shadow-lg shadow-primary/15">
+            <Briefcase className="size-7" strokeWidth={1.8} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
             Welcome to School<span className="text-primary">Purse</span>
           </h1>
           <p className="text-sm text-muted-foreground">
-            Let&apos;s set up your school. This takes about 30 seconds — you
+            Let&apos;s set up your school. This takes about 30 seconds &mdash; you
             can change everything later in Settings.
           </p>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-7 shadow-xl shadow-primary/[0.04]">
           <OnboardingForm
             defaultName={defaultName}
             defaultEmail={user.email ?? ""}

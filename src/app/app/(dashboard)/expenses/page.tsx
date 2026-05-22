@@ -28,14 +28,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FALLBACK_COLORS = [
-  "#22c27a",
-  "#6366f1",
+  "#1e3a5f",
+  "#0ea5e9",
   "#f59e0b",
   "#ef4444",
   "#8b5cf6",
   "#06b6d4",
   "#ec4899",
-  "#10b981",
+  "#0d9488",
 ];
 
 function colorFor(name: string, index: number): string {

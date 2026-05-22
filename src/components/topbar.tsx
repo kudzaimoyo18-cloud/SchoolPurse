@@ -37,7 +37,7 @@ export function TopBar({
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+    <header className="sticky top-0 z-30 border-b border-border bg-card/85 backdrop-blur-xl supports-[backdrop-filter]:bg-card/70">
       <div className="flex items-center justify-between gap-4 px-7 py-3.5">
         <div className="min-w-0">
           <h1 className="truncate text-[17px] font-bold tracking-tight text-foreground">
@@ -52,11 +52,11 @@ export function TopBar({
           <button
             type="button"
             aria-label="Notifications"
-            className="relative inline-flex size-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition hover:text-foreground"
+            className="relative inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:text-foreground hover:shadow-sm"
           >
             <Bell className="size-4" />
             {hasNotifications ? (
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sp-red" />
+              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-sp-red ring-2 ring-card" />
             ) : null}
           </button>
         </div>

@@ -17,13 +17,13 @@ export function Contact() {
   const success = state?.ok === true;
 
   return (
-    <section id="contact" className="border-t border-border bg-sp-card-alt">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-5 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:py-24">
+    <section id="contact" className="border-t border-border bg-secondary/50">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-5 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:py-28">
         <div>
-          <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-foreground">
+          <span className="inline-block rounded-full bg-primary/[0.08] px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-primary dark:bg-primary/20">
             Contact
           </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Tell us about your school
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
@@ -31,10 +31,10 @@ export function Contact() {
             back within one working day, no high-pressure sales call.
           </p>
 
-          <ul className="mt-8 space-y-4 text-[14px]">
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex size-8 items-center justify-center rounded-md bg-card text-primary">
-                <Mail className="size-4" />
+          <ul className="mt-8 space-y-5 text-[14px]">
+            <li className="flex items-start gap-3.5">
+              <span className="mt-0.5 inline-flex size-10 items-center justify-center rounded-lg bg-card text-primary shadow-sm">
+                <Mail className="size-4.5" />
               </span>
               <div>
                 <p className="font-semibold">Email</p>
@@ -46,9 +46,9 @@ export function Contact() {
                 </a>
               </div>
             </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex size-8 items-center justify-center rounded-md bg-card text-primary">
-                <MessageSquare className="size-4" />
+            <li className="flex items-start gap-3.5">
+              <span className="mt-0.5 inline-flex size-10 items-center justify-center rounded-lg bg-card text-primary shadow-sm">
+                <MessageSquare className="size-4.5" />
               </span>
               <div>
                 <p className="font-semibold">Response time</p>
@@ -60,11 +60,11 @@ export function Contact() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-lg shadow-primary/[0.03] sm:p-8">
           {success ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Check className="size-6" strokeWidth={2.5} />
+              <span className="inline-flex size-14 items-center justify-center rounded-full bg-sp-green-soft text-sp-green">
+                <Check className="size-7" strokeWidth={2.5} />
               </span>
               <h3 className="mt-4 text-xl font-semibold tracking-tight">
                 Message received
@@ -86,8 +86,8 @@ export function Contact() {
                 className="absolute left-[-9999px] h-0 w-0 opacity-0"
               />
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
                   <Label htmlFor="contact-name">Your name</Label>
                   <Input
                     id="contact-name"
@@ -98,7 +98,7 @@ export function Contact() {
                     placeholder="Tendai Moyo"
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <Label htmlFor="contact-email">Email</Label>
                   <Input
                     id="contact-email"
@@ -112,7 +112,7 @@ export function Contact() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label htmlFor="contact-school">School name (optional)</Label>
                 <Input
                   id="contact-school"
@@ -123,8 +123,10 @@ export function Contact() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="contact-message">Tell us about your school</Label>
+              <div className="space-y-2">
+                <Label htmlFor="contact-message">
+                  Tell us about your school
+                </Label>
                 <textarea
                   id="contact-message"
                   name="message"
@@ -132,14 +134,14 @@ export function Contact() {
                   rows={5}
                   disabled={pending}
                   placeholder="How many students? How are you tracking fees today?"
-                  className="flex w-full rounded-md border border-input bg-card px-3 py-2 text-sm shadow-sm transition placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm shadow-sm transition placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
               {state && !state.ok ? (
                 <p
                   role="alert"
-                  className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
                   {state.error}
                 </p>
@@ -149,7 +151,7 @@ export function Contact() {
                 {pending ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Sending…
+                    Sending&hellip;
                   </>
                 ) : (
                   <>

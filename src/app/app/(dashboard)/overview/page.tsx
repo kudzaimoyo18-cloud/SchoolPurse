@@ -38,8 +38,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const FALLBACK_COLORS = [
-  "#22c27a",
-  "#6366f1",
+  "#1e3a5f",
+  "#0ea5e9",
   "#f59e0b",
   "#ef4444",
   "#8b5cf6",
@@ -235,7 +235,7 @@ export default async function OverviewPage() {
   return (
     <div className="space-y-6">
       {/* KPI row */}
-      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Today's collections"
           value={formatMoney(todayTotal)}

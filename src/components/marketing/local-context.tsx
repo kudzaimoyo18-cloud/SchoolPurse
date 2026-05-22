@@ -5,31 +5,28 @@ const LOCAL_NOTES = [
   {
     icon: Banknote,
     title: "Cash-first, in your office",
-    body:
-      "Most parents still settle fees at the bursar's window. SchoolPurse is built around that — record the cash, hand over a receipt, done.",
+    body: "Most parents still settle fees at the bursar's window. SchoolPurse is built around that — record the cash, hand over a receipt, done.",
   },
   {
     icon: MapPin,
     title: "USD-priced by default",
-    body:
-      "Fees stay in USD so they don't drift with the ZWG. Multi-currency support is on the roadmap, but USD-only handles most schools here.",
+    body: "Fees stay in USD so they don't drift with the ZWG. Multi-currency support is on the roadmap, but USD-only handles most schools here.",
   },
   {
     icon: WifiOff,
     title: "Tolerant of patchy internet",
-    body:
-      "Pages stay usable on slow connections. CSV exports and printable receipts keep working offline once the page is loaded.",
+    body: "Pages stay usable on slow connections. CSV exports and printable receipts keep working offline once the page is loaded.",
   },
 ];
 
 export function LocalContext() {
   return (
     <section className="relative border-t border-border bg-background">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-24">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-28">
         <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-[1fr_1.05fr]">
           {/* Copy column */}
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground shadow-sm">
               <Image
                 src="/marketing/zimbabwe-flag.svg"
                 alt="Flag of Zimbabwe"
@@ -40,13 +37,13 @@ export function LocalContext() {
               Zimbabwe-first
             </span>
 
-            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-5 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
               Built for our schools, with our schools
             </h2>
 
             <p className="mt-4 text-[15.5px] leading-relaxed text-muted-foreground">
               We&apos;re working out of Harare. We know how Zimbabwean schools
-              actually run — fees invoiced in USD, parents queuing at the
+              actually run &mdash; fees invoiced in USD, parents queuing at the
               bursar&apos;s window, terms broken up by sports day and
               prizegiving, and a WhatsApp group for everything.
             </p>
@@ -56,19 +53,19 @@ export function LocalContext() {
               a clean ledger your bursar can use the day you sign in.
             </p>
 
-            <ul className="mt-8 space-y-4">
+            <ul className="mt-8 space-y-5">
               {LOCAL_NOTES.map((note) => {
                 const Icon = note.icon;
                 return (
-                  <li key={note.title} className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-                      <Icon className="size-4" strokeWidth={2} />
+                  <li key={note.title} className="flex items-start gap-3.5">
+                    <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary dark:bg-primary/20">
+                      <Icon className="size-5" strokeWidth={1.8} />
                     </span>
                     <div>
                       <p className="text-[14px] font-semibold tracking-tight">
                         {note.title}
                       </p>
-                      <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted-foreground">
+                      <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
                         {note.body}
                       </p>
                     </div>
@@ -80,7 +77,7 @@ export function LocalContext() {
 
           {/* Photo collage column */}
           <div className="grid grid-cols-6 grid-rows-6 gap-3">
-            <figure className="col-span-4 row-span-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <figure className="col-span-4 row-span-4 overflow-hidden rounded-2xl border border-border bg-card shadow-md">
               <div className="relative aspect-[4/3]">
                 <Image
                   src="/marketing/classroom-linstedt.jpg"
@@ -92,7 +89,7 @@ export function LocalContext() {
                 />
               </div>
             </figure>
-            <figure className="col-span-2 row-span-3 col-start-5 row-start-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <figure className="col-span-2 row-span-3 col-start-5 row-start-1 overflow-hidden rounded-2xl border border-border bg-card shadow-md">
               <div className="relative aspect-[3/4]">
                 <Image
                   src="/marketing/uniform-balogun.jpg"
@@ -103,7 +100,7 @@ export function LocalContext() {
                 />
               </div>
             </figure>
-            <figure className="col-span-2 row-span-3 col-start-5 row-start-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <figure className="col-span-2 row-span-3 col-start-5 row-start-4 overflow-hidden rounded-2xl border border-border bg-card shadow-md">
               <div className="relative aspect-[3/4]">
                 <Image
                   src="/marketing/students-table-montenegro.jpg"
@@ -114,7 +111,7 @@ export function LocalContext() {
                 />
               </div>
             </figure>
-            <figure className="col-span-4 row-span-2 col-start-1 row-start-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <figure className="col-span-4 row-span-2 col-start-1 row-start-5 overflow-hidden rounded-2xl border border-border bg-card shadow-md">
               <div className="relative aspect-[16/9]">
                 <Image
                   src="/marketing/students-window-wegener.jpg"

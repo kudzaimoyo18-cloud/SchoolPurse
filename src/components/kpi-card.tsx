@@ -21,7 +21,7 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-lg border border-border bg-card p-5",
+        "relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md",
         "before:absolute before:inset-y-0 before:left-0 before:w-[3px]",
         variant === "danger" ? "before:bg-sp-red" : "before:bg-primary",
       )}
@@ -31,7 +31,9 @@ export function KpiCard({
           {label}
         </p>
         {Icon ? (
-          <Icon className="size-4 text-sp-muted" strokeWidth={1.8} />
+          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary/[0.06] dark:bg-primary/15">
+            <Icon className="size-4 text-primary" strokeWidth={1.8} />
+          </span>
         ) : null}
       </div>
       <p
@@ -42,7 +44,7 @@ export function KpiCard({
       >
         {value}
       </p>
-      <div className="mt-1 flex items-center gap-2 text-[11.5px]">
+      <div className="mt-1.5 flex items-center gap-2 text-[11.5px]">
         {trend ? (
           <span
             className={cn(

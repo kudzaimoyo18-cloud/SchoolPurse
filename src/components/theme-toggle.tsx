@@ -6,9 +6,9 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ACCENTS = [
-  { id: "green", label: "SchoolPurse Green", color: "#22c27a" },
-  { id: "blue", label: "SchoolPurse Blue", color: "#3b82f6" },
-  { id: "amber", label: "Warm Amber", color: "#f59e0b" },
+  { id: "navy", label: "SchoolPurse Navy", color: "#1e3a5f" },
+  { id: "teal", label: "Teal", color: "#0d9488" },
+  { id: "gold", label: "Gold", color: "#b45309" },
 ] as const;
 
 type AccentId = (typeof ACCENTS)[number]["id"];
@@ -16,17 +16,17 @@ type AccentId = (typeof ACCENTS)[number]["id"];
 const ACCENT_STORAGE_KEY = "schoolpurse.accent";
 
 function readAccent(): AccentId {
-  if (typeof window === "undefined") return "green";
+  if (typeof window === "undefined") return "navy";
   const stored = window.localStorage.getItem(ACCENT_STORAGE_KEY);
-  if (stored === "blue" || stored === "amber" || stored === "green") {
+  if (stored === "teal" || stored === "gold" || stored === "navy") {
     return stored;
   }
-  return "green";
+  return "navy";
 }
 
 function applyAccent(accent: AccentId) {
   const html = document.documentElement;
-  if (accent === "green") {
+  if (accent === "navy") {
     html.removeAttribute("data-accent");
   } else {
     html.setAttribute("data-accent", accent);
@@ -40,7 +40,7 @@ function applyAccent(accent: AccentId) {
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const [accent, setAccent] = React.useState<AccentId>("green");
+  const [accent, setAccent] = React.useState<AccentId>("navy");
 
   React.useEffect(() => {
     setMounted(true);
@@ -67,7 +67,7 @@ export function ThemeToggle() {
         type="button"
         onClick={() => setTheme(isDark ? "light" : "dark")}
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        className="inline-flex size-7 items-center justify-center rounded-md text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="inline-flex size-7 items-center justify-center rounded-lg text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
       >
         {!mounted ? (
           <Sun className="size-3.5" />

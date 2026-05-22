@@ -161,7 +161,7 @@ function buildEmailHtml(
   const typeColor: Record<string, string> = {
     info: "#3b82f6",
     warning: "#f59e0b",
-    success: "#10b981",
+    success: "#16a34a",
     update: "#8b5cf6",
   };
   const color = typeColor[type] ?? typeColor.info;

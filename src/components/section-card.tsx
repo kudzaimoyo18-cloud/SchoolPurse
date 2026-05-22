@@ -20,14 +20,16 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "rounded-lg border border-border bg-card shadow-sm",
+        "rounded-xl border border-border bg-card shadow-sm",
         className,
       )}
     >
       {title ? (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div>
-            <h2 className="text-[14.5px] font-semibold leading-tight">{title}</h2>
+            <h2 className="text-[14.5px] font-semibold leading-tight tracking-tight">
+              {title}
+            </h2>
             {subtitle ? (
               <p className="mt-0.5 text-[11.5px] text-muted-foreground">
                 {subtitle}

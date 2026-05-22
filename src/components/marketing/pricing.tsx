@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Tier {
@@ -70,12 +70,12 @@ const TIERS: Tier[] = [
 export function Pricing() {
   return (
     <section id="pricing" className="border-t border-border bg-background">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-24">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-foreground">
+          <span className="inline-block rounded-full bg-primary/[0.08] px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-primary dark:bg-primary/20">
             Pricing
           </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
             Honest pricing, paid termly or annually
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
@@ -84,33 +84,34 @@ export function Pricing() {
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {TIERS.map((t) => (
             <div
               key={t.name}
               className={cn(
-                "relative flex flex-col rounded-xl border bg-card p-6 transition",
+                "relative flex flex-col rounded-2xl border bg-card p-7 transition-all",
                 t.highlight
-                  ? "border-primary shadow-[0_18px_40px_-20px_rgba(34,194,122,0.45)] ring-1 ring-primary/30"
-                  : "border-border hover:border-primary/30",
+                  ? "border-primary/30 shadow-xl shadow-primary/[0.08] ring-1 ring-primary/20"
+                  : "border-border hover:border-primary/20 hover:shadow-lg hover:shadow-primary/[0.04]",
               )}
             >
               {t.badge ? (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10.5px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-primary px-3.5 py-1 text-[10.5px] font-semibold uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/20">
+                  <Star className="size-3" />
                   {t.badge}
                 </span>
               ) : null}
 
-              <div className="flex items-baseline justify-between">
+              <div>
                 <h3 className="text-[15px] font-semibold tracking-tight">
                   {t.name}
                 </h3>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  {t.blurb}
+                </p>
               </div>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                {t.blurb}
-              </p>
 
-              <div className="mt-5 flex items-baseline gap-1">
+              <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-4xl font-bold tracking-tight">
                   {t.price}
                 </span>
@@ -121,13 +122,15 @@ export function Pricing() {
                 ) : null}
               </div>
 
-              <ul className="mt-5 space-y-2.5">
+              <div className="my-6 h-px bg-border" />
+
+              <ul className="flex-1 space-y-3">
                 {t.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-2 text-[13.5px]"
+                    className="flex items-start gap-2.5 text-[13.5px]"
                   >
-                    <span className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                    <span className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/20">
                       <Check className="size-2.5" strokeWidth={3} />
                     </span>
                     <span className="leading-relaxed">{f}</span>
@@ -138,10 +141,10 @@ export function Pricing() {
               <Link
                 href={t.href}
                 className={cn(
-                  "mt-6 inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition",
+                  "mt-7 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition",
                   t.highlight
-                    ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90"
-                    : "border border-border bg-card text-foreground hover:bg-sp-card-alt",
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/15 hover:brightness-110"
+                    : "border border-border bg-card text-foreground hover:bg-secondary",
                 )}
               >
                 {t.cta}
@@ -150,7 +153,7 @@ export function Pricing() {
           ))}
         </div>
 
-        <p className="mt-8 text-center text-[12.5px] text-muted-foreground">
+        <p className="mt-10 text-center text-[12.5px] text-muted-foreground">
           Schools are non-profit institutions in many cases — talk to us if
           pricing is tight, we&apos;ll work something out.
         </p>

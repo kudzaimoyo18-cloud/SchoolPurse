@@ -29,27 +29,29 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 transition-all",
+        "sticky top-0 z-50 transition-all duration-200",
         scrolled
-          ? "border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/65"
+          ? "border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
           : "border-b border-transparent bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-6">
+        {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 text-foreground"
+          className="flex items-center gap-2.5 text-foreground"
           aria-label="SchoolPurse home"
         >
-          <span className="inline-flex size-8 items-center justify-center rounded-md bg-sidebar text-primary">
+          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Briefcase className="size-4" strokeWidth={2.2} />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight">
+          <span className="text-[15px] font-bold tracking-tight">
             School<span className="text-primary">Purse</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((l) => (
             <a
               key={l.href}
@@ -61,11 +63,12 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
           ))}
         </nav>
 
+        {/* Desktop CTA */}
         <div className="hidden items-center gap-2 md:flex">
           {isAuthed ? (
             <Link
               href="/app/overview"
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
             >
               <LayoutDashboard className="size-3.5" />
               Open dashboard
@@ -73,7 +76,7 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
             >
               <LogIn className="size-3.5" />
               Sign in
@@ -81,12 +84,13 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
           )}
         </div>
 
+        {/* Mobile hamburger */}
         <button
           type="button"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground md:hidden"
+          className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-secondary hover:text-foreground md:hidden"
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -101,7 +105,7 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
               >
                 {l.label}
               </a>
@@ -109,7 +113,7 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
             <Link
               href={isAuthed ? "/app/overview" : "/login"}
               onClick={() => setOpen(false)}
-              className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm"
+              className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm"
             >
               {isAuthed ? (
                 <>

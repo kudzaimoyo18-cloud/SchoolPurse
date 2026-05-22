@@ -20,16 +20,16 @@ import {
  */
 export function DashboardPreview() {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-[0_24px_60px_-24px_rgba(11,31,46,0.35),0_8px_20px_-12px_rgba(11,31,46,0.2)] dark:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.6)]">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-primary/[0.08] dark:shadow-black/40">
       <div className="grid grid-cols-[140px_1fr]">
         {/* Sidebar */}
         <div className="flex flex-col bg-sidebar px-2.5 py-3 text-sidebar-foreground">
           <div className="mb-3 flex items-center gap-1.5 px-1.5">
-            <span className="inline-flex size-6 items-center justify-center rounded-md bg-sidebar-accent text-primary">
+            <span className="inline-flex size-6 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-primary">
               <Briefcase className="size-3" strokeWidth={2.2} />
             </span>
-            <span className="text-[10px] font-semibold tracking-tight">
-              School<span className="text-primary">Purse</span>
+            <span className="text-[10px] font-semibold tracking-tight text-sidebar-foreground">
+              School<span className="text-sidebar-primary">Purse</span>
             </span>
           </div>
           <ul className="space-y-0.5">
@@ -53,7 +53,7 @@ export function DashboardPreview() {
                   }`}
                 >
                   <Icon
-                    className={`size-2.5 ${item.active ? "text-primary" : ""}`}
+                    className={`size-2.5 ${item.active ? "text-sidebar-primary" : ""}`}
                   />
                   <span className="flex-1 truncate">{item.label}</span>
                   {item.badge ? (
@@ -76,11 +76,11 @@ export function DashboardPreview() {
               <p className="text-[8px] text-muted-foreground">Today</p>
             </div>
             <div className="flex items-center gap-1">
-              <span className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-[8px] font-semibold text-primary-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[8px] font-semibold text-primary-foreground">
                 <Plus className="size-2.5" />
                 Quick Payment
               </span>
-              <span className="relative inline-flex size-5 items-center justify-center rounded border border-border bg-card text-muted-foreground">
+              <span className="relative inline-flex size-5 items-center justify-center rounded-md border border-border bg-card text-muted-foreground">
                 <Bell className="size-2.5" />
                 <span className="absolute right-1 top-1 size-1 rounded-full bg-sp-red" />
               </span>
@@ -113,10 +113,10 @@ export function DashboardPreview() {
             ].map((k) => (
               <div
                 key={k.label}
-                className="relative rounded border border-border bg-card p-1.5 pl-2"
+                className="relative rounded-md border border-border bg-card p-1.5 pl-2"
               >
                 <span
-                  className={`absolute inset-y-0 left-0 w-[2px] ${k.danger ? "bg-sp-red" : "bg-primary"}`}
+                  className={`absolute inset-y-0 left-0 w-[2px] rounded-l-md ${k.danger ? "bg-sp-red" : "bg-primary"}`}
                 />
                 <p className="text-[7px] font-semibold uppercase tracking-wider text-sp-text-sub">
                   {k.label}
@@ -150,7 +150,7 @@ export function DashboardPreview() {
           </div>
 
           {/* Chart placeholder */}
-          <div className="mx-3 mb-3 flex-1 rounded border border-border bg-card p-2">
+          <div className="mx-3 mb-3 flex-1 rounded-md border border-border bg-card p-2">
             <div className="mb-1.5 flex items-center justify-between">
               <p className="text-[8px] font-semibold">Income vs Expenses</p>
               <p className="text-[7px] text-muted-foreground">6 months</p>
@@ -167,7 +167,7 @@ export function DashboardPreview() {
                     style={{ height: `${h}%` }}
                   />
                   <div
-                    className="flex-1 rounded-t bg-sp-muted/60"
+                    className="flex-1 rounded-t bg-sp-muted/50"
                     style={{ height: `${h * 0.55}%` }}
                   />
                 </div>
@@ -179,7 +179,7 @@ export function DashboardPreview() {
                 Income
               </span>
               <span className="flex items-center gap-1">
-                <span className="size-1.5 rounded-sm bg-sp-muted/60" />
+                <span className="size-1.5 rounded-sm bg-sp-muted/50" />
                 Expenses
               </span>
             </div>
