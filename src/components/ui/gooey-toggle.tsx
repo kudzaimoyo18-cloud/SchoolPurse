@@ -16,11 +16,15 @@ import { cn } from "@/lib/utils";
  * to the SchoolPurse tokens via CSS vars so accent overrides still work.
  */
 
+// Tailwind v4: read a CSS variable with `bg-(--var)` parens; setting one with
+// `[--var:value]` brackets still works. Mixing the two was the original bug —
+// `bg-[--c-default]` was interpreted as the literal string "--c-default" and
+// silently dropped, leaving the toggle track transparent.
 const styles = {
   switch:
     "relative block cursor-pointer h-8 w-[52px] [--c-active-inner:#ffffff] [--c-default:rgb(203,213,225)] [--c-default-dark:rgb(148,163,184)] [transform:translateZ(0)] [backface-visibility:hidden]",
   input:
-    "h-full w-full cursor-pointer appearance-none rounded-full bg-[--c-default] outline-none transition-colors duration-500 hover:bg-[--c-default-dark] [transform:translate3d(0,0,0)] data-[checked=true]:bg-[--c-background]",
+    "h-full w-full cursor-pointer appearance-none rounded-full bg-(--c-default) outline-none transition-colors duration-500 hover:bg-(--c-default-dark) [transform:translate3d(0,0,0)] data-[checked=true]:bg-(--c-background)",
   svg: "pointer-events-none absolute inset-0 fill-white [transform:translate3d(0,0,0)]",
   circle:
     "transform-gpu transition-transform duration-500 [transform:translate3d(0,0,0)] [backface-visibility:hidden]",
