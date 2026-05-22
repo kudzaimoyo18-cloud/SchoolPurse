@@ -72,6 +72,15 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     redirect("/onboarding");
   }
 
+  // Auto-activate invited users on first login.
+  if ((profile as { status?: string }).status === "invited") {
+    const admin = createAdminClient();
+    await admin
+      .from("users")
+      .update({ status: "active" })
+      .eq("id", profile.id as string);
+  }
+
   const schoolName = Array.isArray(profile.schools)
     ? (profile.schools[0] as { name?: string } | undefined)?.name ?? null
     : ((profile.schools as { name?: string } | null)?.name ?? null);
