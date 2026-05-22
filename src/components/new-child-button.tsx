@@ -24,7 +24,7 @@ export function NewChildButton({ classes, feeItems }: Props) {
         className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[12.5px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
       >
         <UserPlus className="size-3.5" strokeWidth={2.5} />
-        New child
+        New Registration
       </button>
 
       <NewChildDialog

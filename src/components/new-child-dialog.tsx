@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, Shirt } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +51,9 @@ interface Props {
   feeItems: RegistrationFee[];
 }
 
+/** Quantity state for uniform items: id → quantity (0 = not selected) */
+type UniformQtyMap = Record<string, number>;
+
 export function NewChildDialog({
   open,
   onOpenChange,
@@ -63,29 +66,51 @@ export function NewChildDialog({
   const [selectedItemIds, setSelectedItemIds] = React.useState<Set<string>>(
     new Set(),
   );
+  const [uniformQty, setUniformQty] = React.useState<UniformQtyMap>({});
 
-  // Compute the applicable bundle from the school's fee_items based on the
-  // selected class. Pre-checks them when the class changes.
+  // Split items: registration fees vs uniforms
+  const allRegistrationFees = React.useMemo(
+    () => feeItems.filter((f) => f.type !== "uniform"),
+    [feeItems],
+  );
+  const allUniforms = React.useMemo(
+    () => feeItems.filter((f) => f.type === "uniform"),
+    [feeItems],
+  );
+
+  // Applicable registration fees based on class
   const applicableItems = React.useMemo(() => {
-    return feeItems.filter((f) => {
+    return allRegistrationFees.filter((f) => {
       if (f.applicable_class_ids.length === 0) return true; // global
       if (!classId) return false;
       return f.applicable_class_ids.includes(classId);
     });
-  }, [feeItems, classId]);
+  }, [allRegistrationFees, classId]);
 
   React.useEffect(() => {
-    // Whenever the applicable set changes, default-check all items.
+    // Whenever the applicable set changes, default-check all registration items.
     setSelectedItemIds(new Set(applicableItems.map((f) => f.id)));
   }, [applicableItems]);
 
-  const total = React.useMemo(
+  // Totals
+  const feeTotal = React.useMemo(
     () =>
       applicableItems
         .filter((f) => selectedItemIds.has(f.id))
         .reduce((sum, f) => sum + toNumber(f.amount_usd), 0),
     [applicableItems, selectedItemIds],
   );
+
+  const uniformTotal = React.useMemo(
+    () =>
+      allUniforms.reduce((sum, u) => {
+        const qty = uniformQty[u.id] ?? 0;
+        return sum + toNumber(u.amount_usd) * qty;
+      }, 0),
+    [allUniforms, uniformQty],
+  );
+
+  const total = feeTotal + uniformTotal;
 
   function toggleItem(id: string) {
     setSelectedItemIds((prev) => {
@@ -96,22 +121,43 @@ export function NewChildDialog({
     });
   }
 
+  function setQty(id: string, qty: number) {
+    setUniformQty((prev) => ({ ...prev, [id]: Math.max(0, qty) }));
+  }
+
+  function toggleUniform(id: string) {
+    setUniformQty((prev) => {
+      const current = prev[id] ?? 0;
+      return { ...prev, [id]: current > 0 ? 0 : 1 };
+    });
+  }
+
   function reset() {
     setClassId("");
     setSelectedItemIds(new Set());
+    setUniformQty({});
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    // Reset and re-set fee_item_ids based on our state (FormData would
-    // include all checkboxes even un-rendered ones).
+
+    // Set fee_item_ids from registration fee checkboxes
     formData.delete("fee_item_ids");
     for (const id of selectedItemIds) {
       if (applicableItems.some((f) => f.id === id)) {
         formData.append("fee_item_ids", id);
       }
     }
+
+    // Set uniform_items as JSON: [{fee_item_id, quantity}]
+    const uniformItems = allUniforms
+      .filter((u) => (uniformQty[u.id] ?? 0) > 0)
+      .map((u) => ({
+        fee_item_id: u.id,
+        quantity: uniformQty[u.id],
+      }));
+    formData.set("uniform_items", JSON.stringify(uniformItems));
 
     startTransition(async () => {
       const res = await enrollChild(formData);
@@ -125,11 +171,12 @@ export function NewChildDialog({
           ? `${name} enrolled — ${formatMoney(res.total)} invoice created`
           : `${name} enrolled (no fees billed yet)`,
       );
-      // Open the printable invoice in a new tab so the bursar can hand it
-      // to the parent immediately. Closing the dialog and refreshing the
-      // current page keeps the bursar's place for the next enrolment.
       if (res.invoiceId) {
-        window.open(`/app/invoices/${res.invoiceId}`, "_blank", "noopener,noreferrer");
+        window.open(
+          `/app/invoices/${res.invoiceId}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
       }
       reset();
       onOpenChange(false);
@@ -143,7 +190,7 @@ export function NewChildDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="size-4 text-primary" />
-            Enrol a new child
+            New Registration
           </DialogTitle>
           <DialogDescription>
             Enrol the student and bill the school&apos;s registration bundle in
@@ -186,9 +233,6 @@ export function NewChildDialog({
                 className="flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">— No class —</option>
-                {/* Group classes by level so the bursar can see Primary /
-                    Secondary / Tertiary sections clearly. Classes with no
-                    level fall back to an "Other" group. */}
                 {LEVEL_ORDER.map((level) => {
                   const group = classes.filter((c) => c.level === level);
                   if (group.length === 0) return null;
@@ -219,12 +263,7 @@ export function NewChildDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dob">Date of birth</Label>
-              <Input
-                id="dob"
-                name="dob"
-                type="date"
-                disabled={pending}
-              />
+              <Input id="dob" name="dob" type="date" disabled={pending} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="gender">Gender</Label>
@@ -278,7 +317,7 @@ export function NewChildDialog({
             <div className="max-h-56 overflow-y-auto p-2">
               {applicableItems.length === 0 ? (
                 <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                  {feeItems.length === 0
+                  {allRegistrationFees.length === 0
                     ? "No fee items configured yet. Set them up in Settings → Fee structure."
                     : classId
                       ? "No registration-flagged items apply to this class."
@@ -290,9 +329,7 @@ export function NewChildDialog({
                     const checked = selectedItemIds.has(f.id);
                     return (
                       <li key={f.id}>
-                        <label
-                          className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm hover:bg-sp-card-alt"
-                        >
+                        <label className="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm hover:bg-sp-card-alt">
                           <input
                             type="checkbox"
                             checked={checked}
@@ -317,6 +354,74 @@ export function NewChildDialog({
               )}
             </div>
           </div>
+
+          {/* Uniforms section */}
+          {allUniforms.length > 0 && (
+            <div className="rounded-lg border border-border">
+              <div className="flex items-center gap-2 border-b border-border bg-sp-card-alt px-4 py-3">
+                <Shirt className="size-4 text-muted-foreground" />
+                <div>
+                  <p className="text-[13px] font-semibold">Uniforms</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Select uniforms this student needs and set the quantity.
+                  </p>
+                </div>
+              </div>
+              <div className="max-h-48 overflow-y-auto p-2">
+                <ul className="divide-y divide-border">
+                  {allUniforms.map((u) => {
+                    const qty = uniformQty[u.id] ?? 0;
+                    const isSelected = qty > 0;
+                    return (
+                      <li key={u.id}>
+                        <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleUniform(u.id)}
+                            disabled={pending}
+                            className="size-4"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{u.name}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {formatMoney(u.amount_usd)} each
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <div className="flex items-center gap-1.5">
+                              <label className="text-[11px] text-muted-foreground">
+                                Qty:
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={qty}
+                                onChange={(e) =>
+                                  setQty(
+                                    u.id,
+                                    Math.max(1, parseInt(e.target.value) || 1),
+                                  )
+                                }
+                                disabled={pending}
+                                className="h-7 w-14 rounded border border-input bg-card px-2 text-center text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                          )}
+                          <p className="min-w-[70px] text-right font-semibold tabular-nums">
+                            {isSelected
+                              ? formatMoney(toNumber(u.amount_usd) * qty)
+                              : "—"}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button

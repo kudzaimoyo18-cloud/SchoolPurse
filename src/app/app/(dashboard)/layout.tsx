@@ -29,7 +29,7 @@ export default async function DashboardLayout({
           "id, name, type, amount_usd, applicable_class_ids, active, include_on_registration",
         )
         .eq("active", true)
-        .eq("include_on_registration", true)
+        .or("include_on_registration.eq.true,type.eq.uniform")
         .order("name"),
       supabase.from("schools").select("logo_path").limit(1).maybeSingle(),
     ]);
