@@ -25,21 +25,23 @@ export function SectionCard({
       )}
     >
       {title ? (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-          <div>
-            <h2 className="text-[14.5px] font-semibold leading-tight tracking-tight">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5 sm:px-5 sm:py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-[14.5px] font-semibold leading-tight tracking-tight">
               {title}
             </h2>
             {subtitle ? (
-              <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+              <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
                 {subtitle}
               </p>
             ) : null}
           </div>
-          {action ? <div>{action}</div> : null}
+          {action ? <div className="shrink-0">{action}</div> : null}
         </header>
       ) : null}
-      <div className={cn("px-5 py-5", bodyClassName)}>{children}</div>
+      <div className={cn("px-4 py-4 sm:px-5 sm:py-5", bodyClassName)}>
+        {children}
+      </div>
     </section>
   );
 }

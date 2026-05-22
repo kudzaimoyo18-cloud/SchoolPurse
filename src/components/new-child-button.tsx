@@ -21,10 +21,14 @@ export function NewChildButton({ classes, feeItems }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[12.5px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+        aria-label="New Registration"
+        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-2 text-[12.5px] font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 sm:px-3.5"
       >
         <UserPlus className="size-3.5" strokeWidth={2.5} />
-        New Registration
+        {/* Full label on tablet+, just "Add" on phone to keep the topbar
+            from wrapping next to the title + bell. */}
+        <span className="hidden sm:inline">New Registration</span>
+        <span className="sm:hidden">Add</span>
       </button>
 
       <NewChildDialog

@@ -125,7 +125,7 @@ export default async function DashboardLayout({
           feeItems={feeItems}
         />
         <AnnouncementBanner announcement={announcement} />
-        <main className="flex-1 px-7 pb-10 pt-6">{children}</main>
+        <main className="flex-1 px-4 pb-10 pt-5 sm:px-7 sm:pt-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
