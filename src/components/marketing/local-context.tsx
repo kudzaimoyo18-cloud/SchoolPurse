@@ -32,7 +32,7 @@ export function LocalContext() {
                 alt="Flag of Zimbabwe"
                 width={20}
                 height={12}
-                className="size-auto rounded-sm border border-border/40"
+                className="h-[12px] w-[20px] rounded-sm border border-border/40"
               />
               Zimbabwe-first
             </span>

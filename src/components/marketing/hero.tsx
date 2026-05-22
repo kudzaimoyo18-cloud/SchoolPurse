@@ -32,7 +32,7 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
               alt="Flag of Zimbabwe"
               width={18}
               height={11}
-              className="size-auto rounded-[2px] border border-border/40"
+              className="h-[11px] w-[18px] rounded-[2px] border border-border/40"
             />
             Built for Zimbabwean schools
             <Sparkles className="size-3 text-amber-500" />
