@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, UserPlus, Shirt } from "lucide-react";
+import { FileText, Loader2, Shirt, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -436,9 +436,9 @@ export function NewChildDialog({
               {pending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                <UserPlus className="size-4" />
+                <FileText className="size-4" />
               )}
-              Enrol & invoice
+              Create Invoice
             </Button>
           </DialogFooter>
         </form>
