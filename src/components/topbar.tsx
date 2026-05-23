@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { format } from "date-fns";
 import { NAV_ITEMS } from "./nav-items";
 import { NewChildButton } from "./new-child-button";
+import { CreateInvoiceButton } from "./create-invoice-button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type {
   ClassOption,
@@ -16,6 +17,12 @@ interface TopBarProps {
   hasNotifications?: boolean;
   classes: ClassOption[];
   feeItems: RegistrationFee[];
+  /**
+   * Whether to show the "Create invoice" shortcut. Should be true for
+   * school_admin / bursar / platform_admin. Teachers never see it because
+   * they can't generate invoices.
+   */
+  canCreateInvoice?: boolean;
 }
 
 function titleFromPath(pathname: string): string {
@@ -29,6 +36,7 @@ export function TopBar({
   hasNotifications,
   classes,
   feeItems,
+  canCreateInvoice = false,
 }: TopBarProps) {
   const pathname = usePathname();
   const title = titleFromPath(pathname);
@@ -62,6 +70,7 @@ export function TopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          {canCreateInvoice ? <CreateInvoiceButton /> : null}
           <NewChildButton classes={classes} feeItems={feeItems} />
 
           <button

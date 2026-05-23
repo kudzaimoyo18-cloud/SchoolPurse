@@ -123,6 +123,12 @@ export default async function DashboardLayout({
           hasNotifications={arrears.length > 0}
           classes={classes}
           feeItems={feeItems}
+          /* Teachers can't generate invoices — hide the shortcut for them. */
+          canCreateInvoice={
+            user.role === "school_admin" ||
+            user.role === "bursar" ||
+            user.role === "platform_admin"
+          }
         />
         <AnnouncementBanner announcement={announcement} />
         <main className="flex-1 px-4 pb-10 pt-5 sm:px-7 sm:pt-6">{children}</main>
