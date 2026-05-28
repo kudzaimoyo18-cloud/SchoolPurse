@@ -3,13 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Check, Loader2, Plus, Search, X } from "lucide-react";
+import { Check, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
 import { recordPayment } from "./actions";
+import { quickAddStudent } from "@/app/app/(dashboard)/students/quick-add-action";
 
 export interface OutstandingLine {
   id: string;
@@ -26,11 +27,34 @@ interface StudentOption {
   outstanding_lines: OutstandingLine[];
 }
 
+interface ClassOption {
+  id: string;
+  name: string;
+  level: "primary" | "secondary" | "tertiary" | null;
+}
+
+const LEVEL_LABEL: Record<
+  NonNullable<ClassOption["level"]>,
+  string
+> = {
+  primary: "Primary",
+  secondary: "Secondary",
+  tertiary: "Tertiary",
+};
+
+const LEVEL_ORDER: Array<NonNullable<ClassOption["level"]>> = [
+  "primary",
+  "secondary",
+  "tertiary",
+];
+
 export function NewPaymentForm({
-  students,
+  students: initialStudents,
+  classes = [],
   defaultOpen = false,
 }: {
   students: StudentOption[];
+  classes?: ClassOption[];
   defaultOpen?: boolean;
 }) {
   const router = useRouter();
@@ -41,6 +65,23 @@ export function NewPaymentForm({
   const [studentLabel, setStudentLabel] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [showResults, setShowResults] = React.useState(false);
+  // Local students list — seeded from props but extended in-place when the
+  // bursar adds a student via the quick-add mini-form. Avoids a full
+  // router.refresh() round-trip on every add.
+  const [students, setStudents] = React.useState<StudentOption[]>(
+    () => initialStudents,
+  );
+  React.useEffect(() => {
+    setStudents(initialStudents);
+  }, [initialStudents]);
+  // Quick-add mini-form state. Opened from the search dropdown when there
+  // are no matches; lets the bursar create a minimal student record and
+  // continue with the payment in the same flow.
+  const [quickAddOpen, setQuickAddOpen] = React.useState(false);
+  const [quickAddPending, startQuickAdd] = React.useTransition();
+  const [quickAddFirst, setQuickAddFirst] = React.useState("");
+  const [quickAddLast, setQuickAddLast] = React.useState("");
+  const [quickAddClass, setQuickAddClass] = React.useState("");
   // Per-line allocation amounts as strings (input.value is always string).
   // Empty string = "not entered yet" = $0. We parse to numeric at submit.
   const [allocations, setAllocations] = React.useState<Record<string, string>>(
@@ -104,6 +145,57 @@ export function NewPaymentForm({
     setSearch("");
     setAllocations({});
     setCreditAmount("");
+  }
+
+  // Open the inline mini-form pre-populated with whatever the bursar has
+  // typed in the search box. We split on the first space so a quick "Tendai
+  // Moyo" turns into First=Tendai, Last=Moyo.
+  function openQuickAdd() {
+    const parts = search.trim().split(/\s+/);
+    setQuickAddFirst(parts[0] ?? "");
+    setQuickAddLast(parts.slice(1).join(" "));
+    setQuickAddClass("");
+    setQuickAddOpen(true);
+    setShowResults(false);
+  }
+
+  function cancelQuickAdd() {
+    setQuickAddOpen(false);
+    setQuickAddFirst("");
+    setQuickAddLast("");
+    setQuickAddClass("");
+  }
+
+  function submitQuickAdd() {
+    if (!quickAddFirst.trim() || !quickAddLast.trim()) {
+      toast.error("Both first and last name are required");
+      return;
+    }
+    startQuickAdd(async () => {
+      const fd = new FormData();
+      fd.set("first_name", quickAddFirst.trim());
+      fd.set("last_name", quickAddLast.trim());
+      if (quickAddClass) fd.set("class_id", quickAddClass);
+      const res = await quickAddStudent(fd);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      const newStudent: StudentOption = {
+        id: res.student.id,
+        name: res.student.name,
+        class_name: res.student.class_name,
+        // Fresh student → no outstanding lines → payment becomes a
+        // credit on account (the existing recordPayment path handles this).
+        outstanding_lines: [],
+      };
+      setStudents((prev) => [newStudent, ...prev]);
+      pickStudent(newStudent);
+      cancelQuickAdd();
+      toast.success(
+        `${res.student.name} added — record their payment now. The amount will become a credit on their account until you invoice their fees.`,
+      );
+    });
   }
 
   function updateAllocation(lineId: string, value: string) {
@@ -219,7 +311,7 @@ export function NewPaymentForm({
                 disabled={pending}
               />
             </div>
-            {showResults && filtered.length > 0 ? (
+            {showResults && !quickAddOpen ? (
               <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-border bg-card shadow-lg">
                 {filtered.map((s) => (
                   <li key={s.id}>
@@ -241,7 +333,125 @@ export function NewPaymentForm({
                     </button>
                   </li>
                 ))}
+                {filtered.length === 0 ? (
+                  <li className="px-3 py-2 text-xs text-muted-foreground">
+                    No matches.
+                  </li>
+                ) : null}
+                {/* Quick-add affordance: lets the bursar create a new student
+                    inline without leaving the payment form. */}
+                <li className="border-t border-border bg-sp-card-alt">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={openQuickAdd}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-primary transition hover:bg-card"
+                  >
+                    <UserPlus className="size-3.5" />
+                    Add new student
+                    {search.trim() ? (
+                      <span className="text-muted-foreground">
+                        : &ldquo;{search.trim()}&rdquo;
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
               </ul>
+            ) : null}
+
+            {/* Inline mini-form. Shown when "Add new student" is clicked,
+                replaces the search dropdown until the bursar saves or cancels. */}
+            {quickAddOpen ? (
+              <div className="absolute z-20 mt-1 w-full space-y-3 rounded-md border border-primary/30 bg-card p-3 shadow-lg ring-1 ring-primary/10">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12.5px] font-semibold text-foreground">
+                    <UserPlus className="mr-1.5 inline size-3.5 text-primary" />
+                    Add new student
+                  </p>
+                  <button
+                    type="button"
+                    onClick={cancelQuickAdd}
+                    className="text-muted-foreground transition hover:text-foreground"
+                    aria-label="Cancel"
+                    disabled={quickAddPending}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="First name"
+                    value={quickAddFirst}
+                    onChange={(e) => setQuickAddFirst(e.target.value)}
+                    disabled={quickAddPending}
+                    autoFocus
+                  />
+                  <Input
+                    placeholder="Last name"
+                    value={quickAddLast}
+                    onChange={(e) => setQuickAddLast(e.target.value)}
+                    disabled={quickAddPending}
+                  />
+                </div>
+                <select
+                  value={quickAddClass}
+                  onChange={(e) => setQuickAddClass(e.target.value)}
+                  disabled={quickAddPending}
+                  className="flex h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">— No class (set later) —</option>
+                  {LEVEL_ORDER.map((level) => {
+                    const group = classes.filter((c) => c.level === level);
+                    if (group.length === 0) return null;
+                    return (
+                      <optgroup key={level} label={LEVEL_LABEL[level]}>
+                        {group.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                  {(() => {
+                    const ungrouped = classes.filter((c) => !c.level);
+                    if (ungrouped.length === 0) return null;
+                    return (
+                      <optgroup label="Other">
+                        {ungrouped.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })()}
+                </select>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={cancelQuickAdd}
+                    disabled={quickAddPending}
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={submitQuickAdd}
+                    disabled={quickAddPending}
+                    size="sm"
+                  >
+                    {quickAddPending ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <UserPlus className="size-3.5" />
+                    )}
+                    Add &amp; select
+                  </Button>
+                </div>
+              </div>
             ) : null}
           </div>
 

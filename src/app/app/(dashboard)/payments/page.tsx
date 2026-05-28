@@ -45,6 +45,7 @@ export default async function PaymentsPage({
     paymentsRes,
     monthRes,
     todayRes,
+    classesRes,
   ] = await Promise.all([
     supabase
       .from("students")
@@ -89,7 +90,20 @@ export default async function PaymentsPage({
       .select("amount_usd")
       .gte("paid_at", today)
       .eq("status", "completed"),
+    // Class list for the inline "Add new student" mini-form so the bursar
+    // can attach the freshly-added student to a class without leaving the
+    // payment flow.
+    supabase
+      .from("classes")
+      .select("id, name, level")
+      .order("name"),
   ]);
+
+  const classes = (classesRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    level: "primary" | "secondary" | "tertiary" | null;
+  }>;
 
   // Group outstanding lines by student so the form can show "what is owed"
   // when a bursar picks a student. We compute balance here once and drop
@@ -242,7 +256,11 @@ export default async function PaymentsPage({
         />
       </div>
 
-      <NewPaymentForm students={students} defaultOpen={newFlag === "1"} />
+      <NewPaymentForm
+        students={students}
+        classes={classes}
+        defaultOpen={newFlag === "1"}
+      />
 
       <SectionCard
         title="Recent payments"
