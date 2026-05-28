@@ -265,16 +265,49 @@ export async function voidPayment(
   id: string,
   reason: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  // Voiding is school-admin territory. Bursars record payments; admins
+  // handle corrections. Validate reason early so we don't spawn DB queries
+  // just to return "reason required" later.
+  const trimmedReason = reason.trim();
+  if (trimmedReason.length < 3) {
+    return {
+      ok: false,
+      error: "Please enter a reason (at least 3 characters).",
+    };
+  }
+  if (trimmedReason.length > 500) {
+    return {
+      ok: false,
+      error: "Reason is too long (max 500 characters).",
+    };
+  }
+
   const ctx = await getContext();
   if (!ctx) return { ok: false, error: "Not authenticated" };
   const { supabase, schoolId, userId } = ctx;
+
+  // Role gate: school_admin / platform_admin only. The RLS UPDATE policy
+  // (is_finance_user) is broader (includes bursar) — we're stricter here
+  // because voiding rewrites finance history.
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  const role = (profile as { role?: string } | null)?.role;
+  if (role !== "school_admin" && role !== "platform_admin") {
+    return {
+      ok: false,
+      error: "Only school admins can void receipts.",
+    };
+  }
 
   // Defense in depth: confirm the payment is on this school before mutating.
   // RLS UPDATE policy on payments already enforces school_id = auth_school_id()
   // AND is_finance_user(), but a cleaner error here helps debugging.
   const { data: existing } = await supabase
     .from("payments")
-    .select("id, school_id")
+    .select("id, school_id, status")
     .eq("id", id)
     .maybeSingle();
   if (
@@ -283,12 +316,15 @@ export async function voidPayment(
   ) {
     return { ok: false, error: "Payment not found in this school." };
   }
+  if ((existing as { status: string }).status === "void") {
+    return { ok: false, error: "This receipt is already void." };
+  }
 
   const { error } = await supabase
     .from("payments")
     .update({
       status: "void",
-      void_reason: reason || null,
+      void_reason: trimmedReason,
       voided_at: new Date().toISOString(),
       voided_by: userId,
     })

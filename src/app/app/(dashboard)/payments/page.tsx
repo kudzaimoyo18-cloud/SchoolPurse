@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download, Receipt, ReceiptText, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState } from "@/components/empty-state";
 import { KpiCard } from "@/components/kpi-card";
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { formatDate, formatDateTime, formatMoney, toNumber } from "@/lib/format";
 import { sanitizeOrLiteral } from "@/lib/security";
 import { NewPaymentForm } from "./new-payment-form";
+import { VoidPaymentButton } from "./void-payment-button";
 
 export const metadata = { title: "Payments — SchoolPurse" };
 
@@ -33,6 +35,13 @@ export default async function PaymentsPage({
 }) {
   const { q, new: newFlag } = await searchParams;
   const supabase = await createClient();
+  // Role check for void affordance. Voiding rewrites finance history so
+  // only school_admin (and platform_admin for support) can do it; bursars
+  // and teachers don't see the button.
+  const currentUser = await getCurrentUser();
+  const canVoid =
+    currentUser.role === "school_admin" ||
+    currentUser.role === "platform_admin";
 
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = new Date(new Date().setDate(1))
@@ -335,14 +344,24 @@ export default async function PaymentsPage({
                         )}
                       </TableCell>
                       <TableCell className="pr-5 text-right">
-                        <Link
-                          href={`/app/receipts/${p.id}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
-                        >
-                          <ReceiptText className="size-3.5" />
-                          Receipt
-                        </Link>
+                        <div className="inline-flex items-center gap-3">
+                          <Link
+                            href={`/app/receipts/${p.id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
+                          >
+                            <ReceiptText className="size-3.5" />
+                            Receipt
+                          </Link>
+                          {canVoid && p.status !== "void" ? (
+                            <VoidPaymentButton
+                              paymentId={p.id}
+                              receiptNumber={p.receipt_number}
+                              amountLabel={formatMoney(p.amount_usd)}
+                              studentName={s.name}
+                            />
+                          ) : null}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
