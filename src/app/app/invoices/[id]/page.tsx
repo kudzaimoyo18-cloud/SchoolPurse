@@ -32,7 +32,7 @@ export default async function InvoicePage({
     supabase
       .from("invoices")
       .select(
-        `id, period_label, due_date, total_usd, status, is_registration, created_at,
+        `id, period_label, due_date, total_usd, status, is_registration, is_carry_over, created_at,
          students(first_name, last_name, classes(name)),
          terms(name, start_date, end_date),
          invoice_lines(id, description, amount_usd, paid_usd,
@@ -165,7 +165,11 @@ export default async function InvoicePage({
             </div>
             <div className="text-right">
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-sp-text-sub">
-                {inv.is_registration ? "Registration Invoice" : "Invoice"}
+                {inv.is_carry_over
+                  ? "Carry-over Balance"
+                  : inv.is_registration
+                    ? "Registration Invoice"
+                    : "Invoice"}
               </p>
               <p className="mt-1 font-mono text-sm font-bold">
                 {invoiceNumber}
@@ -180,6 +184,15 @@ export default async function InvoicePage({
               ) : null}
             </div>
           </div>
+
+          {inv.is_carry_over ? (
+            <div className="mt-4 rounded-md border border-sp-amber/30 bg-sp-amber-soft px-4 py-3 text-xs leading-relaxed text-sp-amber">
+              <strong>Carry-over balance.</strong> This statement records fees
+              charged to this student before they joined SchoolPurse, along
+              with payments already received. The &quot;Balance&quot; column
+              shows what is still owing.
+            </div>
+          ) : null}
 
           {/* Bill-to */}
           <div className="grid grid-cols-2 gap-6 py-6">

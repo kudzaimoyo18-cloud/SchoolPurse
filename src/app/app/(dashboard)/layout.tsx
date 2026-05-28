@@ -22,7 +22,7 @@ export default async function DashboardLayout({
     await Promise.all([
       supabase
         .from("terms")
-        .select("name, academic_years(name)")
+        .select("name, start_date, academic_years(name)")
         .eq("is_current", true)
         .limit(1)
         .maybeSingle(),
@@ -63,6 +63,9 @@ export default async function DashboardLayout({
         })()
       }`
     : undefined;
+  // Surfaced to the New Registration dialog so the carry-over mode can
+  // default the enrolment date to the term start (rather than today).
+  const termStartDate = (term as { start_date?: string } | null)?.start_date;
 
   // Resolve the latest active announcement (skip if user already dismissed it)
   const rawAnnouncement = announcementRes.data as {
@@ -123,6 +126,7 @@ export default async function DashboardLayout({
           hasNotifications={arrears.length > 0}
           classes={classes}
           feeItems={feeItems}
+          termStartDate={termStartDate}
         />
         <AnnouncementBanner announcement={announcement} />
         <main className="flex-1 px-4 pb-10 pt-5 sm:px-7 sm:pt-6">{children}</main>

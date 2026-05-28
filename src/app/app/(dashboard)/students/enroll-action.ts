@@ -18,6 +18,11 @@ const UniformItemSchema = z.object({
   quantity: z.number().int().min(1).max(20),
 });
 
+const PaidAmountSchema = z.object({
+  fee_item_id: z.string().uuid(),
+  paid_usd: z.number().min(0),
+});
+
 const Schema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),
   last_name: z.string().trim().min(1, "Last name is required"),
@@ -27,6 +32,12 @@ const Schema = z.object({
   enrollment_date: z.string().min(1, "Enrollment date is required"),
   fee_item_ids: z.array(z.string().uuid()).default([]),
   uniform_items: z.array(UniformItemSchema).default([]),
+  // Carry-over fields: when is_carry_over is true the invoice represents
+  // the student's state before SchoolPurse. Each fee line gets paid_usd
+  // pre-filled from paid_amounts so the outstanding balance reflects
+  // reality rather than the full original fee.
+  is_carry_over: z.boolean().default(false),
+  paid_amounts: z.array(PaidAmountSchema).default([]),
 });
 
 /**
@@ -59,6 +70,19 @@ export async function enrollChild(
     return { ok: false, error: "Malformed uniform items payload." };
   }
 
+  // Parse paid_amounts JSON (carry-over mode only).
+  let paidAmounts: Array<{ fee_item_id: string; paid_usd: number }> = [];
+  try {
+    const raw = formData.get("paid_amounts");
+    if (raw && typeof raw === "string" && raw !== "[]") {
+      paidAmounts = JSON.parse(raw);
+    }
+  } catch {
+    return { ok: false, error: "Malformed paid_amounts payload." };
+  }
+
+  const isCarryOver = formData.get("is_carry_over") === "true";
+
   const parsed = Schema.safeParse({
     first_name: formData.get("first_name"),
     last_name: formData.get("last_name"),
@@ -70,6 +94,8 @@ export async function enrollChild(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
     ),
     uniform_items: uniformItems,
+    is_carry_over: isCarryOver,
+    paid_amounts: paidAmounts,
   });
 
   if (!parsed.success) {
@@ -183,9 +209,20 @@ export async function enrollChild(
     | null;
 
   const year = new Date().getFullYear();
-  const periodLabel = term
-    ? `Registration & ${term.name} ${year}`
-    : `Registration ${year}`;
+  const periodLabel = parsed.data.is_carry_over
+    ? term
+      ? `Carry-over balance · ${term.name} ${year}`
+      : `Carry-over balance ${year}`
+    : term
+      ? `Registration & ${term.name} ${year}`
+      : `Registration ${year}`;
+
+  // Map of paid_usd already collected against each fee item (carry-over mode).
+  // Bounded to [0, amount_usd] per line so overpaid carry-overs don't break
+  // the trigger that auto-flips invoice status to "paid".
+  const paidByItemId = new Map(
+    parsed.data.paid_amounts.map((p) => [p.fee_item_id, p.paid_usd]),
+  );
 
   // Calculate totals
   const feeTotal = eligibleFees.reduce(
@@ -198,13 +235,16 @@ export async function enrollChild(
   );
   const total = feeTotal + uniformTotal;
 
-  // Due date: 14 days after enrolment, or the term start date if that's later.
+  // Due date: in carry-over mode use today (the school is just catching up
+  // their books). Otherwise 14 days after enrolment, or term start if later.
   const enrollDate = parsed.data.enrollment_date;
+  const todayIso = new Date().toISOString().slice(0, 10);
   const enrollPlus14 = new Date(enrollDate + "T00:00:00Z");
   enrollPlus14.setUTCDate(enrollPlus14.getUTCDate() + 14);
-  const dueDate =
-    term?.start_date &&
-    term.start_date > enrollPlus14.toISOString().slice(0, 10)
+  const dueDate = parsed.data.is_carry_over
+    ? todayIso
+    : term?.start_date &&
+        term.start_date > enrollPlus14.toISOString().slice(0, 10)
       ? term.start_date
       : enrollPlus14.toISOString().slice(0, 10);
 
@@ -219,7 +259,10 @@ export async function enrollChild(
       due_date: dueDate,
       total_usd: total,
       status: "open",
-      is_registration: true,
+      // Carry-over invoices are never "registration" invoices — they
+      // represent historic balances, not the student first enrolling.
+      is_registration: !parsed.data.is_carry_over,
+      is_carry_over: parsed.data.is_carry_over,
     })
     .select("id")
     .single();
@@ -234,22 +277,36 @@ export async function enrollChild(
   }
   const inv = invoiceRow as { id: string };
 
-  // Build invoice lines: registration fees (1 line each) + uniforms (1 line each with qty × price)
-  const feeLines = eligibleFees.map((f) => ({
-    invoice_id: inv.id,
-    fee_item_id: f.id,
-    description: f.name,
-    amount_usd: Number(f.amount_usd),
-    paid_usd: 0,
-  }));
+  // Build invoice lines. In carry-over mode the bursar may pre-populate
+  // paid_usd to reflect partial payments already collected. The DB trigger
+  // sync_invoice_line_paid then flips the invoice to "paid" automatically
+  // if every line ends up fully paid.
+  const clampPaid = (paid: number, amount: number) =>
+    Math.max(0, Math.min(paid, amount));
 
-  const uniformLines = eligibleUniforms.map((u) => ({
-    invoice_id: inv.id,
-    fee_item_id: u.id,
-    description: u.quantity > 1 ? `${u.name} ×${u.quantity}` : u.name,
-    amount_usd: Number(u.amount_usd) * u.quantity,
-    paid_usd: 0,
-  }));
+  const feeLines = eligibleFees.map((f) => {
+    const amount = Number(f.amount_usd);
+    const carried = paidByItemId.get(f.id) ?? 0;
+    return {
+      invoice_id: inv.id,
+      fee_item_id: f.id,
+      description: f.name,
+      amount_usd: amount,
+      paid_usd: parsed.data.is_carry_over ? clampPaid(carried, amount) : 0,
+    };
+  });
+
+  const uniformLines = eligibleUniforms.map((u) => {
+    const amount = Number(u.amount_usd) * u.quantity;
+    const carried = paidByItemId.get(u.id) ?? 0;
+    return {
+      invoice_id: inv.id,
+      fee_item_id: u.id,
+      description: u.quantity > 1 ? `${u.name} ×${u.quantity}` : u.name,
+      amount_usd: amount,
+      paid_usd: parsed.data.is_carry_over ? clampPaid(carried, amount) : 0,
+    };
+  });
 
   const allLines = [...feeLines, ...uniformLines];
 

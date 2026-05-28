@@ -144,12 +144,16 @@ export default async function OverviewPage() {
       .eq("is_current", true)
       .maybeSingle();
     const termId = (termIdRes.data as { id: string } | null)?.id ?? "";
+    // Exclude carry-over invoices — they represent state from before
+    // SchoolPurse, not fees actually billed this term, so they'd inflate
+    // both the term target and the "collected" figure if included.
     const { data: termInvoices } = await supabase
       .from("invoices")
       .select(
         "total_usd, invoice_lines(amount_usd, paid_usd, payment_allocations(amount_usd, payments(status)))",
       )
-      .eq("term_id", termId);
+      .eq("term_id", termId)
+      .eq("is_carry_over", false);
     type AllocRow = {
       amount_usd: number | string;
       payments?: { status?: string } | Array<{ status?: string }> | null;

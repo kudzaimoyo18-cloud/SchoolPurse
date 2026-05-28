@@ -11,9 +11,10 @@ import {
 interface Props {
   classes: ClassOption[];
   feeItems: RegistrationFee[];
+  termStartDate?: string;
 }
 
-export function NewChildButton({ classes, feeItems }: Props) {
+export function NewChildButton({ classes, feeItems, termStartDate }: Props) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -36,6 +37,7 @@ export function NewChildButton({ classes, feeItems }: Props) {
         onOpenChange={setOpen}
         classes={classes}
         feeItems={feeItems}
+        termStartDate={termStartDate}
       />
     </>
   );

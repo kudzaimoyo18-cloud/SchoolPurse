@@ -16,6 +16,12 @@ interface TopBarProps {
   hasNotifications?: boolean;
   classes: ClassOption[];
   feeItems: RegistrationFee[];
+  /**
+   * ISO date of the current term's start_date. Threaded into the New
+   * Registration dialog so carry-over mode can default the enrolment
+   * date to the term start rather than today.
+   */
+  termStartDate?: string;
 }
 
 function titleFromPath(pathname: string): string {
@@ -29,6 +35,7 @@ export function TopBar({
   hasNotifications,
   classes,
   feeItems,
+  termStartDate,
 }: TopBarProps) {
   const pathname = usePathname();
   const title = titleFromPath(pathname);
@@ -62,7 +69,11 @@ export function TopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-          <NewChildButton classes={classes} feeItems={feeItems} />
+          <NewChildButton
+            classes={classes}
+            feeItems={feeItems}
+            termStartDate={termStartDate}
+          />
 
           <button
             type="button"
