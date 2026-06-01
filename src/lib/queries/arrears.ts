@@ -12,56 +12,89 @@ export interface ArrearsStudent {
   invoice_ids: string[];
 }
 
+// ── Row shapes ─────────────────────────────────────────────────────────────
+// These mirror what Supabase returns for the nested select used by
+// `fetchArrears`. Exported so tests and other callers can build fixtures
+// without going through Supabase.
+
+export type ArrearsPaymentRef =
+  | { status?: string }
+  | Array<{ status?: string }>
+  | null;
+
+export type ArrearsAllocationRow = {
+  amount_usd?: number | string;
+  payments?: ArrearsPaymentRef;
+};
+
+export type ArrearsLineRow = {
+  amount_usd?: number | string;
+  paid_usd?: number | string;
+  payment_allocations?: ArrearsAllocationRow[] | null;
+};
+
+export type ArrearsClassField =
+  | { name?: string }
+  | Array<{ name?: string }>
+  | null
+  | undefined;
+
+export type ArrearsStudentField =
+  | {
+      first_name?: string;
+      last_name?: string;
+      classes?: ArrearsClassField;
+    }
+  | Array<{
+      first_name?: string;
+      last_name?: string;
+      classes?: ArrearsClassField;
+    }>
+  | null;
+
+export interface ArrearsInvoiceRow {
+  id: string;
+  student_id: string;
+  total_usd: number | string;
+  due_date: string | null;
+  status?: string;
+  students?: ArrearsStudentField;
+  invoice_lines?: ArrearsLineRow[] | null;
+}
+
 /**
- * Fetch all open/partial invoices with their lines and aggregate to a per-student
- * arrears view. Returns the heaviest balances first.
+ * Pure aggregation of raw invoice rows into per-student arrears.
+ *
+ * Accepts `today` so callers (and tests) control time deterministically.
+ * Behavior contract:
+ *   - Term fee per invoice = sum of line.amount_usd, falling back to
+ *     invoice.total_usd if no lines are present.
+ *   - Paid per invoice = sum over lines of MAX(line.paid_usd, sum of
+ *     non-void payment_allocations). Belt-and-braces because the current
+ *     write path populates allocations but not always invoice_lines.paid_usd.
+ *   - Void allocations are excluded.
+ *   - Invoices with balance ≤ $0.0001 are dropped (covers float dust).
+ *   - Multiple invoices per student roll up; days_overdue is the max
+ *     across that student's open invoices.
+ *   - Output sorted by balance DESC (heaviest first).
  */
-export async function fetchArrears(): Promise<ArrearsStudent[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("invoices")
-    .select(
-      "id, student_id, total_usd, due_date, status, students(first_name, last_name, classes(name)), invoice_lines(amount_usd, paid_usd, payment_allocations(amount_usd, payments(status)))",
-    )
-    .in("status", ["open", "partial"])
-    .limit(5000);
-
-  if (error || !data) return [];
-
+export function aggregateArrears(
+  rows: ArrearsInvoiceRow[],
+  today: Date = new Date(),
+): ArrearsStudent[] {
   const byStudent = new Map<string, ArrearsStudent>();
-  const today = new Date();
 
-  for (const row of data as Array<Record<string, unknown>>) {
-    const studentField = row.students as
-      | { first_name?: string; last_name?: string; classes?: unknown }
-      | Array<{ first_name?: string; last_name?: string; classes?: unknown }>
-      | null;
+  for (const row of rows) {
+    const studentField = row.students;
     const s = Array.isArray(studentField) ? studentField[0] : studentField;
     if (!s) continue;
 
-    const classField = s.classes as
-      | { name?: string }
-      | { name?: string }[]
-      | undefined;
+    const classField = s.classes;
     const className = Array.isArray(classField)
       ? (classField[0]?.name ?? null)
       : (classField?.name ?? null);
 
-    type AllocRow = {
-      amount_usd?: number | string;
-      payments?:
-        | { status?: string }
-        | Array<{ status?: string }>
-        | null;
-    };
-    type LineRow = {
-      amount_usd?: number | string;
-      paid_usd?: number | string;
-      payment_allocations?: AllocRow[] | null;
-    };
-
-    const lines = (row.invoice_lines as LineRow[] | null) ?? [];
+    const lines = row.invoice_lines ?? [];
 
     const lineTotal = lines.reduce(
       (sum, ln) => sum + toNumber(ln.amount_usd),
@@ -69,10 +102,6 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
     );
     const total = lineTotal > 0 ? lineTotal : toNumber(row.total_usd);
 
-    // Sum: the materialized paid_usd column (in case it ever gets set)
-    // PLUS the sum of allocations from completed (non-void) payments.
-    // This handles the current DB where allocate_payment_to_invoice creates
-    // payment_allocations rows but doesn't bump invoice_lines.paid_usd.
     const paid = lines.reduce((sum, ln) => {
       const baseline = toNumber(ln.paid_usd);
       const allocs = ln.payment_allocations ?? [];
@@ -91,14 +120,14 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
     const dueDate = row.due_date ? String(row.due_date) : null;
     const overdue = dueDate ? Math.max(daysBetween(dueDate, today), 0) : 0;
 
-    const studentId = row.student_id as string;
+    const studentId = row.student_id;
     const existing = byStudent.get(studentId);
     if (existing) {
       existing.term_fee += total;
       existing.paid += paid;
       existing.balance += balance;
       existing.days_overdue = Math.max(existing.days_overdue, overdue);
-      existing.invoice_ids.push(row.id as string);
+      existing.invoice_ids.push(row.id);
     } else {
       byStudent.set(studentId, {
         student_id: studentId,
@@ -108,10 +137,30 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
         paid,
         balance,
         days_overdue: overdue,
-        invoice_ids: [row.id as string],
+        invoice_ids: [row.id],
       });
     }
   }
 
   return Array.from(byStudent.values()).sort((a, b) => b.balance - a.balance);
+}
+
+/**
+ * Fetch all open/partial invoices with their lines and aggregate to a per-student
+ * arrears view. Returns the heaviest balances first.
+ */
+export async function fetchArrears(): Promise<ArrearsStudent[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(
+      "id, student_id, total_usd, due_date, status, students(first_name, last_name, classes(name)), invoice_lines(amount_usd, paid_usd, payment_allocations(amount_usd, payments(status)))",
+    )
+    .in("status", ["open", "partial"])
+    .limit(5000);
+
+  if (error || !data) return [];
+
+  return aggregateArrears(data as unknown as ArrearsInvoiceRow[], new Date());
 }

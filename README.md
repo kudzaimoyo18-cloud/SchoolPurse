@@ -1,10 +1,11 @@
 # SchoolPurse
 
-Internal finance tracking dashboard for Zimbabwean schools. Built for school admin boards to record cash payments, track arrears, log expenses, and generate monthly P&L reports.
+Multi-tenant finance SaaS for Zimbabwean schools. Bursars and school staff record cash payments, manage students and invoices, issue receipts, track arrears, log expenses, and (eventually) generate monthly P&L reports.
 
-- **Single-purpose:** payment tracking only — no parent/student logins, no payment gateways, no public-facing features.
-- **Cash-only** payments recorded manually by the bursar.
+- **Multi-tenant:** schools-as-tenants, RLS-scoped data. Staff-only access via invite; no parent/student logins.
+- **Cash-only** payments recorded manually by the bursar. No payment gateways.
 - **USD** for v1 (architecture supports adding ZWG/ZiG later).
+- Public marketing site at `/`; the app itself lives under `/app/*` behind auth.
 
 ## Stack
 
@@ -46,32 +47,52 @@ Open <http://localhost:3000>.
 
 ```
 src/
-├── app/                  # Next.js App Router pages
-│   ├── layout.tsx        # Root layout with ThemeProvider + QueryProvider
-│   ├── page.tsx          # Landing
-│   └── globals.css       # Design tokens (light + dark + accent variants)
+├── app/
+│   ├── (marketing)/                 # Public landing + contact form
+│   ├── api/                         # API routes
+│   ├── auth/, login/, onboarding/   # Account lifecycle
+│   └── app/                         # Authed app (RLS-scoped by school)
+│       ├── (dashboard)/
+│       ├── invoices/
+│       └── receipts/
 ├── components/
-│   ├── ui/               # shadcn/ui primitives
-│   ├── theme-provider.tsx
-│   └── query-provider.tsx
+│   └── ui/                          # shadcn/ui primitives (base-nova preset)
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts     # Browser Supabase client
-│   │   ├── server.ts     # Server-component Supabase client
-│   │   ├── admin.ts      # Service-role client (server-only)
-│   │   └── types.ts      # Database types (placeholder)
-│   └── utils.ts          # cn() helper
-└── proxy.ts              # Auth session refresh (Next 16 replacement for middleware.ts)
+│   ├── supabase/                    # client.ts | server.ts | admin.ts (service-role, server-only)
+│   ├── auth/, queries/
+│   ├── csv.ts                       # bulk import/export
+│   ├── format.ts                    # money/date formatting
+│   ├── resend.ts                    # transactional + announcement emails
+│   ├── security.ts
+│   └── storage.ts                   # Supabase Storage (school logos, student photos)
+└── proxy.ts                         # Auth session refresh (Next 16 replacement for middleware.ts)
 ```
 
 ## Design reference
 
 `design-handoff/` contains the prototype and design tokens. Read `design-handoff/design_handoff_schoolpurse/README.md` before building screens.
 
-## Phases
+## Status
 
-- ✅ **Phase 0** — Scaffolding (stack, tokens, Supabase clients)
-- ⏳ **Phase 1** — Auth + dashboard shell
-- ⏳ **Phase 2** — Students, fees, invoices, payments, arrears
-- ⏳ **Phase 3** — Expenses, dashboard, reports
-- ⏳ **Phase 4** — PDF receipts, settings, audit log polish
+Active, approaching ship. Run `git log --oneline -1` for the current head — the surface below is inferred from commits and migrations, not hand-curated, so refresh it when phases close.
+
+### Shipped
+
+- Auth, team invites, welcome email on invite + auto-activate on first login
+- Multi-tenant schools: logos, settings, uniforms, school levels, class levels
+- Students: registration, carry-over mode for prior records, student photos
+- Invoices: lines with `paid_usd` sync, "Create Invoice" topbar shortcut
+- Payments: recording, inline add-new-student in payment form, payment notes
+- Receipts: issuing, voiding from the table action column
+- Announcements: platform-wide banner + per-user dismissal + Resend email
+- Marketing site: landing with Zimbabwean flag + school photos section
+- Design system: navy-blue palette, shadcn sidebar block, aurora bg, glass button, gooey toggle (Tailwind v4 paren syntax)
+- Pre-ship hardening: 4 Supabase security-advisor findings fixed; migrated to `sb_secret_*` keys with legacy fallback
+
+### Outstanding
+
+- PDF receipt export
+- Expense tracking + monthly P&L
+- Audit log polish
+- ZWG / multi-currency
+- **No tests yet** — Vitest + RTL setup is the next big chore (financial domain + no tests = single largest risk)
