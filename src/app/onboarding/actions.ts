@@ -73,6 +73,24 @@ export async function provisionMySchool(
     redirect("/app/overview");
   }
 
+  // SECURITY — pay-first gate. The /onboarding PAGE also checks this, but a
+  // page only controls what's rendered; this server action is an invocable
+  // endpoint. Without re-checking here, anyone holding a magic-link session
+  // (which /welcome hands out to any email) could POST straight to this action
+  // and provision a school without paying. Enforce it server-side.
+  const { data: paidSub } = await admin
+    .from("whop_subscriptions")
+    .select("id")
+    .eq("email", user.email.toLowerCase())
+    .eq("status", "active")
+    .maybeSingle();
+  if (!paidSub) {
+    return {
+      error:
+        "We couldn't find an active subscription for your account. Please complete checkout first, then try again.",
+    };
+  }
+
   // Pre-flight: slug must be unique across all schools.
   const { data: slugClash } = await admin
     .from("schools")
