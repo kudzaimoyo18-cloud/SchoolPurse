@@ -1,0 +1,10 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SchoolPurse profile mark">
+  <rect width="320" height="320" fill="#0b1f2e"/>
+  <g transform="translate(76.8,74.2) scale(2.6)">
+    <path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/>
+    <rect x="9" y="34" width="46" height="6" fill="#1aa869" opacity="0.55"/>
+    <circle cx="32" cy="37" r="9" fill="#ffffff"/>
+    <path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

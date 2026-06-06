@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,7 @@ function prefixOf(name: string): string {
     .map((w) => w[0])
     .join("");
   if (letters.length >= 2 && letters.length <= 6) return letters;
-  // Fallback to first 4 alphanum chars
-  return (
-    name
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 4) || "SP"
-  );
+  return name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4) || "SP";
 }
 
 export function OnboardingForm({
@@ -62,165 +56,146 @@ export function OnboardingForm({
 
   return (
     <form action={action} className="space-y-5">
+      {/* The only required, visible field — everything else has a smart
+          default and lives under "Advanced setup". */}
       <div className="space-y-1.5">
-        <Label htmlFor="school_name">School name</Label>
+        <Label htmlFor="school_name">What&apos;s your school called?</Label>
         <Input
           id="school_name"
           name="school_name"
           required
+          autoFocus
           value={schoolName}
           onChange={(e) => handleSchoolNameChange(e.target.value)}
           placeholder="e.g. Twinkle Star Junior School"
           disabled={pending}
         />
+        <p className="text-[11px] text-muted-foreground">
+          You can change everything else later in Settings.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="school_slug">URL slug</Label>
-          <Input
-            id="school_slug"
-            name="school_slug"
-            required
-            value={slug}
-            onChange={(e) => {
-              setSlug(e.target.value);
-              setSlugTouched(true);
-            }}
-            placeholder="twinkle-star"
-            pattern="[a-z0-9-]+"
-            disabled={pending}
-          />
-          <p className="text-[11px] text-muted-foreground">
-            Lowercase letters, numbers, hyphens. Must be unique.
-          </p>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="receipt_prefix">Receipt prefix</Label>
-          <Input
-            id="receipt_prefix"
-            name="receipt_prefix"
-            required
-            value={prefix}
-            onChange={(e) => {
-              setPrefix(e.target.value.toUpperCase());
-              setPrefixTouched(true);
-            }}
-            maxLength={8}
-            placeholder="TSJS"
-            disabled={pending}
-          />
-          <p className="text-[11px] text-muted-foreground">
-            e.g. TSJS → <span className="font-mono">TSJS-2026-000001</span>
-          </p>
-        </div>
-      </div>
+      <details className="group rounded-lg border border-border bg-sp-card-alt/40">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3.5 py-2.5 text-[13px] font-medium text-muted-foreground transition hover:text-foreground">
+          Advanced setup (optional)
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="address">Address (optional)</Label>
-        <Input
-          id="address"
-          name="address"
-          placeholder="Street, city, country"
-          disabled={pending}
-        />
-      </div>
+        <div className="space-y-5 px-3.5 pb-4 pt-1">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="school_slug">URL slug</Label>
+              <Input
+                id="school_slug"
+                name="school_slug"
+                required
+                value={slug}
+                onChange={(e) => {
+                  setSlug(e.target.value);
+                  setSlugTouched(true);
+                }}
+                placeholder="twinkle-star"
+                pattern="[a-z0-9-]+"
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="receipt_prefix">Receipt prefix</Label>
+              <Input
+                id="receipt_prefix"
+                name="receipt_prefix"
+                required
+                value={prefix}
+                onChange={(e) => {
+                  setPrefix(e.target.value.toUpperCase());
+                  setPrefixTouched(true);
+                }}
+                maxLength={8}
+                placeholder="TSJS"
+                disabled={pending}
+              />
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">School phone (optional)</Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            placeholder="+263 …"
-            disabled={pending}
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              name="address"
+              placeholder="Street, city, country"
+              disabled={pending}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">School phone</Label>
+              <Input id="phone" name="phone" type="tel" placeholder="+263 …" disabled={pending} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="currency">Currency</Label>
+              <Input
+                id="currency"
+                name="currency"
+                required
+                maxLength={4}
+                defaultValue="USD"
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="terms_per_year">Terms / year</Label>
+              <Input
+                id="terms_per_year"
+                name="terms_per_year"
+                type="number"
+                min={1}
+                max={6}
+                required
+                defaultValue={3}
+                disabled={pending}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="admin_name">Your name</Label>
+              <Input
+                id="admin_name"
+                name="admin_name"
+                required
+                defaultValue={defaultName}
+                placeholder="Printed on receipts"
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="admin_phone">Your phone</Label>
+              <Input id="admin_phone" name="admin_phone" type="tel" placeholder="+263 …" disabled={pending} />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-2.5 rounded-md border border-border bg-sp-card-alt px-3 py-2.5 text-sm">
+            <input
+              type="checkbox"
+              name="seed_defaults"
+              defaultChecked
+              disabled={pending}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-medium">Start with default classes &amp; fee items</span>
+              <span className="block text-[11.5px] text-muted-foreground">
+                ECD A/B, Grade 1–7, common fee items, current year &amp; term.
+                Uncheck for a blank slate.
+              </span>
+            </span>
+          </label>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="currency">Currency</Label>
-          <Input
-            id="currency"
-            name="currency"
-            required
-            maxLength={4}
-            defaultValue="USD"
-            disabled={pending}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="terms_per_year">Terms per year</Label>
-          <Input
-            id="terms_per_year"
-            name="terms_per_year"
-            type="number"
-            min={1}
-            max={6}
-            required
-            defaultValue={3}
-            disabled={pending}
-          />
-        </div>
-      </div>
+      </details>
 
-      <hr className="border-border" />
-
-      <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Your account
-      </p>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="admin_name">Your name</Label>
-          <Input
-            id="admin_name"
-            name="admin_name"
-            required
-            defaultValue={defaultName}
-            placeholder="As you'd like it printed on receipts"
-            disabled={pending}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="admin_email">Email</Label>
-          <Input
-            id="admin_email"
-            value={defaultEmail}
-            disabled
-            readOnly
-            className="bg-sp-card-alt text-muted-foreground"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="admin_phone">Your phone (optional)</Label>
-        <Input
-          id="admin_phone"
-          name="admin_phone"
-          type="tel"
-          placeholder="+263 …"
-          disabled={pending}
-        />
-      </div>
-
-      <label className="flex items-start gap-2.5 rounded-md border border-border bg-sp-card-alt px-3 py-2.5 text-sm">
-        <input
-          type="checkbox"
-          name="seed_defaults"
-          defaultChecked
-          disabled={pending}
-          className="mt-0.5"
-        />
-        <span>
-          <span className="font-medium">Start with default classes and fee items</span>
-          <span className="block text-[11.5px] text-muted-foreground">
-            We&apos;ll create ECD A/B, GRADE 1–7, default fee items, the
-            current academic year and current term. You can edit anything
-            after onboarding. Uncheck if you prefer a blank slate.
-          </span>
-        </span>
-      </label>
+      <input type="hidden" name="admin_email_display" value={defaultEmail} />
 
       {state?.error ? (
         <p

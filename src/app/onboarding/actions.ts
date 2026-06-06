@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { linkSubscriptionToSchool, getSchoolTier } from "@/lib/subscription";
+import { sendWelcomeEmail } from "@/lib/emails/welcome";
 
 export type OnboardingState = { error: string } | null;
 
@@ -149,6 +151,21 @@ export async function provisionMySchool(
     await admin.from("terms").delete().eq("school_id", schoolId);
     await admin.from("academic_years").delete().eq("school_id", schoolId);
   }
+
+  // Auto-link any Whop subscription purchased with this email
+  if (user.email) {
+    await linkSubscriptionToSchool(user.email);
+  }
+
+  // Welcome email — fires once the school is provisioned. No-ops if Resend
+  // isn't configured and never throws, so it can't block the redirect.
+  const tier = await getSchoolTier(schoolId);
+  await sendWelcomeEmail({
+    to: user.email,
+    recipientName: parsed.data.admin_name,
+    schoolName: parsed.data.school_name,
+    tier,
+  });
 
   redirect("/app/overview");
 }

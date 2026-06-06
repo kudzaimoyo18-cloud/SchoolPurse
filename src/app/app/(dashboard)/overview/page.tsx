@@ -25,6 +25,7 @@ import { IncomeVsExpenseChart } from "@/components/charts/income-vs-expense";
 import { formatDate, formatMoney, formatMoneyCompact, toNumber } from "@/lib/format";
 import { fetchArrears } from "@/lib/queries/arrears";
 import { fetchMonthlyPL } from "@/lib/queries/monthly-pl";
+import { SetupChecklist, type SetupStep } from "./setup-checklist";
 
 export const metadata = { title: "Overview — SchoolPurse" };
 
@@ -104,6 +105,47 @@ export default async function OverviewPage() {
       .eq("is_current", true)
       .maybeSingle(),
   ]);
+
+  // Onboarding setup checklist — counts drive which steps are complete.
+  const [classesCnt, studentsCnt, feeItemsCnt, paymentsCnt] = await Promise.all([
+    supabase.from("classes").select("*", { count: "exact", head: true }),
+    supabase.from("students").select("*", { count: "exact", head: true }),
+    supabase.from("fee_items").select("*", { count: "exact", head: true }),
+    supabase
+      .from("payments")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "completed"),
+  ]);
+  const setupSteps: SetupStep[] = [
+    {
+      key: "classes",
+      label: "Add your classes",
+      description: "ECD, grades or forms",
+      href: "/app/settings",
+      done: (classesCnt.count ?? 0) > 0,
+    },
+    {
+      key: "fees",
+      label: "Set your fee items",
+      description: "Tuition, levies, transport…",
+      href: "/app/settings",
+      done: (feeItemsCnt.count ?? 0) > 0,
+    },
+    {
+      key: "students",
+      label: "Add students",
+      description: "Import a CSV or add them manually",
+      href: "/app/students",
+      done: (studentsCnt.count ?? 0) > 0,
+    },
+    {
+      key: "payment",
+      label: "Record your first payment",
+      description: "Then print or email a receipt",
+      href: "/app/students",
+      done: (paymentsCnt.count ?? 0) > 0,
+    },
+  ];
 
   const todayTotal = (todayRes.data ?? []).reduce(
     (s: number, p: Record<string, unknown>) => s + toNumber(p.amount_usd),
@@ -238,6 +280,8 @@ export default async function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      <SetupChecklist steps={setupSteps} />
+
       {/* KPI row */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard

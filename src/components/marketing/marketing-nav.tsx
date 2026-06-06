@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Briefcase, LayoutDashboard, LogIn, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { LayoutDashboard, LogIn, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -42,9 +43,14 @@ export function MarketingNav({ isAuthed = false }: { isAuthed?: boolean }) {
           className="flex items-center gap-2.5 text-foreground"
           aria-label="SchoolPurse home"
         >
-          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Briefcase className="size-4" strokeWidth={2.2} />
-          </span>
+          <Image
+            src="/logo.png"
+            alt="SchoolPurse"
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-contain"
+            priority
+          />
           <span className="text-[15px] font-bold tracking-tight">
             School<span className="text-primary">Purse</span>
           </span>

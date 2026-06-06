@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
@@ -66,9 +67,13 @@ export function Sidebar({
               />
             </span>
           ) : (
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
-              <Briefcase className="size-4" strokeWidth={2.2} />
-            </span>
+            <Image
+              src="/logo.png"
+              alt="SchoolPurse"
+              width={36}
+              height={36}
+              className="size-9 shrink-0 rounded-lg object-contain"
+            />
           )}
           <div className="leading-tight group-data-[collapsible=icon]:hidden">
             <p className="text-[15px] font-bold tracking-tight">
