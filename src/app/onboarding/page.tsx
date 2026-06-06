@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
-import { Briefcase } from "lucide-react";
+
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { OnboardingForm } from "./onboarding-form";
+import { SubscriptionPending } from "./subscription-pending";
 
 export const metadata = { title: "Set up your school — SchoolPurse" };
 
@@ -35,6 +37,21 @@ export default async function OnboardingPage() {
     redirect("/app/overview");
   }
 
+  // Pay-first gate: a school can only be created once an active Whop
+  // subscription is recorded for this email (written by the payment.succeeded
+  // webhook). If it isn't there yet, show a "confirming" screen rather than
+  // the form — covers webhook lag and email mismatches.
+  const { data: activeSub } = await admin
+    .from("whop_subscriptions")
+    .select("id")
+    .eq("email", (user.email ?? "").toLowerCase())
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!activeSub) {
+    return <SubscriptionPending email={user.email ?? ""} />;
+  }
+
   const defaultName =
     (user.user_metadata?.full_name as string | undefined) ||
     (user.user_metadata?.name as string | undefined) ||
@@ -44,9 +61,14 @@ export default async function OnboardingPage() {
     <AuroraBackground className="px-6 py-10">
       <div className="w-full max-w-xl space-y-6">
         <div className="space-y-3 text-center">
-          <div className="inline-flex items-center justify-center rounded-2xl bg-primary p-3.5 text-primary-foreground shadow-lg shadow-primary/15">
-            <Briefcase className="size-7" strokeWidth={1.8} />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="SchoolPurse"
+            width={56}
+            height={56}
+            className="mx-auto size-14 rounded-2xl object-contain shadow-lg shadow-primary/15"
+            priority
+          />
           <h1 className="text-2xl font-bold tracking-tight">
             Welcome to School<span className="text-primary">Purse</span>
           </h1>

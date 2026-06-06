@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { linkSubscriptionToSchool, getSchoolTier } from "@/lib/subscription";
+import { sendWelcomeEmail } from "@/lib/emails/welcome";
 
 export type OnboardingState = { error: string } | null;
 
@@ -69,6 +71,24 @@ export async function provisionMySchool(
   ]);
   if (byId.data || byEmail.data) {
     redirect("/app/overview");
+  }
+
+  // SECURITY — pay-first gate. The /onboarding PAGE also checks this, but a
+  // page only controls what's rendered; this server action is an invocable
+  // endpoint. Without re-checking here, anyone holding a magic-link session
+  // (which /welcome hands out to any email) could POST straight to this action
+  // and provision a school without paying. Enforce it server-side.
+  const { data: paidSub } = await admin
+    .from("whop_subscriptions")
+    .select("id")
+    .eq("email", user.email.toLowerCase())
+    .eq("status", "active")
+    .maybeSingle();
+  if (!paidSub) {
+    return {
+      error:
+        "We couldn't find an active subscription for your account. Please complete checkout first, then try again.",
+    };
   }
 
   // Pre-flight: slug must be unique across all schools.
@@ -149,6 +169,21 @@ export async function provisionMySchool(
     await admin.from("terms").delete().eq("school_id", schoolId);
     await admin.from("academic_years").delete().eq("school_id", schoolId);
   }
+
+  // Auto-link any Whop subscription purchased with this email
+  if (user.email) {
+    await linkSubscriptionToSchool(user.email);
+  }
+
+  // Welcome email — fires once the school is provisioned. No-ops if Resend
+  // isn't configured and never throws, so it can't block the redirect.
+  const tier = await getSchoolTier(schoolId);
+  await sendWelcomeEmail({
+    to: user.email,
+    recipientName: parsed.data.admin_name,
+    schoolName: parsed.data.school_name,
+    tier,
+  });
 
   redirect("/app/overview");
 }

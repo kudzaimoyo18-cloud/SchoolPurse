@@ -1,34 +1,27 @@
 import { redirect } from "next/navigation";
-
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { AuroraBackground } from "@/components/ui/aurora-background";
-import { LoginForm } from "./login-form";
+import { WelcomeForm } from "./welcome-form";
 
-export const metadata = {
-  title: "Sign in — SchoolPurse",
-};
+export const metadata = { title: "Welcome — SchoolPurse" };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+export default async function WelcomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Already signed in — skip straight to the app (which routes to /onboarding
+  // if they haven't created a school yet).
   if (user) {
     redirect("/app/overview");
   }
 
-  const { error } = await searchParams;
-
   return (
     <AuroraBackground className="flex-1 px-6 py-12">
       <div className="w-full max-w-sm space-y-6">
-        {/* Branding */}
         <div className="space-y-3 text-center">
           <Image
             src="/logo.png"
@@ -39,30 +32,23 @@ export default async function LoginPage({
             priority
           />
           <h1 className="text-2xl font-bold tracking-tight">
-            School<span className="text-primary">Purse</span>
+            Welcome to School<span className="text-primary">Purse</span>
           </h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to manage your school&apos;s finances
+            Thanks for subscribing! Enter your email and we&apos;ll send a
+            secure link to set up your school — no password needed.
           </p>
         </div>
 
-        {/* Error message */}
-        {error ? (
-          <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error === "missing_code" || error === "oauth_failed"
-              ? "Sign-in didn't complete. Please try again."
-              : error}
-          </p>
-        ) : null}
-
-        {/* Login card */}
         <div className="rounded-2xl border border-border bg-card/95 p-7 shadow-xl shadow-primary/[0.04] backdrop-blur-md">
-          <LoginForm />
+          <WelcomeForm />
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          New here? Sign in with Google &mdash; we&apos;ll help you set up your
-          school right after.
+          Already set up?{" "}
+          <Link href="/login" className="font-medium text-primary underline">
+            Sign in
+          </Link>
         </p>
       </div>
     </AuroraBackground>

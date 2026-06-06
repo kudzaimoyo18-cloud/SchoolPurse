@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "SchoolPurse — School Finance Tracker",
   description:
     "Internal accounting and fee-tracking dashboard for Zimbabwean schools.",
+  icons: { icon: "/logo.png", apple: "/logo.png" },
 };
 
 export default function RootLayout({

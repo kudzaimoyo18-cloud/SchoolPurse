@@ -12,6 +12,7 @@ interface Tier {
   href: string;
   highlight?: boolean;
   badge?: string;
+  external?: boolean;
 }
 
 const TIERS: Tier[] = [
@@ -28,7 +29,8 @@ const TIERS: Tier[] = [
       "Email support",
     ],
     cta: "Get started",
-    href: "/login",
+    href: process.env.NEXT_PUBLIC_WHOP_STARTER_CHECKOUT ?? "/login",
+    external: !!process.env.NEXT_PUBLIC_WHOP_STARTER_CHECKOUT,
   },
   {
     name: "Standard",
@@ -45,7 +47,8 @@ const TIERS: Tier[] = [
       "Priority email support",
     ],
     cta: "Start with Standard",
-    href: "/login",
+    href: process.env.NEXT_PUBLIC_WHOP_STANDARD_CHECKOUT ?? "/login",
+    external: !!process.env.NEXT_PUBLIC_WHOP_STANDARD_CHECKOUT,
     highlight: true,
     badge: "Most popular",
   },
@@ -138,17 +141,33 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <Link
-                href={t.href}
-                className={cn(
-                  "mt-7 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition",
-                  t.highlight
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/15 hover:brightness-110"
-                    : "border border-border bg-card text-foreground hover:bg-secondary",
-                )}
-              >
-                {t.cta}
-              </Link>
+              {t.external ? (
+                <a
+                  href={t.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "mt-7 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition",
+                    t.highlight
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/15 hover:brightness-110"
+                      : "border border-border bg-card text-foreground hover:bg-secondary",
+                  )}
+                >
+                  {t.cta}
+                </a>
+              ) : (
+                <Link
+                  href={t.href}
+                  className={cn(
+                    "mt-7 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition",
+                    t.highlight
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/15 hover:brightness-110"
+                      : "border border-border bg-card text-foreground hover:bg-secondary",
+                  )}
+                >
+                  {t.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>

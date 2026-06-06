@@ -3,10 +3,14 @@ import { createServerClient } from "@supabase/ssr";
 
 // Routes that do NOT require authentication.
 // `/` is the public marketing landing page.
+// `/welcome` is the post-checkout magic-link signup (buyer is not authed yet).
 // `/onboarding` requires auth but NOT a public.users profile — the page
 // itself checks both and renders the school-creation form for new signups.
-const PUBLIC_PATH_PREFIXES = ["/login", "/auth"];
-const PUBLIC_EXACT_PATHS = new Set(["/"]);
+// `/api/webhooks` must be public — external services (Whop) POST here with no
+// Supabase session. The route verifies its own signature, so auth gating would
+// only break delivery (the middleware would 307 the POST to /login).
+const PUBLIC_PATH_PREFIXES = ["/login", "/auth", "/api/webhooks"];
+const PUBLIC_EXACT_PATHS = new Set(["/", "/welcome"]);
 
 function isPublic(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;
