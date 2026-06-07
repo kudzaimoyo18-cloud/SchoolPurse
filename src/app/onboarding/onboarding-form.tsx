@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { provisionMySchool, type OnboardingState } from "./actions";
 
@@ -227,24 +227,29 @@ export function OnboardingForm({
       {/* Nav */}
       <div className="flex items-center justify-between gap-3 pt-1">
         {step > 0 ? (
-          <Button type="button" variant="outline" onClick={back} disabled={pending} className="gap-1.5">
+          <button
+            type="button"
+            onClick={back}
+            disabled={pending}
+            className={cn(buttonVariants({ variant: "outline" }), "gap-1.5")}
+          >
             <ArrowLeft className="size-4" />
             Back
-          </Button>
+          </button>
         ) : (
           <span />
         )}
 
         {step < STEPS.length - 1 ? (
-          <Button
+          <button
             type="button"
             onClick={next}
             disabled={(step === 0 && !canLeaveStep0) || (step === 1 && !canLeaveStep1)}
-            className="gap-1.5"
+            className={cn(buttonVariants({ variant: "default" }), "gap-1.5")}
           >
             Next
             <ArrowRight className="size-4" />
-          </Button>
+          </button>
         ) : (
           <Button type="submit" disabled={pending} className="gap-1.5">
             {pending ? (
