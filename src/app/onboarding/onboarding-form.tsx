@@ -70,7 +70,15 @@ export function OnboardingForm({
   }
 
   return (
-    <form action={action} className="space-y-7">
+    <form
+      action={action}
+      onSubmit={(e) => {
+        // Guard: only commit on the final step. Prevents any earlier
+        // button from submitting before the admin reaches step 3.
+        if (step !== STEPS.length - 1) e.preventDefault();
+      }}
+      className="space-y-7"
+    >
       {/* Progress */}
       <div>
         <div className="flex items-center justify-between">
