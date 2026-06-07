@@ -31,6 +31,76 @@ const Schema = z.object({
   seed_defaults: z.coerce.boolean().optional(),
 });
 
+/**
+ * Seed a current academic year + terms so the school can invoice immediately.
+ * There is no self-service UI for academic years/terms yet, and a brand-new
+ * school has none (seed_school_defaults only creates subjects + expense
+ * categories), so onboarding sets up the current year and splits it into
+ * `termsPerYear` terms, marking the one containing today as current.
+ * No-op if a year already exists.
+ */
+async function seedYearAndTerms(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  termsPerYear: number,
+): Promise<void> {
+  const { data: existing } = await admin
+    .from("academic_years")
+    .select("id")
+    .eq("school_id", schoolId)
+    .limit(1)
+    .maybeSingle();
+  if (existing) return;
+
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const fmt = (d: Date) =>
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+
+  const { data: ay, error: ayErr } = await admin
+    .from("academic_years")
+    .insert({
+      school_id: schoolId,
+      name: String(year),
+      start_date: `${year}-01-01`,
+      end_date: `${year}-12-31`,
+      is_current: true,
+    })
+    .select("id")
+    .single();
+  if (ayErr || !ay) return;
+
+  const n = Math.min(Math.max(termsPerYear, 1), 6);
+  const todayMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const terms: Array<{
+    school_id: string;
+    academic_year_id: string;
+    name: string;
+    start_date: string;
+    end_date: string;
+    is_current: boolean;
+  }> = [];
+  for (let i = 0; i < n; i++) {
+    const startMonth = Math.floor((i * 12) / n);
+    const endMonthExcl = Math.floor(((i + 1) * 12) / n);
+    const start = new Date(Date.UTC(year, startMonth, 1));
+    const end = new Date(Date.UTC(year, endMonthExcl, 0));
+    terms.push({
+      school_id: schoolId,
+      academic_year_id: (ay as { id: string }).id,
+      name: `Term ${i + 1}`,
+      start_date: fmt(start),
+      end_date: fmt(end),
+      is_current: todayMs >= start.getTime() && todayMs <= end.getTime(),
+    });
+  }
+  if (!terms.some((t) => t.is_current) && terms.length > 0) {
+    terms[0].is_current = true;
+  }
+  await admin.from("terms").insert(terms);
+}
+
 export async function provisionMySchool(
   _prev: OnboardingState,
   formData: FormData,
@@ -168,6 +238,9 @@ export async function provisionMySchool(
     await admin.from("classes").delete().eq("school_id", schoolId);
     await admin.from("terms").delete().eq("school_id", schoolId);
     await admin.from("academic_years").delete().eq("school_id", schoolId);
+  } else {
+    // Give the school a usable starting point: a current academic year + terms.
+    await seedYearAndTerms(admin, schoolId, parsed.data.terms_per_year);
   }
 
   // Auto-link any Whop subscription purchased with this email
