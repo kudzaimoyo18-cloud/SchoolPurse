@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { requireRole } from "@/lib/auth/current-user";
 import { getLogoUrl } from "@/lib/storage";
 import { SectionCard } from "@/components/section-card";
 import { SchoolInfoForm } from "./school-info-form";
@@ -16,7 +16,8 @@ import { AnnouncementsSection } from "./announcements-section";
 export const metadata = { title: "Settings — SchoolPurse" };
 
 export default async function SettingsPage() {
-  const me = await getCurrentUser();
+  // Admins only — bursars/teachers must not see team emails or school config.
+  const me = await requireRole(["school_admin", "platform_admin"]);
   const supabase = await createClient();
   const admin = createAdminClient();
 

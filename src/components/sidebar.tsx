@@ -7,7 +7,8 @@ import { LogOut } from "lucide-react";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS } from "./nav-items";
+import { navItemsForRole } from "./nav-items";
+import type { UserRole } from "@/lib/supabase/types";
 import { ThemeToggle } from "./theme-toggle";
 import {
   Sidebar as ShadcnSidebar,
@@ -98,7 +99,7 @@ export function Sidebar({
       <SidebarContent className="px-1 py-3">
         <SidebarGroup className="p-0">
           <SidebarMenu>
-            {NAV_ITEMS.map((item) => {
+            {navItemsForRole(user.role as UserRole).map((item) => {
               const Icon = item.icon;
               const active =
                 pathname === item.href || pathname.startsWith(item.href + "/");

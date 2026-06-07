@@ -12,10 +12,12 @@ import {
 import { IncomeVsExpenseChart } from "@/components/charts/income-vs-expense";
 import { formatMoney, formatMoneyCompact } from "@/lib/format";
 import { fetchMonthlyPL, fetchYearToDate } from "@/lib/queries/monthly-pl";
+import { requireRole } from "@/lib/auth/current-user";
 
 export const metadata = { title: "Reports & P&L — SchoolPurse" };
 
 export default async function ReportsPage() {
+  await requireRole(["platform_admin", "school_admin", "bursar"]);
   const [monthly12, ytd] = await Promise.all([
     fetchMonthlyPL(12),
     fetchYearToDate(),

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Download, Receipt, ReceiptText, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentUser, requireRole } from "@/lib/auth/current-user";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState } from "@/components/empty-state";
 import { KpiCard } from "@/components/kpi-card";
@@ -33,6 +33,7 @@ export default async function PaymentsPage({
 }: {
   searchParams: Promise<{ q?: string; new?: string }>;
 }) {
+  await requireRole(["platform_admin", "school_admin", "bursar"]);
   const { q, new: newFlag } = await searchParams;
   const supabase = await createClient();
   // Role check for void affordance. Voiding rewrites finance history so

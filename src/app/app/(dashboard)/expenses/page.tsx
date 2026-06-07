@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth/current-user";
 import { SectionCard } from "@/components/section-card";
 import { KpiCard } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
@@ -43,6 +44,7 @@ function colorFor(name: string, index: number): string {
 }
 
 export default async function ExpensesPage() {
+  await requireRole(["platform_admin", "school_admin", "bursar"]);
   const supabase = await createClient();
 
   const monthStart = new Date(new Date().setDate(1)).toISOString().slice(0, 10);

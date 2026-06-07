@@ -94,3 +94,18 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     schoolName,
   };
 }
+
+/**
+ * Like getCurrentUser, but redirects to the dashboard home if the user's role
+ * isn't in `allowed`. Use at the top of role-restricted pages so non-permitted
+ * roles never see the content (defense-in-depth alongside RLS + action gates).
+ */
+export async function requireRole(
+  allowed: ReadonlyArray<UserRole>,
+): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!allowed.includes(user.role)) {
+    redirect("/app/overview");
+  }
+  return user;
+}

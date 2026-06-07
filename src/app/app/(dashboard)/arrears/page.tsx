@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatMoney, formatMoneyCompact } from "@/lib/format";
 import { fetchArrears } from "@/lib/queries/arrears";
+import { requireRole } from "@/lib/auth/current-user";
 
 export const metadata = { title: "Arrears — SchoolPurse" };
 
@@ -23,6 +24,7 @@ export default async function ArrearsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  await requireRole(["platform_admin", "school_admin", "bursar"]);
   const { q } = await searchParams;
   const all = await fetchArrears();
 
