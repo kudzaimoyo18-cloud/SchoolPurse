@@ -199,9 +199,9 @@ export function OnboardingForm({
         <label className="flex items-start gap-2.5 rounded-md border border-border bg-sp-card-alt px-3 py-2.5 text-sm">
           <input type="checkbox" name="seed_defaults" defaultChecked disabled={pending} className="mt-0.5" />
           <span>
-            <span className="font-medium">Start with default classes &amp; fee items</span>
+            <span className="font-medium">Start with common subjects &amp; expense categories</span>
             <span className="block text-[11.5px] text-muted-foreground">
-              ECD A/B, Grade 1–7, common fee items, current year &amp; term. Uncheck for a blank slate.
+              A starter set of subjects and expense categories. Uncheck for a completely blank slate.
             </span>
           </span>
         </label>
