@@ -71,7 +71,7 @@ export async function submitContact(
         return {
           ok: false,
           error:
-            "Our contact backend isn't ready yet — please email us at hello@schoolpurse.app instead.",
+            "Our contact backend isn't ready yet — please email us at support@schoolpurse.app instead.",
         };
       }
       return {

@@ -39,10 +39,10 @@ export function Contact() {
               <div>
                 <p className="font-semibold">Email</p>
                 <a
-                  href="mailto:hello@schoolpurse.app"
+                  href="mailto:support@schoolpurse.app"
                   className="text-muted-foreground transition hover:text-primary"
                 >
-                  hello@schoolpurse.app
+                  support@schoolpurse.app
                 </a>
               </div>
             </li>

@@ -17,7 +17,7 @@ const COLUMNS = [
       { href: "/faq", label: "FAQ" },
       { href: "/guides/manage-school-fees-zimbabwe", label: "Fees guide" },
       { href: "#contact", label: "Contact" },
-      { href: "mailto:hello@schoolpurse.app", label: "hello@schoolpurse.app" },
+      { href: "mailto:support@schoolpurse.app", label: "support@schoolpurse.app" },
     ],
   },
   {
