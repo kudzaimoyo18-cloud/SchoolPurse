@@ -10,7 +10,7 @@ import { createServerClient } from "@supabase/ssr";
 // Supabase session. The route verifies its own signature, so auth gating would
 // only break delivery (the middleware would 307 the POST to /login).
 const PUBLIC_PATH_PREFIXES = ["/login", "/auth", "/api/webhooks"];
-const PUBLIC_EXACT_PATHS = new Set(["/", "/welcome"]);
+const PUBLIC_EXACT_PATHS = new Set(["/", "/welcome", "/faq"]);
 
 function isPublic(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;

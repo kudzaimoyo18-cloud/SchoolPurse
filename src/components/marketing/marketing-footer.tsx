@@ -14,7 +14,7 @@ const COLUMNS = [
   {
     heading: "Support",
     links: [
-      { href: "#faq", label: "FAQ" },
+      { href: "/faq", label: "FAQ" },
       { href: "#contact", label: "Contact" },
       { href: "mailto:hello@schoolpurse.app", label: "hello@schoolpurse.app" },
     ],
