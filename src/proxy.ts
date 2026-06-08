@@ -9,7 +9,7 @@ import { createServerClient } from "@supabase/ssr";
 // `/api/webhooks` must be public — external services (Whop) POST here with no
 // Supabase session. The route verifies its own signature, so auth gating would
 // only break delivery (the middleware would 307 the POST to /login).
-const PUBLIC_PATH_PREFIXES = ["/login", "/auth", "/api/webhooks"];
+const PUBLIC_PATH_PREFIXES = ["/login", "/auth", "/api/webhooks", "/guides"];
 const PUBLIC_EXACT_PATHS = new Set(["/", "/welcome", "/faq"]);
 
 function isPublic(pathname: string) {
