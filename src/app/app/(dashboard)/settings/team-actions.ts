@@ -5,6 +5,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
+import { exceedsUserLimit, userLimitMessage } from "@/lib/plan";
+import { getPlanAndUserCount } from "@/lib/plan-server";
 
 export type TeamResult = { ok: true } | { ok: false; error: string };
 
@@ -66,6 +68,12 @@ export async function inviteTeammate(formData: FormData): Promise<TeamResult> {
   const schoolId = auth.caller.schoolId;
 
   const admin = createAdminClient();
+
+  // Plan gate: free schools include a single user. Upgrade to add teammates.
+  const { plan, userCount } = await getPlanAndUserCount(admin, schoolId);
+  if (exceedsUserLimit(plan, userCount)) {
+    return { ok: false, error: userLimitMessage(plan) };
+  }
 
   // 1. If a public.users row with this email already exists, refuse — we
   //    don't want to silently move someone from another school.

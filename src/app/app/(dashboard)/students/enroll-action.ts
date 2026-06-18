@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { exceedsStudentLimit, studentLimitMessage } from "@/lib/plan";
+import { getPlanAndStudentCount } from "@/lib/plan-server";
 
 export type EnrollResult =
   | {
@@ -121,6 +123,15 @@ export async function enrollChild(
     .maybeSingle();
   const schoolId = (profile as { school_id?: string } | null)?.school_id;
   if (!schoolId) return { ok: false, error: "No school assigned" };
+
+  // Plan gate: free schools cap at 100 active students.
+  const { plan, activeStudents } = await getPlanAndStudentCount(
+    supabase,
+    schoolId,
+  );
+  if (exceedsStudentLimit(plan, activeStudents)) {
+    return { ok: false, error: studentLimitMessage(plan) };
+  }
 
   // 1. Insert the student.
   const { data: studentRow, error: studentErr } = await supabase

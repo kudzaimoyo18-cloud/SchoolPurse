@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { parseOpeningBalance } from "@/lib/opening-balance";
+import {
+  exceedsStudentLimit,
+  studentLimitMessage,
+  PLAN_LIMITS,
+} from "@/lib/plan";
+import { getPlanAndStudentCount } from "@/lib/plan-server";
 
 const StudentSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),
@@ -54,6 +60,12 @@ export async function createStudent(formData: FormData): Promise<ActionResult> {
     .eq("id", user.user.id)
     .maybeSingle();
   if (!profile?.school_id) return { ok: false, error: "No school assigned" };
+
+  // Plan gate: free schools cap at 100 active students.
+  const gate = await getPlanAndStudentCount(supabase, profile.school_id);
+  if (exceedsStudentLimit(gate.plan, gate.activeStudents)) {
+    return { ok: false, error: studentLimitMessage(gate.plan) };
+  }
 
   const { error } = await supabase.from("students").insert({
     school_id: profile.school_id,
@@ -362,6 +374,16 @@ export async function importStudentsCsv(
 
   if (inserts.length === 0) {
     return { ok: false, error: "No valid rows found in CSV" };
+  }
+
+  // Plan gate: free schools cap at 100 active students. Block the whole import
+  // if it would cross the cap rather than partially importing.
+  const gate = await getPlanAndStudentCount(supabase, profile.school_id);
+  if (exceedsStudentLimit(gate.plan, gate.activeStudents, inserts.length)) {
+    return {
+      ok: false,
+      error: `Importing ${inserts.length} student${inserts.length === 1 ? "" : "s"} would exceed your ${gate.plan} plan limit of ${PLAN_LIMITS[gate.plan].maxStudents} (you have ${gate.activeStudents}). Upgrade to Pro to import more.`,
+    };
   }
 
   const { data: insertedStudents, error } = await supabase
