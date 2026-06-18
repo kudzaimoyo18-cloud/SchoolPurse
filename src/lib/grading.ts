@@ -107,6 +107,17 @@ export const ECD_RATINGS: { value: EcdRating; label: string; pass: boolean }[] =
     { value: "support", label: "Needs support", pass: false },
   ];
 
+// ECD reports are built around developmental skill areas (rated with
+// ECD_RATINGS) rather than academic subjects. Schools can adjust this list.
+export const ECD_SKILL_AREAS = [
+  "Language & Literacy",
+  "Mathematics & Numeracy",
+  "Physical Development",
+  "Social & Emotional",
+  "Creative Arts",
+  "Science & Environment",
+] as const;
+
 /**
  * Pick the default grading scheme for a class from its level + name. ECD is
  * detected by name (ECD classes live under the `primary` level in the schema);
