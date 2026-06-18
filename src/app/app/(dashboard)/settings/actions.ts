@@ -551,3 +551,49 @@ export async function deleteClass(id: string): Promise<ActionResult> {
   revalidatePath("/app/settings");
   return { ok: true };
 }
+
+// =============================================================================
+// Subjects (E-Report Book)
+// =============================================================================
+
+const SubjectSchema = z.object({
+  name: z.string().trim().min(1, "Subject name is required"),
+});
+
+export async function createSubject(
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+
+  const parsed = SubjectSchema.safeParse({ name: formData.get("name") });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subjects")
+    .insert({ school_id: ctx.schoolId, name: parsed.data.name })
+    .select("id")
+    .single();
+  if (error) {
+    if (/duplicate|unique/i.test(error.message)) {
+      return { ok: false, error: "That subject already exists." };
+    }
+    return { ok: false, error: error.message };
+  }
+  revalidatePath("/app/settings");
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+export async function deleteSubject(id: string): Promise<ActionResult> {
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("subjects").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/app/settings");
+  return { ok: true };
+}

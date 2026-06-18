@@ -11,6 +11,7 @@ import { TeamSection } from "./team-section";
 import { LogoSection } from "./logo-section";
 import { SchoolLevelsSection, type Level } from "./school-levels-section";
 import { ClassesSection } from "./classes-section";
+import { SubjectsSection } from "./subjects-section";
 import { AnnouncementsSection } from "./announcements-section";
 
 export const metadata = { title: "Settings — SchoolPurse" };
@@ -21,8 +22,15 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [schoolRes, feeItemsRes, classesRes, termRes, teammatesRes, announcementsRes] =
-    await Promise.all([
+  const [
+    schoolRes,
+    feeItemsRes,
+    classesRes,
+    subjectsRes,
+    termRes,
+    teammatesRes,
+    announcementsRes,
+  ] = await Promise.all([
       supabase
         .from("schools")
         .select("name, address, phone, currency, receipt_prefix, terms_per_year, logo_path, levels")
@@ -36,6 +44,7 @@ export default async function SettingsPage() {
         .order("active", { ascending: false })
         .order("name"),
       supabase.from("classes").select("id, name, level").order("name"),
+      supabase.from("subjects").select("id, name").order("name"),
       supabase
         .from("terms")
         .select("name, start_date, end_date")
@@ -104,6 +113,7 @@ export default async function SettingsPage() {
     name: string;
     level: Level;
   }[];
+  const subjects = (subjectsRes.data ?? []) as { id: string; name: string }[];
   const term = termRes.data as
     | { name: string; start_date: string; end_date: string }
     | null;
@@ -155,6 +165,10 @@ export default async function SettingsPage() {
 
       <SectionCard bodyClassName="p-0">
         <ClassesSection classes={classes} enabledLevels={school.levels} />
+      </SectionCard>
+
+      <SectionCard bodyClassName="p-0">
+        <SubjectsSection subjects={subjects} />
       </SectionCard>
 
       <SectionCard bodyClassName="p-0">
