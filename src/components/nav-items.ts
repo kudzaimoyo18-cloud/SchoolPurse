@@ -6,6 +6,7 @@ import {
   BarChart3,
   Settings,
   Users,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRole } from "@/lib/supabase/types";
@@ -26,6 +27,11 @@ const FINANCE: ReadonlyArray<UserRole> = [
   "bursar",
 ];
 const ADMIN: ReadonlyArray<UserRole> = ["platform_admin", "school_admin"];
+const ACADEMICS: ReadonlyArray<UserRole> = [
+  "platform_admin",
+  "school_admin",
+  "teacher",
+];
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/app/overview", label: "Overview", icon: Home },
@@ -40,6 +46,12 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/app/students", label: "Students", icon: Users },
   { href: "/app/expenses", label: "Expenses", icon: FileText, roles: FINANCE },
   { href: "/app/reports", label: "Reports & P&L", icon: BarChart3, roles: FINANCE },
+  {
+    href: "/app/report-cards",
+    label: "Report Cards",
+    icon: GraduationCap,
+    roles: ACADEMICS,
+  },
   { href: "/app/settings", label: "Settings", icon: Settings, roles: ADMIN },
 ];
 
