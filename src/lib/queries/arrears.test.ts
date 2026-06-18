@@ -154,6 +154,32 @@ describe("aggregateArrears — payment_allocations are the source of truth", () 
     expect(result[0].balance).toBe(50);
   });
 
+  test("carry-over line: prior payment + new allocation both count (regression)", () => {
+    // Repro of the Test Moyo bug: a $500 term fee carried over with $300 paid
+    // before SchoolPurse, then a $100 payment recorded in-app. The durable
+    // carry-over base ($300) lives in the line's paid_usd alongside the $100
+    // allocation, so paid_usd = 400 and balance = 100 — NOT 500 − 100 = 400.
+    // paid_usd (400) must win over sum-of-allocations (100).
+    const rows = [
+      inv({
+        total_usd: 500,
+        invoice_lines: [
+          {
+            amount_usd: 500,
+            paid_usd: 400, // carry_over_paid_usd(300) + allocation(100)
+            payment_allocations: [
+              { amount_usd: 100, payments: { status: "completed" } },
+            ],
+          },
+        ],
+      }),
+    ];
+
+    const result = aggregateArrears(rows, TODAY);
+    expect(result[0].paid).toBe(400);
+    expect(result[0].balance).toBe(100);
+  });
+
   test("excludes void payment allocations", () => {
     // A voided receipt MUST NOT count toward paid. This is the single most
     // important invariant — getting it wrong overstates collections.

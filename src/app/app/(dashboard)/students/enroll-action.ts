@@ -277,34 +277,44 @@ export async function enrollChild(
   }
   const inv = invoiceRow as { id: string };
 
-  // Build invoice lines. In carry-over mode the bursar may pre-populate
-  // paid_usd to reflect partial payments already collected. The DB trigger
-  // sync_invoice_line_paid then flips the invoice to "paid" automatically
-  // if every line ends up fully paid.
+  // Build invoice lines. In carry-over mode the bursar may pre-populate the
+  // amount already paid before SchoolPurse. That prior payment has NO
+  // payment_allocations row (it never passed through SchoolPurse), so it lives
+  // in `carry_over_paid_usd`. The paid-sync triggers compute
+  //   paid_usd = carry_over_paid_usd + SUM(allocations)
+  // so a later real payment never clobbers the carried amount. We also seed
+  // paid_usd here so the balance is correct immediately, before any allocation
+  // trigger has fired.
   const clampPaid = (paid: number, amount: number) =>
     Math.max(0, Math.min(paid, amount));
 
   const feeLines = eligibleFees.map((f) => {
     const amount = Number(f.amount_usd);
-    const carried = paidByItemId.get(f.id) ?? 0;
+    const carried = parsed.data.is_carry_over
+      ? clampPaid(paidByItemId.get(f.id) ?? 0, amount)
+      : 0;
     return {
       invoice_id: inv.id,
       fee_item_id: f.id,
       description: f.name,
       amount_usd: amount,
-      paid_usd: parsed.data.is_carry_over ? clampPaid(carried, amount) : 0,
+      paid_usd: carried,
+      carry_over_paid_usd: carried,
     };
   });
 
   const uniformLines = eligibleUniforms.map((u) => {
     const amount = Number(u.amount_usd) * u.quantity;
-    const carried = paidByItemId.get(u.id) ?? 0;
+    const carried = parsed.data.is_carry_over
+      ? clampPaid(paidByItemId.get(u.id) ?? 0, amount)
+      : 0;
     return {
       invoice_id: inv.id,
       fee_item_id: u.id,
       description: u.quantity > 1 ? `${u.name} ×${u.quantity}` : u.name,
       amount_usd: amount,
-      paid_usd: parsed.data.is_carry_over ? clampPaid(carried, amount) : 0,
+      paid_usd: carried,
+      carry_over_paid_usd: carried,
     };
   });
 
