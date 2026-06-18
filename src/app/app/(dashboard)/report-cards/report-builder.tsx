@@ -41,6 +41,7 @@ export interface ExistingLine {
   comment: string | null;
 }
 export interface ExistingReport {
+  id: string;
   teacher_comment: string | null;
   head_comment: string | null;
   attendance_present: number | null;
@@ -199,6 +200,9 @@ function StudentReportForm({
     }
     return r;
   });
+  const [savedId, setSavedId] = React.useState<string | null>(
+    initial?.id ?? null,
+  );
   const [teacherComment, setTeacherComment] = React.useState(
     initial?.teacher_comment ?? "",
   );
@@ -268,6 +272,7 @@ function StudentReportForm({
         toast.error(res.error);
         return;
       }
+      setSavedId(res.reportId);
       toast.success("Report card saved.");
       router.refresh();
     });
@@ -397,7 +402,17 @@ function StudentReportForm({
         />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {savedId ? (
+          <a
+            href={`/app/report-cards/${savedId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View / print
+          </a>
+        ) : null}
         <Button type="button" onClick={handleSave} disabled={pending}>
           {pending ? (
             <Loader2 className="size-4 animate-spin" />

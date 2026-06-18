@@ -83,6 +83,7 @@ export default async function ReportCardsPage() {
       .eq("term_id", term.id);
     for (const r of (reports ?? []) as ReportRow[]) {
       existing[r.student_id] = {
+        id: r.id,
         teacher_comment: r.teacher_comment,
         head_comment: r.head_comment,
         attendance_present: r.attendance_present,
