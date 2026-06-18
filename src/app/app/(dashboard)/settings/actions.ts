@@ -260,6 +260,24 @@ export async function generateInvoicesForCurrentTerm(): Promise<
   const items = (feeItems ?? []) as FeeItem[];
   const studs = (students ?? []) as Student[];
 
+  // Which students already have an invoice that covers this term's tuition?
+  // Skip them so the term fee is never billed twice. Two cases count as
+  // "covered":
+  //   1. any non-registration invoice already tagged to THIS term (a previous
+  //      generate run, or a carry-over invoice attached to the term), and
+  //   2. a carry-over invoice with NO term (term_id IS NULL) — created before a
+  //      current term existed. Without this, generate couldn't see it and would
+  //      stack a full term fee on top of the carried balance (the $70 bug).
+  // Fetching once (instead of per-student) also removes the old N+1 query.
+  const { data: coveredRows } = await supabase
+    .from("invoices")
+    .select("student_id")
+    .eq("is_registration", false)
+    .or(`term_id.eq.${t.id},and(is_carry_over.eq.true,term_id.is.null)`);
+  const covered = new Set(
+    ((coveredRows ?? []) as { student_id: string }[]).map((r) => r.student_id),
+  );
+
   let created = 0;
   let skipped = 0;
 
@@ -274,14 +292,7 @@ export async function generateInvoicesForCurrentTerm(): Promise<
       continue;
     }
 
-    const { data: existing } = await supabase
-      .from("invoices")
-      .select("id")
-      .eq("student_id", s.id)
-      .eq("term_id", t.id)
-      .eq("is_registration", false)
-      .maybeSingle();
-    if (existing) {
+    if (covered.has(s.id)) {
       skipped++;
       continue;
     }
@@ -321,6 +332,7 @@ export async function generateInvoicesForCurrentTerm(): Promise<
     }));
 
     await supabase.from("invoice_lines").insert(lines);
+    covered.add(s.id);
     created++;
   }
 

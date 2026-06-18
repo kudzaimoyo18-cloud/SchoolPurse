@@ -48,10 +48,13 @@ export function ImportDialog({
           <DialogTitle>Import students from CSV</DialogTitle>
           <DialogDescription>
             Upload a CSV with columns:{" "}
-            <code className="text-foreground">first_name, last_name, class, dob, gender, enrollment_date</code>
+            <code className="text-foreground">first_name, last_name, class, dob, gender, enrollment_date, opening_balance</code>
             . Only <code className="text-foreground">first_name</code> and{" "}
             <code className="text-foreground">last_name</code> are required.
-            Class names must match existing classes exactly.
+            Class names must match existing classes exactly.{" "}
+            <code className="text-foreground">opening_balance</code> is optional —
+            the amount a student already owes (carried over from before
+            SchoolPurse); it creates a carry-over invoice for that balance.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -69,7 +72,7 @@ export function ImportDialog({
           </div>
           <p className="text-xs text-muted-foreground">
             Example row: <br />
-            <code>Jane,Doe,Form 1,2014-03-12,female,2026-01-15</code>
+            <code>Jane,Doe,Form 1,2014-03-12,female,2026-01-15,200</code>
           </p>
           <DialogFooter>
             <Button

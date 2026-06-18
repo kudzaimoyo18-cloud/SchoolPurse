@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { parseOpeningBalance } from "@/lib/opening-balance";
 
 const StudentSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),
@@ -151,6 +152,12 @@ const MAX_CSV_ROWS = 5000; // including header
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ALLOWED_GENDERS = new Set(["male", "female", "other"]);
+const OPENING_BALANCE_HEADERS = [
+  "opening_balance",
+  "balance",
+  "outstanding",
+  "owing",
+];
 
 /** Validate a yyyy-mm-dd string. Returns the string if valid, else null. */
 function parseIsoDate(value: string | undefined): string | null {
@@ -201,6 +208,10 @@ export async function importStudentsCsv(
   }
 
   const idx = (col: string) => headers.indexOf(col);
+  // Optional opening-balance column (accepts a few common aliases).
+  const obIdx = OPENING_BALANCE_HEADERS.map((h) => headers.indexOf(h)).find(
+    (i) => i >= 0,
+  );
 
   const supabase = await createClient();
   const { data: user } = await supabase.auth.getUser();
@@ -220,6 +231,10 @@ export async function importStudentsCsv(
 
   const today = new Date().toISOString().slice(0, 10);
   const inserts: Record<string, unknown>[] = [];
+  // Aligned 1:1 with `inserts` — the opening balance each student owes at
+  // import time (0 when none). Used to create carry-over invoices after the
+  // students are inserted.
+  const openingBalances: number[] = [];
   const errors: string[] = [];
 
   for (let i = 1; i < rows.length; i++) {
@@ -264,6 +279,18 @@ export async function importStudentsCsv(
       gender = genderRaw;
     }
 
+    let openingBalance = 0;
+    if (obIdx !== undefined && obIdx >= 0) {
+      const parsedOb = parseOpeningBalance(r[obIdx]);
+      if (parsedOb === null) {
+        errors.push(
+          `Row ${i + 1}: opening balance "${r[obIdx]?.trim()}" must be a non-negative amount.`,
+        );
+        continue;
+      }
+      openingBalance = parsedOb;
+    }
+
     inserts.push({
       school_id: profile.school_id,
       first_name: first,
@@ -274,6 +301,7 @@ export async function importStudentsCsv(
       enrollment_date: enroll ?? today,
       status: "active",
     });
+    openingBalances.push(openingBalance);
   }
 
   if (errors.length > 0) {
@@ -288,9 +316,67 @@ export async function importStudentsCsv(
     return { ok: false, error: "No valid rows found in CSV" };
   }
 
-  const { error } = await supabase.from("students").insert(inserts);
+  const { data: insertedStudents, error } = await supabase
+    .from("students")
+    .insert(inserts)
+    .select("id");
   if (error) return { ok: false, error: error.message };
 
+  // Opening balances → one carry-over invoice per imported student who owes
+  // something at import time. Modelled exactly like the New Registration
+  // dialog's carry-over (is_carry_over=true, excluded from income); the
+  // balance shown is simply the amount entered. INSERT…RETURNING preserves
+  // row order, so insertedStudents[i] lines up with openingBalances[i].
+  const studentIds = ((insertedStudents ?? []) as { id: string }[]).map(
+    (s) => s.id,
+  );
+  const owing = studentIds
+    .map((id, i) => ({ id, amount: openingBalances[i] ?? 0 }))
+    .filter((o) => o.amount > 0);
+
+  if (owing.length > 0) {
+    const { data: termRow } = await supabase
+      .from("terms")
+      .select("id, name")
+      .eq("is_current", true)
+      .maybeSingle();
+    const term = termRow as { id: string; name: string } | null;
+    const year = new Date().getFullYear();
+    const periodLabel = term
+      ? `Opening balance · ${term.name} ${year}`
+      : `Opening balance ${year}`;
+
+    const invoiceRows = owing.map((o) => ({
+      school_id: profile.school_id,
+      student_id: o.id,
+      term_id: term?.id ?? null,
+      period_label: periodLabel,
+      due_date: today,
+      total_usd: o.amount,
+      status: "open",
+      is_registration: false,
+      is_carry_over: true,
+    }));
+
+    const { data: invs, error: invErr } = await supabase
+      .from("invoices")
+      .insert(invoiceRows)
+      .select("id");
+    if (!invErr && invs) {
+      const lineRows = (invs as { id: string }[]).map((inv, i) => ({
+        invoice_id: inv.id,
+        fee_item_id: null,
+        description: "Opening balance carried over at import",
+        amount_usd: owing[i].amount,
+        paid_usd: 0,
+        carry_over_paid_usd: 0,
+      }));
+      await supabase.from("invoice_lines").insert(lineRows);
+    }
+  }
+
   revalidatePath("/app/students");
+  revalidatePath("/app/arrears");
+  revalidatePath("/app/overview");
   return { ok: true, count: inserts.length };
 }
