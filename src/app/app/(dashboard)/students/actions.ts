@@ -12,6 +12,11 @@ const StudentSchema = z.object({
   dob: z.string().nullish().or(z.literal("")),
   gender: z.string().nullish().or(z.literal("")),
   enrollment_date: z.string().min(1, "Enrollment date is required"),
+  // Guardian contact. parent_phone is the target for fee reminders.
+  parent_name: z.string().trim().nullish().or(z.literal("")),
+  parent_phone: z.string().trim().nullish().or(z.literal("")),
+  parent_email: z.string().trim().nullish().or(z.literal("")),
+  home_address: z.string().trim().nullish().or(z.literal("")),
 });
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -26,6 +31,10 @@ function normalize(formData: FormData) {
     enrollment_date:
       String(formData.get("enrollment_date") ?? "") ||
       new Date().toISOString().slice(0, 10),
+    parent_name: String(formData.get("parent_name") ?? "") || null,
+    parent_phone: String(formData.get("parent_phone") ?? "") || null,
+    parent_email: String(formData.get("parent_email") ?? "") || null,
+    home_address: String(formData.get("home_address") ?? "") || null,
   };
 }
 
@@ -54,6 +63,10 @@ export async function createStudent(formData: FormData): Promise<ActionResult> {
     dob: parsed.data.dob || null,
     gender: parsed.data.gender || null,
     enrollment_date: parsed.data.enrollment_date,
+    parent_name: parsed.data.parent_name || null,
+    parent_phone: parsed.data.parent_phone || null,
+    parent_email: parsed.data.parent_email || null,
+    home_address: parsed.data.home_address || null,
     status: "active",
   });
 
@@ -82,6 +95,10 @@ export async function updateStudent(
       dob: parsed.data.dob || null,
       gender: parsed.data.gender || null,
       enrollment_date: parsed.data.enrollment_date,
+      parent_name: parsed.data.parent_name || null,
+      parent_phone: parsed.data.parent_phone || null,
+      parent_email: parsed.data.parent_email || null,
+      home_address: parsed.data.home_address || null,
     })
     .eq("id", id);
 
@@ -291,6 +308,33 @@ export async function importStudentsCsv(
       openingBalance = parsedOb;
     }
 
+    // Guardian contact (optional). Accept a few common header aliases; the
+    // first non-empty match wins.
+    const pick = (aliases: string[]): string | null => {
+      for (const a of aliases) {
+        const k = idx(a);
+        if (k >= 0) {
+          const v = r[k]?.trim();
+          if (v) return v;
+        }
+      }
+      return null;
+    };
+    const parentName = pick(["parent_name", "guardian", "guardian_name"]);
+    const parentPhone = pick([
+      "parent_phone",
+      "parent_number",
+      "phone",
+      "contact",
+      "mobile",
+    ]);
+    const parentEmail = pick(["parent_email", "guardian_email", "email"]);
+    const homeAddress = pick([
+      "home_address",
+      "address",
+      "residential_address",
+    ]);
+
     inserts.push({
       school_id: profile.school_id,
       first_name: first,
@@ -299,6 +343,10 @@ export async function importStudentsCsv(
       dob,
       gender,
       enrollment_date: enroll ?? today,
+      parent_name: parentName,
+      parent_phone: parentPhone,
+      parent_email: parentEmail,
+      home_address: homeAddress,
       status: "active",
     });
     openingBalances.push(openingBalance);

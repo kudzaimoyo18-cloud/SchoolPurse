@@ -30,6 +30,10 @@ const Schema = z.object({
   dob: z.string().nullish().or(z.literal("")),
   gender: z.string().nullish().or(z.literal("")),
   enrollment_date: z.string().min(1, "Enrollment date is required"),
+  parent_name: z.string().trim().nullish().or(z.literal("")),
+  parent_phone: z.string().trim().nullish().or(z.literal("")),
+  parent_email: z.string().trim().nullish().or(z.literal("")),
+  home_address: z.string().trim().nullish().or(z.literal("")),
   fee_item_ids: z.array(z.string().uuid()).default([]),
   uniform_items: z.array(UniformItemSchema).default([]),
   // Carry-over fields: when is_carry_over is true the invoice represents
@@ -90,6 +94,10 @@ export async function enrollChild(
     dob: formData.get("dob") || null,
     gender: formData.get("gender") || null,
     enrollment_date: formData.get("enrollment_date"),
+    parent_name: formData.get("parent_name") || null,
+    parent_phone: formData.get("parent_phone") || null,
+    parent_email: formData.get("parent_email") || null,
+    home_address: formData.get("home_address") || null,
     fee_item_ids: feeItemIds.filter((id) =>
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
     ),
@@ -125,6 +133,10 @@ export async function enrollChild(
       dob: parsed.data.dob || null,
       gender: parsed.data.gender || null,
       enrollment_date: parsed.data.enrollment_date,
+      parent_name: parsed.data.parent_name || null,
+      parent_phone: parsed.data.parent_phone || null,
+      parent_email: parsed.data.parent_email || null,
+      home_address: parsed.data.home_address || null,
       status: "active",
     })
     .select("id, class_id")

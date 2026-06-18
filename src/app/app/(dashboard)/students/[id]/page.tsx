@@ -47,7 +47,7 @@ export default async function StudentProfilePage({
     supabase
       .from("students")
       .select(
-        "id, first_name, last_name, dob, gender, enrollment_date, status, photo_path, class_id, classes(name)",
+        "id, first_name, last_name, dob, gender, enrollment_date, status, photo_path, class_id, parent_name, parent_phone, parent_email, home_address, classes(name)",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -235,6 +235,16 @@ export default async function StudentProfilePage({
   const gender = student.gender as string | null;
   const enrollmentDate = student.enrollment_date as string;
   const status = student.status as "active" | "withdrawn";
+  const parentName = student.parent_name as string | null;
+  const parentPhone = student.parent_phone as string | null;
+  const parentEmail = student.parent_email as string | null;
+  const homeAddress = student.home_address as string | null;
+  const hasGuardian = !!(
+    parentName ||
+    parentPhone ||
+    parentEmail ||
+    homeAddress
+  );
 
   return (
     <div className="space-y-6">
@@ -301,6 +311,60 @@ export default async function StudentProfilePage({
           </div>
         </div>
       </SectionCard>
+
+      {/* Parent / guardian contact */}
+      {hasGuardian ? (
+        <SectionCard title="Parent / guardian" bodyClassName="px-5 py-4">
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                Name
+              </dt>
+              <dd className="mt-0.5 font-medium">{parentName ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                Phone · reminders
+              </dt>
+              <dd className="mt-0.5 font-medium">
+                {parentPhone ? (
+                  <a
+                    href={`tel:${parentPhone}`}
+                    className="text-primary hover:underline"
+                  >
+                    {parentPhone}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                Email
+              </dt>
+              <dd className="mt-0.5 font-medium">
+                {parentEmail ? (
+                  <a
+                    href={`mailto:${parentEmail}`}
+                    className="text-primary hover:underline"
+                  >
+                    {parentEmail}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                Home address
+              </dt>
+              <dd className="mt-0.5 font-medium">{homeAddress ?? "—"}</dd>
+            </div>
+          </dl>
+        </SectionCard>
+      ) : null}
 
       {/* Current term summary */}
       <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">

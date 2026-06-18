@@ -30,6 +30,10 @@ interface StudentRow {
   enrollment_date: string;
   status: "active" | "withdrawn";
   photo_path: string | null;
+  parent_name: string | null;
+  parent_phone: string | null;
+  parent_email: string | null;
+  home_address: string | null;
   classes: { name: string } | { name: string }[] | null;
 }
 
@@ -57,7 +61,7 @@ export default async function StudentsPage({
       let query = supabase
         .from("students")
         .select(
-          "id, first_name, last_name, class_id, dob, gender, enrollment_date, status, photo_path, classes(name)",
+          "id, first_name, last_name, class_id, dob, gender, enrollment_date, status, photo_path, parent_name, parent_phone, parent_email, home_address, classes(name)",
         )
         .order("last_name", { ascending: true })
         .limit(500);
@@ -175,6 +179,10 @@ export default async function StudentsPage({
                             gender: s.gender,
                             enrollment_date: s.enrollment_date,
                             status: s.status,
+                            parent_name: s.parent_name,
+                            parent_phone: s.parent_phone,
+                            parent_email: s.parent_email,
+                            home_address: s.home_address,
                           }}
                         />
                       </TableCell>

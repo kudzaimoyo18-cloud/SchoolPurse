@@ -23,6 +23,10 @@ interface Props {
     gender: string | null;
     enrollment_date: string;
     status: "active" | "withdrawn";
+    parent_name: string | null;
+    parent_phone: string | null;
+    parent_email: string | null;
+    home_address: string | null;
   };
 }
 

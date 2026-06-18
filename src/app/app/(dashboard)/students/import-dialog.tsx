@@ -55,6 +55,10 @@ export function ImportDialog({
             <code className="text-foreground">opening_balance</code> is optional —
             the amount a student already owes (carried over from before
             SchoolPurse); it creates a carry-over invoice for that balance.
+            You can also include optional{" "}
+            <code className="text-foreground">parent_name, parent_phone, parent_email, home_address</code>{" "}
+            columns — <code className="text-foreground">parent_phone</code> is
+            where fee reminders are sent. Column order doesn&apos;t matter.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

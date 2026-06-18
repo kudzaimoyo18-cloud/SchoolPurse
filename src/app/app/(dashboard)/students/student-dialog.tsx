@@ -30,6 +30,10 @@ interface StudentInitial {
   dob: string | null;
   gender: string | null;
   enrollment_date: string;
+  parent_name: string | null;
+  parent_phone: string | null;
+  parent_email: string | null;
+  home_address: string | null;
 }
 
 interface Props {
@@ -154,6 +158,57 @@ export function StudentDialog({ open, onOpenChange, classes, initial }: Props) {
               }
               disabled={pending}
             />
+          </div>
+
+          {/* Guardian contact — parent_phone is where fee reminders go. */}
+          <div className="space-y-3 rounded-lg border border-border bg-sp-card-alt/40 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-sp-text-sub">
+              Parent / guardian
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="parent_name">Name</Label>
+                <Input
+                  id="parent_name"
+                  name="parent_name"
+                  defaultValue={initial?.parent_name ?? ""}
+                  disabled={pending}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="parent_phone">
+                  Phone <span className="text-muted-foreground">· reminders</span>
+                </Label>
+                <Input
+                  id="parent_phone"
+                  name="parent_phone"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="+263 77 123 4567"
+                  defaultValue={initial?.parent_phone ?? ""}
+                  disabled={pending}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="parent_email">Email (optional)</Label>
+              <Input
+                id="parent_email"
+                name="parent_email"
+                type="email"
+                defaultValue={initial?.parent_email ?? ""}
+                disabled={pending}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="home_address">Home address</Label>
+              <Input
+                id="home_address"
+                name="home_address"
+                defaultValue={initial?.home_address ?? ""}
+                disabled={pending}
+              />
+            </div>
           </div>
 
           <DialogFooter>
