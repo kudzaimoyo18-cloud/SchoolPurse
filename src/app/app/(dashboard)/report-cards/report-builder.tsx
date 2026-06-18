@@ -55,6 +55,8 @@ interface Props {
   termName: string | null;
   /** Existing current-term reports keyed by student_id, for editing. */
   existing: Record<string, ExistingReport>;
+  /** Per-student attendance from the register, to prefill the report. */
+  attendanceSummary: Record<string, { present: number; total: number }>;
 }
 
 const SCHEME_LABEL: Record<GradingScheme, string> = {
@@ -71,6 +73,7 @@ export function ReportBuilder({
   subjects,
   termName,
   existing,
+  attendanceSummary,
 }: Props) {
   const [classId, setClassId] = React.useState("");
   const [studentId, setStudentId] = React.useState("");
@@ -146,6 +149,7 @@ export function ReportBuilder({
           scheme={scheme}
           subjects={subjects}
           initial={existing[selectedStudent.id] ?? null}
+          attendance={attendanceSummary[selectedStudent.id]}
         />
       ) : (
         <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
@@ -162,11 +166,13 @@ function StudentReportForm({
   scheme,
   subjects,
   initial,
+  attendance,
 }: {
   student: StudentOption;
   scheme: GradingScheme;
   subjects: SubjectOption[];
   initial: ExistingReport | null;
+  attendance?: { present: number; total: number };
 }) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
@@ -199,10 +205,16 @@ function StudentReportForm({
   const [present, setPresent] = React.useState(
     initial?.attendance_present != null
       ? String(initial.attendance_present)
-      : "",
+      : attendance
+        ? String(attendance.present)
+        : "",
   );
   const [total, setTotal] = React.useState(
-    initial?.attendance_total != null ? String(initial.attendance_total) : "",
+    initial?.attendance_total != null
+      ? String(initial.attendance_total)
+      : attendance
+        ? String(attendance.total)
+        : "",
   );
 
   const numericMarks = React.useMemo(

@@ -43,12 +43,35 @@ export default async function ReportCardsPage() {
     supabase.from("subjects").select("id, name").order("name"),
     supabase
       .from("terms")
-      .select("id, name")
+      .select("id, name, start_date, end_date")
       .eq("is_current", true)
       .maybeSingle(),
   ]);
 
-  const term = termRes.data as { id: string; name: string } | null;
+  const term = termRes.data as {
+    id: string;
+    name: string;
+    start_date: string;
+    end_date: string;
+  } | null;
+
+  // Per-student attendance for the term, from the register. Present + late
+  // count as attended; total is every marked day. Prefills the report (editable).
+  const attendanceSummary: Record<string, { present: number; total: number }> =
+    {};
+  if (term?.id) {
+    const { data: att } = await supabase
+      .from("attendance")
+      .select("student_id, status")
+      .gte("date", term.start_date)
+      .lte("date", term.end_date);
+    for (const a of (att ?? []) as { student_id: string; status: string }[]) {
+      const cur = attendanceSummary[a.student_id] ?? { present: 0, total: 0 };
+      cur.total += 1;
+      if (a.status === "present" || a.status === "late") cur.present += 1;
+      attendanceSummary[a.student_id] = cur;
+    }
+  }
 
   const existing: Record<string, ExistingReport> = {};
   if (term?.id) {
@@ -95,6 +118,7 @@ export default async function ReportCardsPage() {
           subjects={subjects}
           termName={term?.name ?? null}
           existing={existing}
+          attendanceSummary={attendanceSummary}
         />
       </SectionCard>
     </div>
