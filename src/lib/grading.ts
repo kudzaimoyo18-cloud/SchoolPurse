@@ -1,24 +1,129 @@
-// ZIMSEC-style grading for the E-Report Book: a percentage maps to a letter
-// symbol (A–U) plus a remark. Bands live in one place so adjusting a school's
-// standard is a single edit. Pure + framework-free for easy testing.
+// Level-aware grading for the E-Report Book. Zimbabwe grades each level
+// differently, and ECD/Primary/Secondary/College are all target clients, so a
+// single scale won't do.
+//
+//   ecd      — competency descriptors, NO marks (see ECD_RATINGS)
+//   primary  — ZIMSEC units 1 (best) .. 9 (worst)
+//   olevel   — ZIMSEC O-Level A–U (A 75, B 65, C 50 credit/pass, D 40, E 30, U <30)
+//   alevel   — ZIMSEC A-Level A–U with points (A 80=5 .. E 40=1 pass, U <40=0)
+//   college  — TVET/polytechnic Distinction / Credit / Pass / Fail
+//
+// Band %s for primary are illustrative and easy to tweak per school; the
+// O-Level, A-Level and college thresholds follow the published standards.
+// Pure + framework-free for easy testing.
 
-export type ZimsecSymbol = "A" | "B" | "C" | "D" | "E" | "U";
+export type GradingScheme = "ecd" | "primary" | "olevel" | "alevel" | "college";
 
-export interface ZimsecGrade {
-  symbol: ZimsecSymbol;
+export interface GradeResult {
+  /** What prints on the report: a letter, a unit number, or a descriptor. */
+  symbol: string;
   remark: string;
-  /** A–D (>= 50%) count as a pass on this internal scale. */
   pass: boolean;
+  /** A-Level points (5..0); undefined for other schemes. */
+  points?: number;
 }
 
-export function zimsecGrade(percent: number): ZimsecGrade {
+interface Band {
+  min: number;
+  symbol: string;
+  remark: string;
+  pass: boolean;
+  points?: number;
+}
+
+// ZIMSEC O-Level: credit (pass) is C / >= 50%.
+const OLEVEL_BANDS: Band[] = [
+  { min: 75, symbol: "A", remark: "Distinction", pass: true },
+  { min: 65, symbol: "B", remark: "Merit", pass: true },
+  { min: 50, symbol: "C", remark: "Credit", pass: true },
+  { min: 40, symbol: "D", remark: "Satisfactory", pass: false },
+  { min: 30, symbol: "E", remark: "Fail", pass: false },
+  { min: 0, symbol: "U", remark: "Unsatisfactory", pass: false },
+];
+
+// ZIMSEC A-Level: E (>= 40%) is the lowest pass; U scores no points.
+const ALEVEL_BANDS: Band[] = [
+  { min: 80, symbol: "A", remark: "Excellent", pass: true, points: 5 },
+  { min: 70, symbol: "B", remark: "Very good", pass: true, points: 4 },
+  { min: 60, symbol: "C", remark: "Good", pass: true, points: 3 },
+  { min: 50, symbol: "D", remark: "Satisfactory", pass: true, points: 2 },
+  { min: 40, symbol: "E", remark: "Pass", pass: true, points: 1 },
+  { min: 0, symbol: "U", remark: "Fail", pass: false, points: 0 },
+];
+
+// TVET / polytechnic style classification.
+const COLLEGE_BANDS: Band[] = [
+  { min: 75, symbol: "DIST", remark: "Distinction", pass: true },
+  { min: 60, symbol: "CRED", remark: "Credit", pass: true },
+  { min: 50, symbol: "PASS", remark: "Pass", pass: true },
+  { min: 0, symbol: "FAIL", remark: "Fail", pass: false },
+];
+
+// ZIMSEC primary units (1 best .. 9 worst). %→unit bands are illustrative.
+const PRIMARY_BANDS: Band[] = [
+  { min: 90, symbol: "1", remark: "Outstanding", pass: true },
+  { min: 80, symbol: "2", remark: "Excellent", pass: true },
+  { min: 70, symbol: "3", remark: "Very good", pass: true },
+  { min: 60, symbol: "4", remark: "Good", pass: true },
+  { min: 50, symbol: "5", remark: "Satisfactory", pass: true },
+  { min: 40, symbol: "6", remark: "Fair", pass: false },
+  { min: 30, symbol: "7", remark: "Weak", pass: false },
+  { min: 20, symbol: "8", remark: "Poor", pass: false },
+  { min: 0, symbol: "9", remark: "Very poor", pass: false },
+];
+
+const BANDS: Record<Exclude<GradingScheme, "ecd">, Band[]> = {
+  olevel: OLEVEL_BANDS,
+  alevel: ALEVEL_BANDS,
+  college: COLLEGE_BANDS,
+  primary: PRIMARY_BANDS,
+};
+
+/** Grade a percentage under a numeric scheme. ECD has no percentage grade. */
+export function gradeFor(
+  scheme: Exclude<GradingScheme, "ecd">,
+  percent: number,
+): GradeResult {
   const p = Math.max(0, Math.min(100, percent));
-  if (p >= 80) return { symbol: "A", remark: "Distinction", pass: true };
-  if (p >= 70) return { symbol: "B", remark: "Merit", pass: true };
-  if (p >= 60) return { symbol: "C", remark: "Credit", pass: true };
-  if (p >= 50) return { symbol: "D", remark: "Pass", pass: true };
-  if (p >= 40) return { symbol: "E", remark: "Satisfactory", pass: false };
-  return { symbol: "U", remark: "Needs improvement", pass: false };
+  const bands = BANDS[scheme];
+  const band = bands.find((b) => p >= b.min) ?? bands[bands.length - 1];
+  return {
+    symbol: band.symbol,
+    remark: band.remark,
+    pass: band.pass,
+    points: band.points,
+  };
+}
+
+// ECD competency ratings (non-numeric). The report records one of these per
+// skill area instead of a mark.
+export type EcdRating = "excellent" | "competent" | "developing" | "support";
+
+export const ECD_RATINGS: { value: EcdRating; label: string; pass: boolean }[] =
+  [
+    { value: "excellent", label: "Excellent", pass: true },
+    { value: "competent", label: "Competent", pass: true },
+    { value: "developing", label: "Developing", pass: true },
+    { value: "support", label: "Needs support", pass: false },
+  ];
+
+/**
+ * Pick the default grading scheme for a class from its level + name. ECD is
+ * detected by name (ECD classes live under the `primary` level in the schema);
+ * Form 5/6 (Lower/Upper 6) map to A-Level, other secondary to O-Level.
+ */
+export function defaultScheme(
+  level: "primary" | "secondary" | "tertiary" | null | undefined,
+  className?: string,
+): GradingScheme {
+  const name = (className ?? "").toLowerCase();
+  if (/\becd\b|nursery|reception|\bgrade\s*0\b/.test(name)) return "ecd";
+  if (level === "tertiary") return "college";
+  if (level === "secondary") {
+    if (/lower\s*6|upper\s*6|form\s*[56]|a-?level/.test(name)) return "alevel";
+    return "olevel";
+  }
+  return "primary";
 }
 
 export interface ReportSubjectMark {
