@@ -14,7 +14,13 @@ interface Category {
   name: string;
 }
 
-export function NewExpenseForm({ categories }: { categories: Category[] }) {
+export function NewExpenseForm({
+  categories,
+  isTransport = false,
+}: {
+  categories: Category[];
+  isTransport?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
@@ -31,7 +37,7 @@ export function NewExpenseForm({ categories }: { categories: Category[] }) {
         toast.error(res.error);
         return;
       }
-      toast.success("Expense logged");
+      toast.success(isTransport ? "Bus expense logged" : "Expense logged");
       formRef.current?.reset();
       router.refresh();
     });
@@ -54,9 +60,12 @@ export function NewExpenseForm({ categories }: { categories: Category[] }) {
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)}>
+      <Button
+        onClick={() => setOpen(true)}
+        variant={isTransport ? "outline" : "default"}
+      >
         <Plus className="size-4" />
-        Add expense
+        {isTransport ? "Add school bus expense" : "Add expense"}
       </Button>
     );
   }
@@ -64,7 +73,9 @@ export function NewExpenseForm({ categories }: { categories: Category[] }) {
   return (
     <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[14.5px] font-semibold">New expense</h2>
+        <h2 className="text-[14.5px] font-semibold">
+          {isTransport ? "New school bus expense" : "New expense"}
+        </h2>
         <button
           type="button"
           onClick={() => setOpen(false)}
@@ -76,6 +87,11 @@ export function NewExpenseForm({ categories }: { categories: Category[] }) {
       </div>
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="hidden"
+          name="is_transport"
+          value={isTransport ? "true" : "false"}
+        />
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="expense_date">Date</Label>
@@ -94,7 +110,11 @@ export function NewExpenseForm({ categories }: { categories: Category[] }) {
               id="description"
               name="description"
               required
-              placeholder="e.g. Electricity bill — April"
+              placeholder={
+                isTransport
+                  ? "e.g. Diesel for bus, Driver wages, Tyre repair"
+                  : "e.g. Electricity bill — April"
+              }
               disabled={pending}
             />
           </div>

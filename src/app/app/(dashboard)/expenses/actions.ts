@@ -12,6 +12,7 @@ const ExpenseSchema = z.object({
   amount_usd: z.coerce.number().positive("Amount must be positive"),
   category_id: z.string().uuid().nullish().or(z.literal("")),
   payee: z.string().trim().optional().or(z.literal("")),
+  is_transport: z.boolean().optional(),
 });
 
 async function getCtx() {
@@ -38,6 +39,7 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
     amount_usd: formData.get("amount_usd"),
     category_id: formData.get("category_id") || null,
     payee: formData.get("payee") || "",
+    is_transport: formData.get("is_transport") === "true",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -53,6 +55,7 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
     payee: parsed.data.payee || null,
     description: parsed.data.description,
     expense_date: parsed.data.expense_date,
+    is_transport: parsed.data.is_transport ?? false,
     recorded_by: userId,
   });
   if (error) return { ok: false, error: error.message };

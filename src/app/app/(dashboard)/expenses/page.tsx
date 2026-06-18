@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, Bus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/current-user";
 import { SectionCard } from "@/components/section-card";
@@ -55,25 +55,50 @@ export default async function ExpensesPage() {
     return d.toISOString().slice(0, 10);
   })();
 
-  const [expensesRes, categoriesRes, monthRes, prevMonthRes] = await Promise.all([
-    supabase
-      .from("expenses")
-      .select(
-        "id, description, payee, amount_usd, expense_date, expense_categories(name)",
-      )
-      .order("expense_date", { ascending: false })
-      .limit(200),
-    supabase.from("expense_categories").select("id, name").order("name"),
-    supabase
-      .from("expenses")
-      .select("amount_usd, expense_categories(name)")
-      .gte("expense_date", monthStart),
-    supabase
-      .from("expenses")
-      .select("amount_usd")
-      .gte("expense_date", prevMonthStart)
-      .lt("expense_date", monthStart),
-  ]);
+  const [expensesRes, categoriesRes, monthRes, prevMonthRes, transportRes] =
+    await Promise.all([
+      supabase
+        .from("expenses")
+        .select(
+          "id, description, payee, amount_usd, expense_date, expense_categories(name)",
+        )
+        .eq("is_transport", false)
+        .order("expense_date", { ascending: false })
+        .limit(200),
+      supabase.from("expense_categories").select("id, name").order("name"),
+      supabase
+        .from("expenses")
+        .select("amount_usd, expense_categories(name)")
+        .eq("is_transport", false)
+        .gte("expense_date", monthStart),
+      supabase
+        .from("expenses")
+        .select("amount_usd")
+        .eq("is_transport", false)
+        .gte("expense_date", prevMonthStart)
+        .lt("expense_date", monthStart),
+      supabase
+        .from("expenses")
+        .select("id, description, payee, amount_usd, expense_date")
+        .eq("is_transport", true)
+        .order("expense_date", { ascending: false })
+        .limit(200),
+    ]);
+
+  const transport = (transportRes.data ?? []) as Array<{
+    id: string;
+    description: string;
+    payee: string | null;
+    amount_usd: number | string;
+    expense_date: string;
+  }>;
+  const transportTotal = transport.reduce(
+    (s, e) => s + toNumber(e.amount_usd),
+    0,
+  );
+  const transportMonthTotal = transport
+    .filter((e) => e.expense_date >= monthStart)
+    .reduce((s, e) => s + toNumber(e.amount_usd), 0);
 
   const expenses = (expensesRes.data ?? []) as Array<{
     id: string;
@@ -271,6 +296,60 @@ export default async function ExpensesPage() {
           </div>
         </SectionCard>
       </div>
+
+      <SectionCard
+        title="School bus & transport"
+        subtitle={`A separate ledger for bus running costs — kept apart from school expenses. This month: ${formatMoney(transportMonthTotal)}${transportTotal > 0 ? ` · ${formatMoney(transportTotal)} all-time` : ""}`}
+        bodyClassName="p-0"
+      >
+        <div className="border-b border-border px-5 py-4">
+          <NewExpenseForm categories={categories} isTransport />
+        </div>
+        {transport.length === 0 ? (
+          <div className="px-5 py-2">
+            <EmptyState
+              icon={Bus}
+              title="No bus expenses yet"
+              description="Add fuel, driver wages, maintenance and other bus costs here."
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-sp-card-alt">
+                <TableRow>
+                  <TableHead className="pl-5">Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Payee</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="pr-5"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transport.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="pl-5 text-muted-foreground">
+                      {formatDate(e.expense_date)}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {e.description}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {e.payee ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums text-sp-red">
+                      {formatMoney(e.amount_usd)}
+                    </TableCell>
+                    <TableCell className="pr-5 text-right">
+                      <DeleteExpenseButton id={e.id} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }
