@@ -9,7 +9,6 @@ import {
   GraduationCap,
   CalendarCheck,
   Video,
-  Sparkles,
   MessageSquare,
   type LucideIcon,
 } from "lucide-react";
@@ -98,7 +97,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Communication",
     items: [
       { href: "/app/messages", label: "Messages", icon: MessageSquare, roles: STAFF },
-      { href: "/app/assistant", label: "Assistant", icon: Sparkles, roles: FINANCE },
     ],
   },
   {

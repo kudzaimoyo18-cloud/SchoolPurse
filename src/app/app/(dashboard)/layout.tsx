@@ -4,6 +4,8 @@ import { getLogoUrl } from "@/lib/storage";
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { AssistantFab } from "@/components/assistant-fab";
+import { normalizePlan } from "@/lib/plan";
 import { fetchArrears } from "@/lib/queries/arrears";
 import {
   SidebarInset,
@@ -36,7 +38,7 @@ export default async function DashboardLayout({
         .eq("active", true)
         .or("include_on_registration.eq.true,type.eq.uniform")
         .order("name"),
-      supabase.from("schools").select("logo_path").limit(1).maybeSingle(),
+      supabase.from("schools").select("logo_path, plan").limit(1).maybeSingle(),
       // Latest active announcement
       supabase
         .from("announcements")
@@ -46,10 +48,19 @@ export default async function DashboardLayout({
         .limit(1)
         .maybeSingle(),
     ]);
-  const logoUrl = await getLogoUrl(
-    (schoolRes.data as { logo_path?: string | null } | null)?.logo_path ??
-      null,
-  );
+  const schoolData = schoolRes.data as {
+    logo_path?: string | null;
+    plan?: string | null;
+  } | null;
+  const logoUrl = await getLogoUrl(schoolData?.logo_path ?? null);
+
+  // The AI assistant is a floating widget on every page. Show it to finance
+  // roles; the panel itself gates AI-plan access (upgrade card otherwise).
+  const hasAiAccess = normalizePlan(schoolData?.plan) === "ai";
+  const showAssistant =
+    user.role === "platform_admin" ||
+    user.role === "school_admin" ||
+    user.role === "bursar";
 
   const term = termRes.data;
   const termLabel = term
@@ -130,6 +141,12 @@ export default async function DashboardLayout({
         />
         <AnnouncementBanner announcement={announcement} />
         <main className="flex-1 px-4 pb-10 pt-5 sm:px-7 sm:pt-6">{children}</main>
+        {showAssistant ? (
+          <AssistantFab
+            firstName={user.name.split(" ")[0]}
+            hasAccess={hasAiAccess}
+          />
+        ) : null}
       </SidebarInset>
     </SidebarProvider>
   );
