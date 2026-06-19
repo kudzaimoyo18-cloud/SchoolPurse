@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
-import { navItemsForRole } from "./nav-items";
+import { navSectionsForRole } from "./nav-items";
 import type { UserRole } from "@/lib/supabase/types";
 import { ThemeToggle } from "./theme-toggle";
 import {
@@ -15,6 +15,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -97,45 +98,53 @@ export function Sidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-1 py-3">
-        <SidebarGroup className="p-0">
-          <SidebarMenu>
-            {navItemsForRole(user.role as UserRole).map((item) => {
-              const Icon = item.icon;
-              const active =
-                pathname === item.href || pathname.startsWith(item.href + "/");
-              return (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={active}
-                    tooltip={item.label}
-                    className="h-9"
-                  >
-                    <Link href={item.href}>
-                      <Icon
-                        className={cn(
-                          "size-4 shrink-0 transition",
-                          active
-                            ? "text-sidebar-primary"
-                            : "text-sidebar-foreground/55",
-                        )}
-                        strokeWidth={1.8}
-                      />
-                      <span className="text-[13px] font-medium">
-                        {item.label}
-                      </span>
-                      {item.badge === "arrears" && arrearsCount > 0 ? (
-                        <span className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sp-red px-1.5 py-0.5 text-[10px] font-semibold text-white group-data-[collapsible=icon]:hidden">
-                          {arrearsCount}
+        {navSectionsForRole(user.role as UserRole).map((section, idx) => (
+          <SidebarGroup key={section.label ?? `section-${idx}`} className="p-0">
+            {section.label ? (
+              <SidebarGroupLabel className="px-2 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                {section.label}
+              </SidebarGroupLabel>
+            ) : null}
+            <SidebarMenu>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.label}
+                      className="h-9"
+                    >
+                      <Link href={item.href}>
+                        <Icon
+                          className={cn(
+                            "size-4 shrink-0 transition",
+                            active
+                              ? "text-sidebar-primary"
+                              : "text-sidebar-foreground/55",
+                          )}
+                          strokeWidth={1.8}
+                        />
+                        <span className="text-[13px] font-medium">
+                          {item.label}
                         </span>
-                      ) : null}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+                        {item.badge === "arrears" && arrearsCount > 0 ? (
+                          <span className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sp-red px-1.5 py-0.5 text-[10px] font-semibold text-white group-data-[collapsible=icon]:hidden">
+                            {arrearsCount}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
