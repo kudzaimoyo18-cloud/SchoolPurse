@@ -22,19 +22,21 @@ import { enrollChild } from "@/app/app/(dashboard)/students/enroll-action";
 export interface ClassOption {
   id: string;
   name: string;
-  level?: "primary" | "secondary" | "tertiary";
+  level?: "ecd" | "primary" | "secondary" | "college";
 }
 
 const LEVEL_LABEL: Record<NonNullable<ClassOption["level"]>, string> = {
+  ecd: "ECD",
   primary: "Primary",
   secondary: "Secondary",
-  tertiary: "Tertiary",
+  college: "College",
 };
 
 const LEVEL_ORDER: Array<NonNullable<ClassOption["level"]>> = [
+  "ecd",
   "primary",
   "secondary",
-  "tertiary",
+  "college",
 ];
 
 export interface RegistrationFee {

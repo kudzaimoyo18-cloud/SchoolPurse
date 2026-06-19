@@ -17,9 +17,10 @@ interface ClassRow {
 }
 
 const LEVEL_LABEL: Record<Level, string> = {
+  ecd: "ECD",
   primary: "Primary",
   secondary: "Secondary",
-  tertiary: "Tertiary",
+  college: "College",
 };
 
 export function ClassesSection({
@@ -41,9 +42,10 @@ export function ClassesSection({
   // as separate buckets — this is exactly what the user asked for.
   const grouped = React.useMemo(() => {
     const map: Record<Level, ClassRow[]> = {
+      ecd: [],
       primary: [],
       secondary: [],
-      tertiary: [],
+      college: [],
     };
     for (const c of classes) {
       map[c.level].push(c);
@@ -186,11 +188,13 @@ export function ClassesSection({
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder={`e.g. ${
-                    level === "primary"
-                      ? "Grade 8"
-                      : level === "secondary"
-                        ? "Form 4 Blue"
-                        : "BSc Year 2"
+                    level === "ecd"
+                      ? "Nursery"
+                      : level === "primary"
+                        ? "Grade 8"
+                        : level === "secondary"
+                          ? "Form 4 Blue"
+                          : "Year 2"
                   }`}
                   disabled={pending}
                   autoFocus

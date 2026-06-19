@@ -123,13 +123,22 @@ export const ECD_SKILL_AREAS = [
  * detected by name (ECD classes live under the `primary` level in the schema);
  * Form 5/6 (Lower/Upper 6) map to A-Level, other secondary to O-Level.
  */
+export type ClassLevel =
+  | "ecd"
+  | "primary"
+  | "secondary"
+  | "college"
+  // tertiary kept for legacy rows migrated to college
+  | "tertiary";
+
 export function defaultScheme(
-  level: "primary" | "secondary" | "tertiary" | null | undefined,
+  level: ClassLevel | null | undefined,
   className?: string,
 ): GradingScheme {
   const name = (className ?? "").toLowerCase();
+  if (level === "ecd") return "ecd";
   if (/\becd\b|nursery|reception|\bgrade\s*0\b/.test(name)) return "ecd";
-  if (level === "tertiary") return "college";
+  if (level === "college" || level === "tertiary") return "college";
   if (level === "secondary") {
     if (/lower\s*6|upper\s*6|form\s*[56]|a-?level/.test(name)) return "alevel";
     return "olevel";

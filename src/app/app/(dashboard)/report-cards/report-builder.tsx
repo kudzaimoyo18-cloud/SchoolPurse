@@ -21,7 +21,7 @@ import { saveReportCard } from "./actions";
 export interface ClassOption {
   id: string;
   name: string;
-  level: "primary" | "secondary" | "tertiary";
+  level: "ecd" | "primary" | "secondary" | "college";
 }
 export interface StudentOption {
   id: string;

@@ -9,23 +9,27 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { updateSchoolLevels } from "./actions";
 
-export type Level = "primary" | "secondary" | "tertiary";
+export type Level = "ecd" | "primary" | "secondary" | "college";
 
 const LEVEL_DETAILS: Record<
   Level,
   { label: string; blurb: string }
 > = {
+  ecd: {
+    label: "ECD",
+    blurb: "Early childhood — ECD A & B.",
+  },
   primary: {
     label: "Primary",
-    blurb: "ECD A&B through Grade 7.",
+    blurb: "Grade 1 through Grade 7.",
   },
   secondary: {
     label: "Secondary",
     blurb: "Form 1–6 (Lower / Upper 6).",
   },
-  tertiary: {
-    label: "Tertiary",
-    blurb: "Colleges, vocational programmes, Year 1–4.",
+  college: {
+    label: "College",
+    blurb: "Tertiary / vocational, Year 1–4.",
   },
 };
 
@@ -85,7 +89,7 @@ export function SchoolLevelsSection({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {(Object.keys(LEVEL_DETAILS) as Level[]).map((level) => {
           const isOn = selected.has(level);
           const wasOn = enabledLevels.includes(level);

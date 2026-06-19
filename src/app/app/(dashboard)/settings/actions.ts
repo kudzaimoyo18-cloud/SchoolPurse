@@ -346,16 +346,15 @@ export async function generateInvoicesForCurrentTerm(): Promise<
 // School levels + classes
 // =============================================================================
 
-const LEVELS = ["primary", "secondary", "tertiary"] as const;
+const LEVELS = ["ecd", "primary", "secondary", "college"] as const;
 type Level = (typeof LEVELS)[number];
 
 // Default class catalogue per level. When a school enables Secondary, we
 // seed Form 1–6 etc. so the admin doesn't have to type them in. We skip any
 // names that already exist (idempotent).
 const DEFAULT_CLASSES: Record<Level, string[]> = {
+  ecd: ["ECD A", "ECD B"],
   primary: [
-    "ECD A",
-    "ECD B",
     "Grade 1",
     "Grade 2",
     "Grade 3",
@@ -372,7 +371,7 @@ const DEFAULT_CLASSES: Record<Level, string[]> = {
     "Form 5 (Lower 6)",
     "Form 6 (Upper 6)",
   ],
-  tertiary: ["Year 1", "Year 2", "Year 3", "Year 4"],
+  college: ["Year 1", "Year 2", "Year 3", "Year 4"],
 };
 
 const LevelsSchema = z.object({

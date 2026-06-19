@@ -74,8 +74,12 @@ describe("defaultScheme", () => {
     expect(defaultScheme("secondary", "Form 5 (Lower 6)")).toBe("alevel");
     expect(defaultScheme("secondary", "Upper 6")).toBe("alevel");
   });
-  test("tertiary → college", () => {
+  test("college (and legacy tertiary) → college", () => {
+    expect(defaultScheme("college", "Year 1")).toBe("college");
     expect(defaultScheme("tertiary", "Year 1")).toBe("college");
+  });
+  test("ecd level → ecd scheme", () => {
+    expect(defaultScheme("ecd", "ECD A")).toBe("ecd");
   });
 });
 

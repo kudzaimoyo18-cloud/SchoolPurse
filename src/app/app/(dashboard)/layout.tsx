@@ -89,7 +89,7 @@ export default async function DashboardLayout({
   const classes = (classesRes.data ?? []) as {
     id: string;
     name: string;
-    level: "primary" | "secondary" | "tertiary";
+    level: "ecd" | "primary" | "secondary" | "college";
   }[];
   const feeItems = (feeItemsRes.data ?? []).map((f: Record<string, unknown>) => ({
     id: f.id as string,

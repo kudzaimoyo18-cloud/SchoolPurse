@@ -62,8 +62,11 @@ export default async function ReportCardPage({
   );
   const classField = first(
     studentField?.classes as
-      | { name?: string; level?: "primary" | "secondary" | "tertiary" }
-      | Array<{ name?: string; level?: "primary" | "secondary" | "tertiary" }>
+      | { name?: string; level?: "ecd" | "primary" | "secondary" | "college" }
+      | Array<{
+          name?: string;
+          level?: "ecd" | "primary" | "secondary" | "college";
+        }>
       | null,
   );
   const termField = first(
