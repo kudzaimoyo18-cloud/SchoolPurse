@@ -8,6 +8,7 @@ import {
   Users,
   GraduationCap,
   CalendarCheck,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import type { UserRole } from "@/lib/supabase/types";
@@ -57,6 +58,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/app/report-cards",
     label: "Report Cards",
     icon: GraduationCap,
+    roles: ACADEMICS,
+  },
+  {
+    href: "/app/classroom",
+    label: "Classroom",
+    icon: Video,
     roles: ACADEMICS,
   },
   { href: "/app/settings", label: "Settings", icon: Settings, roles: ADMIN },
