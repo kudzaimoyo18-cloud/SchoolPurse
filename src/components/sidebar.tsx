@@ -20,6 +20,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -182,6 +183,10 @@ export function Sidebar({
           </form>
         </div>
       </SidebarFooter>
+
+      {/* Draggable edge handle — click the border to collapse/expand,
+          Notion-style. Keyboard shortcut Ctrl/Cmd+B also toggles. */}
+      <SidebarRail />
     </ShadcnSidebar>
   );
 }

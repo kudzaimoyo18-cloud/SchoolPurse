@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { getLogoUrl } from "@/lib/storage";
@@ -18,6 +19,11 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+
+  // Remember whether the user collapsed the sidebar last time (Notion-style).
+  // shadcn writes "sidebar_state" on toggle; default to open when unset.
+  const sidebarOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false";
 
   const supabase = await createClient();
   const [termRes, arrears, classesRes, feeItemsRes, schoolRes, announcementRes] =
@@ -112,7 +118,7 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider
-      defaultOpen
+      defaultOpen={sidebarOpen}
       style={
         {
           // Match the previous fixed sidebar width so other screens still feel
