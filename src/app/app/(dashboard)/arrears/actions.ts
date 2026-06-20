@@ -34,7 +34,7 @@ export async function sendArrearsReminders(): Promise<ReminderResult> {
   const supabase = await createClient();
   const { data: school } = await supabase
     .from("schools")
-    .select("name, plan")
+    .select("name, plan, phone")
     .eq("id", user.schoolId)
     .maybeSingle();
 
@@ -60,7 +60,16 @@ export async function sendArrearsReminders(): Promise<ReminderResult> {
     }),
   );
 
-  const schoolName = (school as { name?: string } | null)?.name ?? "your school";
+  const schoolRow = school as { name?: string; phone?: string | null } | null;
+  const schoolName = schoolRow?.name ?? "your school";
+  // Platform-managed sending: the API sender is SchoolPurse's number, so the
+  // school's identity (name + receipt phone) goes IN the message so parents see
+  // who it's from and can reply/call the actual school.
+  const schoolPhone = (schoolRow?.phone ?? "").trim();
+  const signoff = schoolPhone
+    ? ` Reply or call ${schoolPhone}. — ${schoolName}`
+    : ` — ${schoolName}`;
+
   let sent = 0;
   let skipped = 0;
   let failed = 0;
@@ -74,7 +83,7 @@ export async function sendArrearsReminders(): Promise<ReminderResult> {
     }
     const body = `Hello, this is a fee reminder from ${schoolName}. ${a.student_name} has an outstanding balance of ${formatMoney(
       a.balance,
-    )}. Please settle it when you can. Thank you.`;
+    )}. Please settle it when you can. Thank you.${signoff}`;
 
     const r = await enqueueAndSend({
       schoolId: user.schoolId,
