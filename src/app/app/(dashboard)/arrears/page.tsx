@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { formatMoney, formatMoneyCompact } from "@/lib/format";
 import { fetchArrears } from "@/lib/queries/arrears";
 import { requireRole } from "@/lib/auth/current-user";
+import { createClient } from "@/lib/supabase/server";
+import { normalizePlan } from "@/lib/plan";
+import { RemindersButton } from "./reminders-button";
 
 export const metadata = { title: "Arrears — SchoolPurse" };
 
@@ -24,9 +27,18 @@ export default async function ArrearsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  await requireRole(["platform_admin", "school_admin", "bursar"]);
+  const user = await requireRole(["platform_admin", "school_admin", "bursar"]);
   const { q } = await searchParams;
   const all = await fetchArrears();
+
+  // WhatsApp reminders are an AI-plan feature.
+  const supabase = await createClient();
+  const { data: school } = await supabase
+    .from("schools")
+    .select("plan")
+    .eq("id", user.schoolId ?? "")
+    .maybeSingle();
+  const isAiPlan = normalizePlan((school as { plan?: string } | null)?.plan) === "ai";
 
   const term = (q ?? "").trim().toLowerCase();
   const filtered = term
@@ -156,6 +168,7 @@ export default async function ArrearsPage({
               <Download className="size-3.5" />
               Export CSV
             </a>
+            {isAiPlan && all.length > 0 ? <RemindersButton /> : null}
           </div>
         }
         bodyClassName="p-0"
