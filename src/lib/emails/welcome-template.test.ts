@@ -6,12 +6,12 @@ describe("buildWelcomeEmailHtml", () => {
     const html = buildWelcomeEmailHtml({
       recipientName: "Tendai",
       schoolName: "Twinkle Star Junior School",
-      tier: "standard",
+      tier: "ai",
     });
     expect(html).toContain("Tendai");
     expect(html).toContain("Twinkle Star Junior School");
     expect(html).toContain("/app/overview");
-    expect(html).toContain("Standard"); // tier label
+    expect(html).toContain("AI"); // tier label
   });
 
   it("shows a neutral line when no tier is given", () => {

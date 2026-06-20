@@ -25,16 +25,14 @@ function signedHeaders(payload: string): Record<string, string> {
 describe("productIdToTier", () => {
   beforeEach(() => {
     vi.resetModules();
-    process.env.WHOP_STARTER_PRODUCT_ID = "prod_starter";
-    process.env.WHOP_STANDARD_PRODUCT_ID = "prod_standard";
-    process.env.WHOP_PLUS_PRODUCT_ID = "prod_plus";
+    process.env.WHOP_PRO_PRODUCT_ID = "prod_pro";
+    process.env.WHOP_AI_PRODUCT_ID = "prod_ai";
   });
 
   it("maps known product ids to their tier", async () => {
     const { productIdToTier } = await import("./whop");
-    expect(productIdToTier("prod_starter")).toBe("starter");
-    expect(productIdToTier("prod_standard")).toBe("standard");
-    expect(productIdToTier("prod_plus")).toBe("plus");
+    expect(productIdToTier("prod_pro")).toBe("pro");
+    expect(productIdToTier("prod_ai")).toBe("ai");
   });
 
   it("returns undefined for an unknown product id", async () => {

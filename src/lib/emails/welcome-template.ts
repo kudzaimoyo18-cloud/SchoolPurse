@@ -3,13 +3,12 @@
  * No "server-only" and no secrets here so it can be unit-tested and rendered
  * from scripts. The actual send lives in ./welcome.ts.
  */
-export type Tier = "free" | "starter" | "standard" | "plus";
+export type Tier = "free" | "pro" | "ai";
 
 const TIER_LABEL: Record<Tier, string> = {
   free: "Free",
-  starter: "Starter",
-  standard: "Standard",
-  plus: "Plus",
+  pro: "Pro",
+  ai: "AI",
 };
 
 function appUrl(): string {

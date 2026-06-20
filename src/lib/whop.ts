@@ -2,11 +2,14 @@ import "server-only";
 import { Whop } from "@whop/sdk";
 
 /**
- * Subscription tiers offered in SchoolPurse. "free" is the implicit tier for
- * any school that has not completed a paid Whop checkout.
+ * Subscription tiers offered in SchoolPurse. These MUST match the freemium
+ * vocabulary in lib/plan.ts and the `schools.plan` column — every feature gate
+ * reads that. "free" is the implicit tier for any school without a paid Whop
+ * checkout. (Earlier starter/standard/plus naming was retired so a Whop payment
+ * actually unlocks Pro/AI features.)
  */
-export type SubscriptionTier = "free" | "starter" | "standard" | "plus";
-export type PaidTier = "starter" | "standard" | "plus";
+export type SubscriptionTier = "free" | "pro" | "ai";
+export type PaidTier = "pro" | "ai";
 
 /**
  * Lazily-instantiated Whop client.
@@ -42,11 +45,9 @@ export function getWhop(): Whop {
 export function productIdToTier(productId: string): PaidTier | undefined {
   if (!productId) return undefined;
   const map: Record<string, PaidTier> = {};
-  const starter = process.env.WHOP_STARTER_PRODUCT_ID;
-  const standard = process.env.WHOP_STANDARD_PRODUCT_ID;
-  const plus = process.env.WHOP_PLUS_PRODUCT_ID;
-  if (starter) map[starter] = "starter";
-  if (standard) map[standard] = "standard";
-  if (plus) map[plus] = "plus";
+  const pro = process.env.WHOP_PRO_PRODUCT_ID;
+  const ai = process.env.WHOP_AI_PRODUCT_ID;
+  if (pro) map[pro] = "pro";
+  if (ai) map[ai] = "ai";
   return map[productId];
 }

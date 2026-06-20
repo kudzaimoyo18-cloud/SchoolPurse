@@ -36,7 +36,7 @@ export async function linkSubscriptionToSchool(email: string): Promise<void> {
 
   await admin
     .from("schools")
-    .update({ subscription_tier: sub.tier })
+    .update({ plan: sub.tier })
     .eq("id", user.school_id);
 }
 
@@ -73,7 +73,7 @@ export async function deactivateSubscription(
     if (!activeSub) {
       await admin
         .from("schools")
-        .update({ subscription_tier: "free" })
+        .update({ plan: "free" })
         .eq("id", sub.school_id);
     }
   }
@@ -88,9 +88,9 @@ export async function getSchoolTier(
   const admin = createAdminClient();
   const { data } = await admin
     .from("schools")
-    .select("subscription_tier")
+    .select("plan")
     .eq("id", schoolId)
     .single();
 
-  return (data?.subscription_tier as SubscriptionTier) ?? "free";
+  return (data?.plan as SubscriptionTier) ?? "free";
 }
