@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { linkSubscriptionToSchool, getSchoolTier } from "@/lib/subscription";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
+import { LEVELS, DEFAULT_CLASSES, type Level } from "@/lib/levels";
 
 export type OnboardingState = { error: string } | null;
 
@@ -28,8 +29,58 @@ const Schema = z.object({
     .regex(/^[A-Z0-9]+$/, "Use uppercase letters and digits only"),
   admin_name: z.string().trim().min(2, "Your name is required"),
   admin_phone: z.string().trim().optional().or(z.literal("")),
+  levels: z.array(z.enum(LEVELS)).min(1, "Pick at least one level your school runs"),
+  plan: z.enum(["free", "pro", "ai"]).default("free"),
   seed_defaults: z.coerce.boolean().optional(),
 });
+
+const CHECKOUT_BY_PLAN: Record<"pro" | "ai", string | undefined> = {
+  pro: process.env.NEXT_PUBLIC_WHOP_PRO_CHECKOUT,
+  ai: process.env.NEXT_PUBLIC_WHOP_AI_CHECKOUT,
+};
+
+/** Upload an onboarding logo to the school-logos bucket; returns its path. */
+async function uploadLogo(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  file: File,
+): Promise<string | null> {
+  if (!file || file.size === 0 || !file.type.startsWith("image/")) return null;
+  if (file.size > 2 * 1024 * 1024) return null; // 2MB cap
+  const ext = file.type.split("/")[1]?.replace("jpeg", "jpg") ?? "png";
+  const path = `${schoolId}/logo.${ext}`;
+  const { error } = await admin.storage
+    .from("school-logos")
+    .upload(path, file, { upsert: true, contentType: file.type });
+  return error ? null : path;
+}
+
+/** Seed the starter classes for the chosen levels (idempotent by name). */
+async function seedLevelClasses(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string,
+  levels: Level[],
+): Promise<void> {
+  const { data: existing } = await admin
+    .from("classes")
+    .select("name")
+    .eq("school_id", schoolId);
+  const have = new Set(
+    ((existing ?? []) as { name: string }[]).map((c) =>
+      c.name.trim().toLowerCase(),
+    ),
+  );
+  const rows: { school_id: string; name: string; level: Level }[] = [];
+  for (const level of levels) {
+    for (const name of DEFAULT_CLASSES[level]) {
+      if (!have.has(name.trim().toLowerCase())) {
+        rows.push({ school_id: schoolId, name, level });
+        have.add(name.trim().toLowerCase());
+      }
+    }
+  }
+  if (rows.length > 0) await admin.from("classes").insert(rows);
+}
 
 /**
  * Seed a current academic year + terms so the school can invoice immediately.
@@ -115,6 +166,8 @@ export async function provisionMySchool(
     receipt_prefix: formData.get("receipt_prefix"),
     admin_name: formData.get("admin_name"),
     admin_phone: formData.get("admin_phone") || "",
+    levels: formData.getAll("levels").map(String),
+    plan: formData.get("plan") || "free",
     seed_defaults: formData.get("seed_defaults") === "on",
   });
 
@@ -143,23 +196,10 @@ export async function provisionMySchool(
     redirect("/app/overview");
   }
 
-  // SECURITY — pay-first gate. The /onboarding PAGE also checks this, but a
-  // page only controls what's rendered; this server action is an invocable
-  // endpoint. Without re-checking here, anyone holding a magic-link session
-  // (which /welcome hands out to any email) could POST straight to this action
-  // and provision a school without paying. Enforce it server-side.
-  const { data: paidSub } = await admin
-    .from("whop_subscriptions")
-    .select("id")
-    .eq("email", user.email.toLowerCase())
-    .eq("status", "active")
-    .maybeSingle();
-  if (!paidSub) {
-    return {
-      error:
-        "We couldn't find an active subscription for your account. Please complete checkout first, then try again.",
-    };
-  }
+  // Freemium model: onboarding is open. Any signed-in user provisions a school
+  // on the Free tier (capped at 100 students by the plan gates). Paid tiers are
+  // chosen here too, but billing happens after via the Whop checkout redirect
+  // below — the webhook upgrades schools.plan once payment clears.
 
   // Pre-flight: slug must be unique across all schools.
   const { data: slugClash } = await admin
@@ -215,9 +255,17 @@ export async function provisionMySchool(
     };
   }
 
-  // Apply the extra fields provision_school doesn't accept and flip the
-  // school out of 'trial' into 'active' since the user has actively
-  // signed up. Service-role bypasses RLS for this update.
+  // Optional logo (uploaded in the wizard). Best-effort — never blocks setup.
+  const logoFile = formData.get("logo");
+  const logoPath =
+    logoFile instanceof File
+      ? await uploadLogo(admin, schoolId, logoFile)
+      : null;
+
+  // Apply the extra fields provision_school doesn't accept, set the chosen
+  // levels + Free plan (paid upgrades arrive via the Whop webhook), and flip
+  // the school 'active'. Service-role bypasses RLS for this update. Levels are
+  // set here BEFORE seeding classes so the level-check trigger passes.
   await admin
     .from("schools")
     .update({
@@ -226,20 +274,27 @@ export async function provisionMySchool(
       currency: parsed.data.currency || "USD",
       terms_per_year: parsed.data.terms_per_year,
       receipt_prefix: parsed.data.receipt_prefix,
+      levels: parsed.data.levels,
+      plan: "free",
+      ...(logoPath ? { logo_path: logoPath } : {}),
       status: "active",
     })
     .eq("id", schoolId);
 
-  // If the user opted OUT of default seed, wipe the data
-  // provision_school just seeded so they get a blank slate.
+  // Drop provision_school's generic classes; we reseed to match the chosen
+  // levels below (or leave blank if the admin opted out of defaults).
+  await admin.from("classes").delete().eq("school_id", schoolId);
+
   if (!parsed.data.seed_defaults) {
+    // Blank slate: remove the rest of the seeded starter data too.
     await admin.from("fee_items").delete().eq("school_id", schoolId);
     await admin.from("expense_categories").delete().eq("school_id", schoolId);
-    await admin.from("classes").delete().eq("school_id", schoolId);
     await admin.from("terms").delete().eq("school_id", schoolId);
     await admin.from("academic_years").delete().eq("school_id", schoolId);
   } else {
-    // Give the school a usable starting point: a current academic year + terms.
+    // Auto-create the starter classes for the chosen levels + a usable
+    // current academic year and terms so they can enrol immediately.
+    await seedLevelClasses(admin, schoolId, parsed.data.levels);
     await seedYearAndTerms(admin, schoolId, parsed.data.terms_per_year);
   }
 
@@ -257,6 +312,14 @@ export async function provisionMySchool(
     schoolName: parsed.data.school_name,
     tier,
   });
+
+  // Paid tier picked → hand off to Whop checkout (webhook upgrades plan once
+  // paid). If the checkout link isn't configured, fall through to the app on
+  // Free; they can upgrade from Settings/Pricing later.
+  if (parsed.data.plan !== "free") {
+    const checkout = CHECKOUT_BY_PLAN[parsed.data.plan];
+    if (checkout) redirect(checkout);
+  }
 
   redirect("/app/overview");
 }

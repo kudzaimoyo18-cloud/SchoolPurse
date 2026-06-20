@@ -3,17 +3,15 @@ import Image from "next/image";
 import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { AuroraBackground } from "@/components/ui/aurora-background";
 import { OnboardingForm } from "./onboarding-form";
-import { SubscriptionPending } from "./subscription-pending";
 
 export const metadata = { title: "Set up your school — SchoolPurse" };
 
 const VALUE_PROPS = [
-  "Track every fee and payment",
-  "Issue printable receipts & invoices",
-  "Surface arrears at a glance",
-  "Watch monthly income vs expenses",
+  "Free for up to 100 students",
+  "Receipts, invoices & arrears in one place",
+  "In-app messages — no more WhatsApp groups",
+  "Upgrade for the AI assistant & WhatsApp reminders",
 ];
 
 export default async function OnboardingPage() {
@@ -38,27 +36,17 @@ export default async function OnboardingPage() {
     redirect("/app/overview");
   }
 
-  // Pay-first gate: require an active subscription for this email.
-  const { data: activeSub } = await admin
-    .from("whop_subscriptions")
-    .select("id")
-    .eq("email", (user.email ?? "").toLowerCase())
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (!activeSub) {
-    return <SubscriptionPending email={user.email ?? ""} />;
-  }
-
+  // Freemium: onboarding is open — no pay-first gate. New schools start Free;
+  // paid tiers hand off to Whop checkout from the wizard's last step.
   const defaultName =
     (user.user_metadata?.full_name as string | undefined) ||
     (user.user_metadata?.name as string | undefined) ||
     (user.email?.split("@")[0] ?? "");
 
   return (
-    <div className="flex min-h-svh flex-col bg-background">
-      {/* Top bar — signals you're signed in (distinct from the marketing site). */}
-      <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6">
+    <div className="flex min-h-svh flex-col bg-slate-50 text-slate-900">
+      {/* Top bar */}
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2.5">
           <Image
             src="/logo.png"
@@ -67,19 +55,19 @@ export default async function OnboardingPage() {
             height={28}
             className="size-7 rounded-lg object-contain"
           />
-          <span className="text-[15px] font-bold tracking-tight">
-            School<span className="text-primary">Purse</span>
+          <span className="text-[15px] font-bold tracking-tight text-slate-900">
+            School<span className="text-amber-500">Purse</span>
           </span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="hidden sm:inline">
             Signed in as{" "}
-            <span className="font-medium text-foreground">{user.email}</span>
+            <span className="font-medium text-slate-900">{user.email}</span>
           </span>
           <form action="/auth/logout" method="post">
             <button
               type="submit"
-              className="font-medium text-muted-foreground underline underline-offset-2 transition hover:text-foreground"
+              className="font-medium text-slate-500 underline underline-offset-2 transition hover:text-slate-900"
             >
               Sign out
             </button>
@@ -87,31 +75,30 @@ export default async function OnboardingPage() {
         </div>
       </header>
 
-      {/* Split: branded aurora panel + app-surface wizard. */}
       <div className="grid flex-1 lg:grid-cols-2">
-        {/* Left — branded panel (keeps the aurora, but only here). */}
-        <AuroraBackground className="hidden min-h-0 px-10 py-12 lg:flex">
+        {/* Left — light value panel */}
+        <div className="hidden min-h-0 flex-col justify-center bg-white px-10 py-12 lg:flex">
           <div className="w-full max-w-md space-y-7">
             <Image
               src="/logo.png"
               alt="SchoolPurse"
-              width={56}
-              height={56}
-              className="size-14 rounded-2xl object-contain shadow-lg shadow-primary/15"
+              width={52}
+              height={52}
+              className="size-[52px] rounded-2xl object-contain"
             />
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Let&apos;s set up your school
+            <div className="space-y-2.5">
+              <h1 className="text-[28px] font-bold leading-tight tracking-tight text-slate-900">
+                Set up your school in a couple of minutes
               </h1>
-              <p className="text-[15px] leading-relaxed text-muted-foreground">
-                A couple of minutes to get SchoolPurse ready for fees, payments,
-                receipts and arrears.
+              <p className="text-[15px] leading-relaxed text-slate-500">
+                Fees, payments, receipts and arrears — built for schools in
+                Zimbabwe and the region.
               </p>
             </div>
             <ul className="space-y-3">
               {VALUE_PROPS.map((v) => (
-                <li key={v} className="flex items-center gap-2.5 text-sm">
-                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <li key={v} className="flex items-center gap-2.5 text-sm text-slate-700">
+                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
                     <Check className="size-3" strokeWidth={3} />
                   </span>
                   {v}
@@ -119,20 +106,18 @@ export default async function OnboardingPage() {
               ))}
             </ul>
           </div>
-        </AuroraBackground>
+        </div>
 
-        {/* Right — the wizard on a plain app surface. */}
-        <div className="flex items-center justify-center bg-background px-5 py-10 sm:px-8">
+        {/* Right — wizard card */}
+        <div className="flex items-center justify-center px-5 py-10 sm:px-8">
           <div className="w-full max-w-md">
             <div className="mb-6 lg:hidden">
-              <h1 className="text-xl font-bold tracking-tight">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
                 Set up your school
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Takes about two minutes.
-              </p>
+              <p className="text-sm text-slate-500">Takes about two minutes.</p>
             </div>
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <OnboardingForm
                 defaultName={defaultName}
                 defaultEmail={user.email ?? ""}
