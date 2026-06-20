@@ -112,7 +112,7 @@ export default async function PaymentsPage({
   const classes = (classesRes.data ?? []) as Array<{
     id: string;
     name: string;
-    level: "primary" | "secondary" | "tertiary" | null;
+    level: "ecd" | "primary" | "secondary" | "college" | null;
   }>;
 
   // Group outstanding lines by student so the form can show "what is owed"

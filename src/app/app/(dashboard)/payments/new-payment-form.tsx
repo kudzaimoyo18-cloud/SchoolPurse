@@ -30,22 +30,24 @@ interface StudentOption {
 interface ClassOption {
   id: string;
   name: string;
-  level: "primary" | "secondary" | "tertiary" | null;
+  level: "ecd" | "primary" | "secondary" | "college" | null;
 }
 
 const LEVEL_LABEL: Record<
   NonNullable<ClassOption["level"]>,
   string
 > = {
+  ecd: "ECD",
   primary: "Primary",
   secondary: "Secondary",
-  tertiary: "Tertiary",
+  college: "College",
 };
 
 const LEVEL_ORDER: Array<NonNullable<ClassOption["level"]>> = [
+  "ecd",
   "primary",
   "secondary",
-  "tertiary",
+  "college",
 ];
 
 export function NewPaymentForm({
@@ -98,6 +100,10 @@ export function NewPaymentForm({
   );
   const outstandingLines = selectedStudent?.outstanding_lines ?? [];
   const hasOutstanding = outstandingLines.length > 0;
+  const totalOutstanding = React.useMemo(
+    () => outstandingLines.reduce((sum, ln) => sum + Math.max(ln.balance, 0), 0),
+    [outstandingLines],
+  );
 
   // Reset allocations whenever the picked student changes. We don't pre-fill
   // amounts — the bursar always types what the parent actually paid per line.
@@ -214,6 +220,20 @@ export function NewPaymentForm({
   // exact outstanding balance so the bursar doesn't have to retype it.
   function fillFullBalance(line: OutstandingLine) {
     updateAllocation(line.id, line.balance.toFixed(2));
+  }
+
+  // The common case: the parent clears everything. One tap fills every row to
+  // its full balance so the bursar doesn't enter each line by hand.
+  function payAllInFull() {
+    const next: Record<string, string> = {};
+    for (const ln of outstandingLines) {
+      if (ln.balance > 0) next[ln.id] = ln.balance.toFixed(2);
+    }
+    setAllocations(next);
+  }
+
+  function clearAllocations() {
+    setAllocations({});
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -474,26 +494,54 @@ export function NewPaymentForm({
         {studentId ? (
           hasOutstanding ? (
             <div className="rounded-lg border border-border">
-              <div className="flex items-center justify-between border-b border-border bg-sp-card-alt px-4 py-2.5">
-                <div>
-                  <p className="text-[13px] font-semibold">Paying for</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Enter how much the parent is paying against each item.
-                    Leave a row blank to skip it.
-                  </p>
+              <div className="border-b border-border bg-sp-card-alt px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[13px] font-semibold">Paying for</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Total outstanding{" "}
+                      <span className="font-medium text-foreground tabular-nums">
+                        {formatMoney(totalOutstanding)}
+                      </span>
+                      . Pay it all in one tap, or enter amounts per item.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
+                      Receipt total
+                    </p>
+                    <p
+                      className={cn(
+                        "text-lg font-bold tabular-nums",
+                        allocationsTotal > 0
+                          ? "text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {formatMoney(allocationsTotal)}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-wide text-sp-text-sub">
-                    Receipt total
-                  </p>
-                  <p
-                    className={cn(
-                      "text-lg font-bold tabular-nums",
-                      allocationsTotal > 0 ? "text-primary" : "text-muted-foreground",
-                    )}
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={payAllInFull}
+                    disabled={pending}
+                    className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11.5px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
                   >
-                    {formatMoney(allocationsTotal)}
-                  </p>
+                    <Check className="size-3" strokeWidth={2.5} />
+                    Pay all in full
+                  </button>
+                  {allocationsTotal > 0 ? (
+                    <button
+                      type="button"
+                      onClick={clearAllocations}
+                      disabled={pending}
+                      className="rounded-md border border-border px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground transition hover:text-foreground disabled:opacity-40"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
                 </div>
               </div>
               <ul className="divide-y divide-border">
