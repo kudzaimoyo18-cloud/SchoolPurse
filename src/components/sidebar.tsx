@@ -39,6 +39,8 @@ interface SidebarProps {
   arrearsCount?: number;
   termLabel?: string;
   logoUrl?: string | null;
+  /** AI plan unlocks the video classroom + in-app messaging nav items. */
+  hasAi?: boolean;
 }
 
 /**
@@ -52,6 +54,7 @@ export function Sidebar({
   arrearsCount = 0,
   termLabel,
   logoUrl,
+  hasAi = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const initials = getInitials(user.name);
@@ -99,7 +102,7 @@ export function Sidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-1 py-3">
-        {navSectionsForRole(user.role as UserRole).map((section, idx) => (
+        {navSectionsForRole(user.role as UserRole, hasAi).map((section, idx) => (
           <SidebarGroup key={section.label ?? `section-${idx}`} className="p-0">
             {section.label ? (
               <SidebarGroupLabel className="px-2 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">

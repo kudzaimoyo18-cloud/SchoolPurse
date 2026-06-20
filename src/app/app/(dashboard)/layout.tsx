@@ -137,6 +137,7 @@ export default async function DashboardLayout({
         termLabel={termLabel}
         arrearsCount={arrears.length}
         logoUrl={logoUrl}
+        hasAi={hasAiAccess}
       />
       <SidebarInset className="flex min-h-svh flex-col">
         <TopBar

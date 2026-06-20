@@ -1,6 +1,8 @@
 import { MessageSquare } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
+import { normalizePlan } from "@/lib/plan";
+import { AiUpgradeNotice } from "@/components/ai-upgrade-notice";
 import { ensureConversations } from "./actions";
 import { MessagesClient, type ConversationView } from "./messages-client";
 
@@ -16,6 +18,21 @@ const TYPE_RANK: Record<string, number> = {
 export default async function MessagesPage() {
   const user = await getCurrentUser();
   const supabase = await createClient();
+
+  // AI-plan feature — gate before provisioning any groups.
+  const { data: schoolRow } = await supabase
+    .from("schools")
+    .select("plan")
+    .limit(1)
+    .maybeSingle();
+  if (normalizePlan((schoolRow as { plan?: string } | null)?.plan) !== "ai") {
+    return (
+      <AiUpgradeNotice
+        title="Messages"
+        description="Bring your school's groups in-app — class notices and staff chat, with no more scattered WhatsApp groups."
+      />
+    );
+  }
 
   // Provision the standard groups (+ one per class) on first visit.
   await ensureConversations();
