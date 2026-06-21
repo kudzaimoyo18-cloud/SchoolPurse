@@ -124,12 +124,22 @@ const findStudent: AssistantTool = {
     required: ["name"],
   },
   async run(input) {
-    const name = String(input.name ?? "").trim();
-    if (!name) return { error: "No name provided." };
-    const supabase = await createClient();
+    const raw = String(input.name ?? "").trim();
+    if (!raw) return { error: "No name provided." };
 
-    // Match first name, last name, or the two combined. ilike args are passed
-    // as bound parameters by the client — safe from injection.
+    // The name is interpolated into a PostgREST `.or()` filter string, where
+    // commas and parentheses are structural. Strip them (and the ilike
+    // wildcards) so a crafted name can't break out of the ilike into other
+    // conditions. RLS already scopes to the caller's school — this is
+    // defence-in-depth against filter injection.
+    const name = raw
+      .replace(/[,()*%]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 60);
+    if (!name) return { matches: [], note: "No student found." };
+
+    const supabase = await createClient();
     const pattern = `%${name}%`;
     const { data, error } = await supabase
       .from("students")

@@ -136,7 +136,10 @@ export async function POST(req: Request) {
           }
           messages.push({ role: "user", content: results });
         }
-      } catch {
+      } catch (err) {
+        // Surface the underlying Anthropic/SDK error server-side (billing,
+        // rate-limit, bad key) — the user still gets a generic message.
+        console.error("[assistant] stream error:", err);
         send("\n\n_Sorry — something went wrong reaching the assistant._");
       } finally {
         controller.close();
