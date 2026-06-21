@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GooeyFilter } from "@/components/ui/gooey-toggle";
@@ -40,7 +41,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             <TooltipProvider delay={200}>
-              {children}
+              <PostHogProvider>{children}</PostHogProvider>
               <Toaster richColors position="top-right" />
               <GooeyFilter />
             </TooltipProvider>

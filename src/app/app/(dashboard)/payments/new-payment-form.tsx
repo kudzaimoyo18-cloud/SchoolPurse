@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
+import { track } from "@/lib/analytics";
 import { recordPayment } from "./actions";
 import { quickAddStudent } from "@/app/app/(dashboard)/students/quick-add-action";
 
@@ -268,6 +269,7 @@ export function NewPaymentForm({
         return;
       }
       setSuccess(res.receiptNumber);
+      track("payment_recorded", { amount_usd: totalForSubmit });
       toast.success(`Receipt ${res.receiptNumber} issued`);
       formRef.current?.reset();
       clearStudent();

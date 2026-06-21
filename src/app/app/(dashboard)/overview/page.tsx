@@ -107,15 +107,24 @@ export default async function OverviewPage() {
   ]);
 
   // Onboarding setup checklist — counts drive which steps are complete.
-  const [classesCnt, studentsCnt, feeItemsCnt, paymentsCnt] = await Promise.all([
-    supabase.from("classes").select("*", { count: "exact", head: true }),
-    supabase.from("students").select("*", { count: "exact", head: true }),
-    supabase.from("fee_items").select("*", { count: "exact", head: true }),
-    supabase
-      .from("payments")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "completed"),
-  ]);
+  const [classesCnt, studentsCnt, feeItemsCnt, paymentsCnt, usersCnt, schoolRes] =
+    await Promise.all([
+      supabase.from("classes").select("*", { count: "exact", head: true }),
+      supabase.from("students").select("*", { count: "exact", head: true }),
+      supabase.from("fee_items").select("*", { count: "exact", head: true }),
+      supabase
+        .from("payments")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase.from("schools").select("logo_path, phone").limit(1).maybeSingle(),
+    ]);
+  const school = schoolRes.data as {
+    logo_path?: string | null;
+    phone?: string | null;
+  } | null;
+  const branded =
+    !!school?.logo_path && !!school?.phone && (usersCnt.count ?? 0) > 1;
   const setupSteps: SetupStep[] = [
     {
       key: "classes",
@@ -144,6 +153,13 @@ export default async function OverviewPage() {
       description: "Then print or email a receipt",
       href: "/app/students",
       done: (paymentsCnt.count ?? 0) > 0,
+    },
+    {
+      key: "brand",
+      label: "Brand & invite your team",
+      description: "Add a logo, school phone & a teammate",
+      href: "/app/settings",
+      done: branded,
     },
   ];
 

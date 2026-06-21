@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { sendArrearsReminders } from "./actions";
 
 // AI-plan button: queue WhatsApp fee reminders to every family in arrears.
@@ -17,6 +18,11 @@ export function RemindersButton() {
         toast.error(r.error ?? "Couldn't send reminders.");
         return;
       }
+      track("arrears_reminders_sent", {
+        sent: r.sent ?? 0,
+        skipped: r.skipped ?? 0,
+        no_phone: r.noPhone ?? 0,
+      });
       const sent = r.sent ?? 0;
       const skipped = r.skipped ?? 0;
       const noPhone = r.noPhone ?? 0;

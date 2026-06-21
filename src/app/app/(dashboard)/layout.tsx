@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { AssistantFab } from "@/components/assistant-fab";
+import { PostHogIdentify } from "@/components/posthog-identify";
 import { normalizePlan } from "@/lib/plan";
 import { fetchArrears } from "@/lib/queries/arrears";
 import {
@@ -154,6 +155,12 @@ export default async function DashboardLayout({
             hasAccess={hasAiAccess}
           />
         ) : null}
+        <PostHogIdentify
+          id={user.id}
+          email={user.email}
+          role={user.role}
+          schoolName={user.schoolName}
+        />
       </SidebarInset>
     </SidebarProvider>
   );

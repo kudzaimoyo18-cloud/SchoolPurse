@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -36,6 +37,7 @@ export function AssistantChat({ firstName }: { firstName: string }) {
     ];
     setMessages(next);
     setBusy(true);
+    track("assistant_query");
 
     // Reserve the assistant bubble; deltas stream into it as they arrive.
     setMessages((m) => [...m, { role: "assistant", content: "" }]);
