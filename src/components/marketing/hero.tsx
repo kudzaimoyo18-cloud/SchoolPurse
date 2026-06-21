@@ -41,18 +41,18 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
 
           {/* Headline */}
           <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[56px]">
-            Track every fee.{" "}
+            Run your school&apos;s fees &mdash;{" "}
             <span className="bg-gradient-to-r from-primary to-[#0ea5e9] bg-clip-text text-transparent dark:from-primary dark:to-[#38bdf8]">
-              Issue every receipt.
-            </span>{" "}
-            See every report.
+              free for up to 100 students.
+            </span>
           </h1>
 
           {/* Subline */}
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-[16.5px]">
-            SchoolPurse is the internal finance dashboard your bursar and admin
-            board need &mdash; manage cash payments, surface arrears, log
-            expenses, and watch monthly P&amp;L without leaving the office.
+            Record payments, issue receipts and chase arrears without
+            spreadsheets. Upgrade for an AI assistant that answers your finances
+            in plain English or Shona, in-app class messaging, and automated
+            WhatsApp fee reminders that get you paid faster.
           </p>
 
           {/* CTAs */}
@@ -64,22 +64,22 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
               className="group w-full sm:w-auto"
             >
               <Link href={isAuthed ? "/app/overview" : "/login"}>
-                {isAuthed ? "Open dashboard" : "Sign in to your school"}
+                {isAuthed ? "Open dashboard" : "Start free"}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </GlassButton>
             <a
-              href="#features"
+              href="#pricing"
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-secondary sm:w-auto"
             >
-              See what&apos;s included
+              See pricing
             </a>
           </div>
 
           {/* Trust bar */}
           <div className="mt-6 flex items-center justify-center gap-1.5 text-[11.5px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
-            Multi-tenant &middot; Row-level isolation per school &middot; Audit-logged
+            Free to start &middot; No card needed &middot; Works great on Android
           </div>
         </div>
 

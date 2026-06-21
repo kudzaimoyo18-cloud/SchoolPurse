@@ -12,13 +12,13 @@ import { Contact } from "@/components/marketing/contact";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 
 export const metadata: Metadata = {
-  title: "SchoolPurse — Finance tracking for Zimbabwean schools",
+  title: "SchoolPurse — School fees, free for up to 100 students",
   description:
-    "Internal finance dashboard for school admin boards. Track cash payments, surface arrears, log expenses, and run monthly P&L without spreadsheets.",
+    "Run your school's fees, receipts and arrears free for up to 100 students. Upgrade for an AI finance assistant, in-app class messaging, and automated WhatsApp fee reminders. Built for schools in Zimbabwe.",
   openGraph: {
-    title: "SchoolPurse — Finance tracking for Zimbabwean schools",
+    title: "SchoolPurse — School fees, free for up to 100 students",
     description:
-      "Internal finance dashboard for school admin boards. Track cash payments, surface arrears, log expenses, and run monthly P&L without spreadsheets.",
+      "Fees, receipts and arrears free for up to 100 students. Upgrade for the AI assistant, in-app messaging and WhatsApp fee reminders. Built for Zimbabwean schools.",
     type: "website",
   },
 };

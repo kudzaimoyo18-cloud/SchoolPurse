@@ -1,42 +1,54 @@
 import {
-  CreditCard,
-  AlertTriangle,
   Receipt,
+  AlertTriangle,
   BarChart3,
-  Users,
-  ShieldCheck,
+  Sparkles,
+  MessageSquare,
+  Send,
+  type LucideIcon,
 } from "lucide-react";
 
-const FEATURES = [
+type Feature = {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+  tag?: "Free" | "AI";
+};
+
+const FEATURES: Feature[] = [
   {
-    icon: CreditCard,
-    title: "Cash payments, properly recorded",
-    body: "Record cash at the office in seconds with student autocomplete. Each payment auto-allocates against the oldest open invoice and issues a sequential receipt number.",
+    icon: Receipt,
+    title: "Free for up to 100 students",
+    body: "Record cash, EcoCash and transfers, issue sequential receipts, and track every student's balance — at no cost. The whole fee book for a small school, free forever.",
+    tag: "Free",
   },
   {
     icon: AlertTriangle,
     title: "Arrears you can act on",
-    body: "Critical / Moderate / Recent badges by days overdue, per-class collection progress, total outstanding by form. Spot who to chase, today.",
-  },
-  {
-    icon: Receipt,
-    title: "Printable receipts on demand",
-    body: "Every payment becomes a receipt with school header, registration details, amount in words, and a signature line. Print to PDF in one click.",
+    body: "Critical / Moderate / Recent badges by days overdue, per-class collection progress, total outstanding by form. See exactly who to chase today.",
   },
   {
     icon: BarChart3,
-    title: "Reports your board will actually read",
-    body: "Monthly income vs expenses, YTD net surplus, margin trends, expense breakdowns by category. CSV export for the auditor.",
+    title: "Reports your board will read",
+    body: "Monthly income vs expenses, year-to-date surplus, margins and expense breakdowns. E-Report Books for pupils. CSV export for the auditor.",
   },
   {
-    icon: Users,
-    title: "Students, fees & invoices",
-    body: "Enrol students (one-by-one or via CSV), set per-class fee structures, and generate a full term's invoices for every active student with one click.",
+    icon: Sparkles,
+    title: "AI finance assistant",
+    body: "Ask your fees, arrears and P&L in plain English or Shona — “who owes the most?”, “how much did we collect this month?” — and get an instant answer.",
+    tag: "AI",
   },
   {
-    icon: ShieldCheck,
-    title: "Built for the admin board",
-    body: "Role-based access (Head, Bursar, Teacher), full audit trail, multi-tenant isolation. No parent or student logins — your data, your team only.",
+    icon: MessageSquare,
+    title: "In-app messages & class groups",
+    body: "School notices, staff room and a group per class, all in one place. No more scattered WhatsApp groups to keep track of.",
+    tag: "AI",
+  },
+  {
+    icon: Send,
+    title: "Automated WhatsApp reminders",
+    body: "Personalised fee reminders to parents, sent from your school's identity — so families pay faster, without the awkward phone calls.",
+    tag: "AI",
   },
 ];
 
@@ -49,11 +61,11 @@ export function Features() {
             Features
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-            Every finance task in one place
+            Everything the office needs — and a smart layer on top
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            Designed for the bursar&apos;s day-to-day, not for a quarterly board
-            meeting. Open the laptop, record the cash, print the receipt.
+            Start free with the fee book your bursar uses daily. Upgrade for the
+            AI assistant, in-app messaging and WhatsApp reminders.
           </p>
         </div>
 
@@ -65,12 +77,27 @@ export function Features() {
                 key={f.title}
                 className="group relative flex flex-col rounded-xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/20 hover:shadow-md hover:shadow-primary/[0.04]"
               >
-                {/* Subtle top-left accent line */}
                 <div className="absolute left-0 top-6 h-8 w-[3px] rounded-r-full bg-primary/20 transition-all group-hover:h-10 group-hover:bg-primary/50" />
 
-                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground dark:bg-primary/20">
-                  <Icon className="size-5" strokeWidth={1.8} />
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground dark:bg-primary/20">
+                    <Icon className="size-5" strokeWidth={1.8} />
+                  </span>
+                  {f.tag ? (
+                    <span
+                      className={
+                        f.tag === "Free"
+                          ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"
+                          : "inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
+                      }
+                    >
+                      {f.tag === "AI" ? (
+                        <Sparkles className="size-2.5" />
+                      ) : null}
+                      {f.tag} {f.tag === "AI" ? "plan" : ""}
+                    </span>
+                  ) : null}
+                </div>
                 <h3 className="mt-4 text-[15px] font-semibold tracking-tight">
                   {f.title}
                 </h3>
