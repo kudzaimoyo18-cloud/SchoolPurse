@@ -27,7 +27,40 @@ function isPublic(pathname: string) {
   );
 }
 
+// Optional subdomain split: the dashboard (/app/*) lives on this host, the
+// landing on the apex. Both are UNSET by default, so behaviour is unchanged
+// until the env vars + DNS are in place.
+//   NEXT_PUBLIC_DASHBOARD_HOST — e.g. "app.schoolpurse.app"
+//   AUTH_COOKIE_DOMAIN         — e.g. ".schoolpurse.app" (so the login cookie
+//                                spans the apex and the subdomain)
+const DASHBOARD_HOST = process.env.NEXT_PUBLIC_DASHBOARD_HOST;
+const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN;
+
 export async function proxy(request: NextRequest) {
+  const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  const pathname = request.nextUrl.pathname;
+  const onDashboardHost = !!DASHBOARD_HOST && host === DASHBOARD_HOST;
+
+  // Host-based routing (only when a dashboard host is configured).
+  if (DASHBOARD_HOST) {
+    // Apex requesting a dashboard path → send it to the dashboard host.
+    if (
+      !onDashboardHost &&
+      (pathname === "/app" || pathname.startsWith("/app/"))
+    ) {
+      const url = new URL(request.url);
+      url.protocol = "https:";
+      url.host = DASHBOARD_HOST;
+      return NextResponse.redirect(url);
+    }
+    // Dashboard host root → the dashboard home.
+    if (onDashboardHost && pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/app/overview";
+      return NextResponse.redirect(url);
+    }
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -44,7 +77,10 @@ export async function proxy(request: NextRequest) {
           );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, {
+              ...options,
+              ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
+            }),
           );
         },
       },
@@ -55,8 +91,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-
   // Unauthenticated users hitting a protected route → /login
   if (!user && !isPublic(pathname)) {
     const url = request.nextUrl.clone();
@@ -65,9 +99,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authed users hitting /login → /overview (the dashboard layout will
-  // route them onward to /onboarding if they don't have a profile yet).
+  // Authed users hitting /login → the dashboard (on its own host if split).
   if (user && pathname === "/login") {
+    if (DASHBOARD_HOST && !onDashboardHost) {
+      return NextResponse.redirect(
+        new URL("/app/overview", `https://${DASHBOARD_HOST}`),
+      );
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/app/overview";
     url.search = "";

@@ -14,9 +14,12 @@ export async function createClient() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
+          // Optional cross-subdomain cookie domain so the session spans the
+          // apex + dashboard subdomain. Unset by default (no behaviour change).
+          const domain = process.env.AUTH_COOKIE_DOMAIN;
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, domain ? { ...options, domain } : options),
             );
           } catch {
             // Called from a Server Component — proxy refreshes the session.
