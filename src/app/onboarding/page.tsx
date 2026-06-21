@@ -8,8 +8,8 @@ import { OnboardingForm } from "./onboarding-form";
 export const metadata = { title: "Set up your school — SchoolPurse" };
 
 const VALUE_PROPS = [
-  "Free for up to 100 students",
-  "Receipts, invoices & arrears in one place",
+  "Fees, receipts & arrears from $35/month",
+  "Everything in one place — no spreadsheets",
   "In-app messages — no more WhatsApp groups",
   "Upgrade for the AI assistant & WhatsApp reminders",
 ];

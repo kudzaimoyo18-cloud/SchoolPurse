@@ -22,18 +22,22 @@ describe("normalizePlan", () => {
 });
 
 describe("exceedsStudentLimit", () => {
-  test("free blocks the 101st student", () => {
-    expect(exceedsStudentLimit("free", 99)).toBe(false); // 99 + 1 = 100 ok
-    expect(exceedsStudentLimit("free", 100)).toBe(true); // 100 + 1 = 101 blocked
+  test("Starter (free key) blocks the 51st student", () => {
+    expect(exceedsStudentLimit("free", 49)).toBe(false); // 49 + 1 = 50 ok
+    expect(exceedsStudentLimit("free", 50)).toBe(true); // 50 + 1 = 51 blocked
   });
 
-  test("free respects a batch import that would cross the cap", () => {
-    expect(exceedsStudentLimit("free", 80, 20)).toBe(false); // 100 ok
-    expect(exceedsStudentLimit("free", 80, 21)).toBe(true); // 101 blocked
+  test("Starter respects a batch import that would cross the cap", () => {
+    expect(exceedsStudentLimit("free", 30, 20)).toBe(false); // 50 ok
+    expect(exceedsStudentLimit("free", 30, 21)).toBe(true); // 51 blocked
   });
 
-  test("pro and ai are uncapped", () => {
-    expect(exceedsStudentLimit("pro", 100_000)).toBe(false);
+  test("Pro caps at 250 students", () => {
+    expect(exceedsStudentLimit("pro", 249)).toBe(false); // 250 ok
+    expect(exceedsStudentLimit("pro", 250)).toBe(true); // 251 blocked
+  });
+
+  test("AI is uncapped", () => {
     expect(exceedsStudentLimit("ai", 100_000, 5000)).toBe(false);
   });
 });
@@ -51,8 +55,14 @@ describe("exceedsUserLimit", () => {
 });
 
 describe("PLAN_LIMITS", () => {
-  test("free caps at 100 students / 1 user", () => {
-    expect(PLAN_LIMITS.free.maxStudents).toBe(100);
+  test("Starter (free key) caps at 50 students / 1 user", () => {
+    expect(PLAN_LIMITS.free.maxStudents).toBe(50);
     expect(PLAN_LIMITS.free.maxUsers).toBe(1);
+  });
+  test("Pro caps at 250 students", () => {
+    expect(PLAN_LIMITS.pro.maxStudents).toBe(250);
+  });
+  test("AI is unlimited students", () => {
+    expect(PLAN_LIMITS.ai.maxStudents).toBe(Number.POSITIVE_INFINITY);
   });
 });

@@ -12,15 +12,14 @@ type Feature = {
   icon: LucideIcon;
   title: string;
   body: string;
-  tag?: "Free" | "AI";
+  tag?: "AI";
 };
 
 const FEATURES: Feature[] = [
   {
     icon: Receipt,
-    title: "Free for up to 100 students",
-    body: "Record cash, EcoCash and transfers, issue sequential receipts, and track every student's balance — at no cost. The whole fee book for a small school, free forever.",
-    tag: "Free",
+    title: "Fees, receipts & payments",
+    body: "Record cash, EcoCash and transfers in seconds with student autocomplete, auto-allocate against open invoices, and issue a sequential receipt every time.",
   },
   {
     icon: AlertTriangle,
@@ -64,8 +63,8 @@ export function Features() {
             Everything the office needs — and a smart layer on top
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            Start free with the fee book your bursar uses daily. Upgrade for the
-            AI assistant, in-app messaging and WhatsApp reminders.
+            The fee book your bursar uses daily, from $35/mo. Upgrade for the AI
+            assistant, in-app messaging and WhatsApp reminders.
           </p>
         </div>
 
@@ -84,17 +83,9 @@ export function Features() {
                     <Icon className="size-5" strokeWidth={1.8} />
                   </span>
                   {f.tag ? (
-                    <span
-                      className={
-                        f.tag === "Free"
-                          ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"
-                          : "inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
-                      }
-                    >
-                      {f.tag === "AI" ? (
-                        <Sparkles className="size-2.5" />
-                      ) : null}
-                      {f.tag} {f.tag === "AI" ? "plan" : ""}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                      <Sparkles className="size-2.5" />
+                      AI plan
                     </span>
                   ) : null}
                 </div>

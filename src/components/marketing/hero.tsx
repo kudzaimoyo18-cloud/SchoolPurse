@@ -43,7 +43,7 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
           <h1 className="mt-6 text-balance text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[56px]">
             Run your school&apos;s fees &mdash;{" "}
             <span className="bg-gradient-to-r from-primary to-[#0ea5e9] bg-clip-text text-transparent dark:from-primary dark:to-[#38bdf8]">
-              free for up to 100 students.
+              from $35 a month.
             </span>
           </h1>
 
@@ -64,7 +64,7 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
               className="group w-full sm:w-auto"
             >
               <Link href={isAuthed ? "/app/overview" : "/login"}>
-                {isAuthed ? "Open dashboard" : "Start free"}
+                {isAuthed ? "Open dashboard" : "Get started"}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </GlassButton>
@@ -79,7 +79,7 @@ export function Hero({ isAuthed = false }: { isAuthed?: boolean }) {
           {/* Trust bar */}
           <div className="mt-6 flex items-center justify-center gap-1.5 text-[11.5px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
-            Free to start &middot; No card needed &middot; Works great on Android
+            From $35/mo &middot; Cancel anytime &middot; Works great on Android
           </div>
         </div>
 

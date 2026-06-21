@@ -12,13 +12,13 @@ import { Contact } from "@/components/marketing/contact";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 
 export const metadata: Metadata = {
-  title: "SchoolPurse — School fees, free for up to 100 students",
+  title: "SchoolPurse — School fee management, from $35/month",
   description:
-    "Run your school's fees, receipts and arrears free for up to 100 students. Upgrade for an AI finance assistant, in-app class messaging, and automated WhatsApp fee reminders. Built for schools in Zimbabwe.",
+    "Run your school's fees, receipts and arrears from $35/month. Upgrade for an AI finance assistant, in-app class messaging, and automated WhatsApp fee reminders. Built for schools in Zimbabwe.",
   openGraph: {
-    title: "SchoolPurse — School fees, free for up to 100 students",
+    title: "SchoolPurse — School fee management, from $35/month",
     description:
-      "Fees, receipts and arrears free for up to 100 students. Upgrade for the AI assistant, in-app messaging and WhatsApp fee reminders. Built for Zimbabwean schools.",
+      "Fees, receipts and arrears from $35/month. Upgrade for the AI assistant, in-app messaging and WhatsApp fee reminders. Built for Zimbabwean schools.",
     type: "website",
   },
 };

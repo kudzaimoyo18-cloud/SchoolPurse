@@ -34,9 +34,11 @@ const Schema = z.object({
   seed_defaults: z.coerce.boolean().optional(),
 });
 
-const CHECKOUT_BY_PLAN: Record<"pro" | "ai", string | undefined> = {
+// Starter ($35, internal `free` key) and Pro ($50) check out via Whop. AI is
+// custom-priced (contact us) — no checkout link.
+const CHECKOUT_BY_PLAN: Record<"free" | "pro", string | undefined> = {
+  free: process.env.NEXT_PUBLIC_WHOP_STARTER_CHECKOUT,
   pro: process.env.NEXT_PUBLIC_WHOP_PRO_CHECKOUT,
-  ai: process.env.NEXT_PUBLIC_WHOP_AI_CHECKOUT,
 };
 
 /** Upload an onboarding logo to the school-logos bucket; returns its path. */
@@ -313,10 +315,11 @@ export async function provisionMySchool(
     tier,
   });
 
-  // Paid tier picked → hand off to Whop checkout (webhook upgrades plan once
-  // paid). If the checkout link isn't configured, fall through to the app on
-  // Free; they can upgrade from Settings/Pricing later.
-  if (parsed.data.plan !== "free") {
+  // Starter/Pro → hand off to Whop checkout (webhook activates the plan once
+  // paid). AI is custom-priced, so it skips checkout — the school lands in the
+  // app and we follow up. If a checkout link isn't configured, fall through to
+  // the app; they can pay from Settings/Pricing later.
+  if (parsed.data.plan === "free" || parsed.data.plan === "pro") {
     const checkout = CHECKOUT_BY_PLAN[parsed.data.plan];
     if (checkout) redirect(checkout);
   }

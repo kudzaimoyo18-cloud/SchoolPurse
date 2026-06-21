@@ -17,30 +17,31 @@ interface Tier {
 
 const TIERS: Tier[] = [
   {
-    name: "Free",
-    price: "$0",
-    cadence: "forever",
-    blurb: "Run your fee book for a small school, at no cost.",
+    name: "Starter",
+    price: "$35",
+    cadence: "/ month",
+    blurb: "Everything a small school needs to run its fee book.",
     features: [
-      "Up to 100 students",
+      "Up to 50 students",
       "1 admin user",
-      "Cash, transfer & EcoCash tracking",
-      "Receipts (print + WhatsApp)",
-      "Arrears dashboard",
+      "Cash, EcoCash & transfer tracking",
+      "Receipts & arrears dashboard",
+      "Monthly income vs expenses",
     ],
-    cta: "Start free",
-    href: "/login",
+    cta: "Start with Starter",
+    href: process.env.NEXT_PUBLIC_WHOP_STARTER_CHECKOUT ?? "/login",
+    external: !!process.env.NEXT_PUBLIC_WHOP_STARTER_CHECKOUT,
   },
   {
     name: "Pro",
-    price: "$25",
+    price: "$50",
     cadence: "/ month",
-    blurb: "For growing schools — unlimited students and your whole office.",
+    blurb: "For growing schools — more students and your whole office.",
     features: [
-      "Unlimited students",
+      "Up to 250 students",
       "Multiple staff logins & roles",
       "Expenses & monthly P&L",
-      "Parent statements",
+      "Parent statements & E-Report Books",
       "School-bus / transport ledger",
       "CSV import & export, audit log",
     ],
@@ -52,19 +53,18 @@ const TIERS: Tier[] = [
   },
   {
     name: "AI",
-    price: "$59",
-    cadence: "/ month",
-    blurb: "Everything in Pro, plus the smart layer that gets you paid faster.",
+    price: "Custom",
+    cadence: "",
+    blurb: "Unlimited students plus the smart layer — priced by your numbers.",
     features: [
-      "Everything in Pro",
+      "Unlimited students",
       "AI dashboard chat — ask your finances",
       "Automated WhatsApp fee reminders",
-      "AI-assisted E-Report Books",
-      "Priority support",
+      "In-app messages & class video rooms",
+      "Everything in Pro",
     ],
-    cta: "Start with AI",
-    href: process.env.NEXT_PUBLIC_WHOP_AI_CHECKOUT ?? "/login",
-    external: !!process.env.NEXT_PUBLIC_WHOP_AI_CHECKOUT,
+    cta: "Talk to us",
+    href: "#contact",
   },
 ];
 
@@ -77,11 +77,11 @@ export function Pricing() {
             Pricing
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-            Honest pricing, paid termly or annually
+            Simple monthly pricing
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            All plans are billed in USD. Pay by EcoCash, bank transfer, or
-            cash at the office — annual plans get two months free.
+            Billed monthly in USD &mdash; pay by EcoCash, bank transfer or card.
+            AI pricing scales with your student numbers, so let&apos;s talk.
           </p>
         </div>
 

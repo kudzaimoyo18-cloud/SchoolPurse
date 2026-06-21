@@ -47,9 +47,9 @@ const STEPS = ["School", "Details", "You", "Plan"] as const;
 
 type Plan = "free" | "pro" | "ai";
 const PLANS: Array<{ id: Plan; name: string; price: string; blurb: string }> = [
-  { id: "free", name: "Free", price: "$0", blurb: "Up to 100 students, receipts & arrears." },
-  { id: "pro", name: "Pro", price: "$25/mo", blurb: "Unlimited students, staff logins, P&L." },
-  { id: "ai", name: "AI", price: "$59/mo", blurb: "Pro + AI assistant & WhatsApp reminders." },
+  { id: "free", name: "Starter", price: "$35/mo", blurb: "Up to 50 students, receipts & arrears." },
+  { id: "pro", name: "Pro", price: "$50/mo", blurb: "Up to 250 students, staff logins, P&L." },
+  { id: "ai", name: "AI", price: "Custom", blurb: "Unlimited + AI assistant & WhatsApp, priced by your numbers." },
 ];
 
 export function OnboardingForm({
@@ -414,7 +414,8 @@ export function OnboardingForm({
           Pick a plan
         </h2>
         <p className="text-[13px] text-slate-500">
-          Start free — no card needed. Upgrade any time.
+          AI is priced by your student numbers — we&apos;ll reach out after you
+          sign up. Change plans any time.
         </p>
         <div className="space-y-2.5">
           {PLANS.map((p) => {
@@ -458,12 +459,17 @@ export function OnboardingForm({
             );
           })}
         </div>
-        {plan !== "free" ? (
+        {plan === "ai" ? (
           <p className="text-[12px] text-slate-500">
-            We&apos;ll create your school on Free, then take you to secure
-            checkout to activate {plan === "ai" ? "AI" : "Pro"}.
+            We&apos;ll create your school and get in touch about AI pricing for
+            your student numbers.
           </p>
-        ) : null}
+        ) : (
+          <p className="text-[12px] text-slate-500">
+            We&apos;ll create your school, then take you to secure checkout to
+            activate {plan === "pro" ? "Pro" : "Starter"}.
+          </p>
+        )}
       </div>
 
       {state?.error ? (
@@ -514,7 +520,7 @@ export function OnboardingForm({
                 <Loader2 className="size-4 animate-spin" />
                 Setting up…
               </>
-            ) : plan === "free" ? (
+            ) : plan === "ai" ? (
               "Create my school"
             ) : (
               "Create & continue to payment"
