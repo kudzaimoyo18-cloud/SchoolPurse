@@ -109,8 +109,72 @@ export default async function StudentsPage({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <>
+            {/* Mobile: stacked student cards instead of a side-scrolling table. */}
+            <ul className="divide-y divide-border md:hidden">
+              {students.map((s) => {
+                const cls = classNameOf(s);
+                const photoUrl = s.photo_path
+                  ? (photoUrls.get(s.photo_path) ?? null)
+                  : null;
+                return (
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
+                    <Link
+                      href={`/app/students/${s.id}`}
+                      className="flex min-w-0 flex-1 items-center gap-2.5"
+                    >
+                      <span className="inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sp-card-alt text-xs font-semibold text-muted-foreground">
+                        {photoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={photoUrl}
+                            alt=""
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          getInitials(s.first_name, s.last_name)
+                        )}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">
+                          {s.first_name} {s.last_name}
+                        </span>
+                        <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+                          {cls ?? "—"} ·{" "}
+                          {s.status === "active" ? "Active" : "Withdrawn"}
+                        </span>
+                      </span>
+                    </Link>
+                    <div className="shrink-0">
+                      <StudentRowActions
+                        classes={classOptions}
+                        student={{
+                          id: s.id,
+                          first_name: s.first_name,
+                          last_name: s.last_name,
+                          class_id: s.class_id,
+                          dob: s.dob,
+                          gender: s.gender,
+                          enrollment_date: s.enrollment_date,
+                          status: s.status,
+                          parent_name: s.parent_name,
+                          parent_phone: s.parent_phone,
+                          parent_email: s.parent_email,
+                          home_address: s.home_address,
+                        }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Desktop: the full table. */}
+            <div className="hidden overflow-x-auto md:block">
+              <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
                   <TableHead className="pl-5">Name</TableHead>
@@ -190,8 +254,9 @@ export default async function StudentsPage({
                   );
                 })}
               </TableBody>
-            </Table>
-          </div>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
     </div>

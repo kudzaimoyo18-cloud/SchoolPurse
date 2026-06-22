@@ -188,8 +188,43 @@ export default async function ArrearsPage({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <>
+            {/* Mobile: stacked cards instead of a side-scrolling table. */}
+            <ul className="divide-y divide-border md:hidden">
+              {filtered.map((a) => (
+                <li
+                  key={a.student_id}
+                  className="flex items-center gap-3 px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {a.student_name}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                      {a.class_name ?? "—"} · {a.days_overdue}d overdue
+                    </p>
+                    <div className="mt-1">
+                      <ArrearsStatusBadge daysOverdue={a.days_overdue} />
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[15px] font-bold tabular-nums text-sp-red">
+                      {formatMoney(a.balance)}
+                    </p>
+                    <Link
+                      href="/app/payments?new=1"
+                      className="mt-1 inline-flex items-center rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground transition hover:opacity-90"
+                    >
+                      Record payment
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop: the full table. */}
+            <div className="hidden overflow-x-auto md:block">
+              <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
                   <TableHead className="pl-5">Student</TableHead>
@@ -237,8 +272,9 @@ export default async function ArrearsPage({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </div>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
     </div>

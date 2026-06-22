@@ -297,8 +297,62 @@ export default async function PaymentsPage({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <>
+            {/* Mobile: stacked payment cards instead of a side-scrolling table. */}
+            <ul className="divide-y divide-border md:hidden">
+              {payments.map((p) => {
+                const s = studentName(p);
+                const voided = p.status === "void";
+                return (
+                  <li key={p.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{s.name}</p>
+                        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                          {p.receipt_number} ·{" "}
+                          {METHOD_LABELS[p.method] ?? p.method} ·{" "}
+                          {formatDate(p.paid_at)}
+                        </p>
+                      </div>
+                      <p
+                        className={`shrink-0 text-[15px] font-bold tabular-nums ${voided ? "text-muted-foreground line-through" : "text-primary"}`}
+                      >
+                        {formatMoney(p.amount_usd)}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      {voided ? (
+                        <StatusBadge label="Void" variant="danger" />
+                      ) : (
+                        <StatusBadge label="Completed" variant="success" />
+                      )}
+                      <div className="inline-flex items-center gap-3">
+                        <Link
+                          href={`/app/receipts/${p.id}`}
+                          target="_blank"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
+                        >
+                          <ReceiptText className="size-3.5" />
+                          Receipt
+                        </Link>
+                        {canVoid && !voided ? (
+                          <VoidPaymentButton
+                            paymentId={p.id}
+                            receiptNumber={p.receipt_number}
+                            amountLabel={formatMoney(p.amount_usd)}
+                            studentName={s.name}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Desktop: the full table. */}
+            <div className="hidden overflow-x-auto md:block">
+              <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
                   <TableHead className="pl-5">Receipt</TableHead>
@@ -368,8 +422,9 @@ export default async function PaymentsPage({
                   );
                 })}
               </TableBody>
-            </Table>
-          </div>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
 
