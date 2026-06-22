@@ -455,7 +455,32 @@ export default async function OverviewPage() {
               />
             </div>
           ) : (
-            <Table>
+            <>
+              {/* Mobile: stacked cards. */}
+              <ul className="divide-y divide-border md:hidden">
+                {topArrears.map((a) => (
+                  <li
+                    key={a.student_id}
+                    className="flex items-center justify-between gap-3 px-5 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {a.student_name}
+                      </p>
+                      <p className="mt-1">
+                        <ArrearsStatusBadge daysOverdue={a.days_overdue} />
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold tabular-nums text-sp-red">
+                      {formatMoney(a.balance)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Desktop: the full table. */}
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
                   <TableHead className="pl-5">Student</TableHead>
@@ -482,7 +507,9 @@ export default async function OverviewPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+                </Table>
+              </div>
+            </>
           )}
         </SectionCard>
 

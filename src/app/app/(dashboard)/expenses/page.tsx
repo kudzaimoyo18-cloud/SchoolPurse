@@ -200,8 +200,35 @@ export default async function ExpensesPage() {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <>
+              {/* Mobile: stacked expense cards. */}
+              <ul className="divide-y divide-border md:hidden">
+                {expenses.map((e) => (
+                  <li
+                    key={e.id}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {e.description}
+                      </p>
+                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                        {formatDate(e.expense_date)} ·{" "}
+                        {categoryNameOf(e.expense_categories)}
+                        {e.payee ? ` · ${e.payee}` : ""}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[15px] font-bold tabular-nums text-sp-red">
+                      {formatMoney(e.amount_usd)}
+                    </p>
+                    <DeleteExpenseButton id={e.id} />
+                  </li>
+                ))}
+              </ul>
+
+              {/* Desktop: the full table. */}
+              <div className="hidden overflow-x-auto md:block">
+                <Table>
                 <TableHeader className="bg-sp-card-alt">
                   <TableRow>
                     <TableHead className="pl-5">Date</TableHead>
@@ -250,8 +277,9 @@ export default async function ExpensesPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </div>
+                </Table>
+              </div>
+            </>
           )}
         </SectionCard>
 
@@ -314,8 +342,31 @@ export default async function ExpensesPage() {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <>
+            {/* Mobile: stacked transport-cost cards. */}
+            <ul className="divide-y divide-border md:hidden">
+              {transport.map((e) => (
+                <li key={e.id} className="flex items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {e.description}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                      {formatDate(e.expense_date)}
+                      {e.payee ? ` · ${e.payee}` : ""}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-[15px] font-bold tabular-nums text-sp-red">
+                    {formatMoney(e.amount_usd)}
+                  </p>
+                  <DeleteExpenseButton id={e.id} />
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop: the full table. */}
+            <div className="hidden overflow-x-auto md:block">
+              <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
                   <TableHead className="pl-5">Date</TableHead>
@@ -346,8 +397,9 @@ export default async function ExpensesPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </div>
+              </Table>
+            </div>
+          </>
         )}
       </SectionCard>
     </div>
