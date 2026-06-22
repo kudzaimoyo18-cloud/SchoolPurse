@@ -34,7 +34,7 @@ export function AssistantFab({ firstName, hasAccess }: Props) {
         <div
           role="dialog"
           aria-label="SchoolPurse Assistant"
-          className="fixed bottom-20 right-4 z-50 flex h-[min(70vh,32rem)] w-[min(92vw,23rem)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:right-6 sm:bottom-24"
+          className="fixed bottom-36 right-4 z-50 flex h-[min(70vh,32rem)] w-[min(92vw,23rem)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl lg:bottom-24 lg:right-6"
         >
           <header className="flex items-center gap-2 border-b border-border px-4 py-3">
             <span className="inline-flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -70,7 +70,7 @@ export function AssistantFab({ firstName, hasAccess }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close assistant" : "Open assistant"}
-        className="fixed bottom-4 right-4 z-50 inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 hover:shadow-xl active:scale-95 sm:bottom-6 sm:right-6"
+        className="fixed bottom-20 right-4 z-50 inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 hover:shadow-xl active:scale-95 lg:bottom-6 lg:right-6"
       >
         {open ? (
           <X className="size-6" strokeWidth={2.2} />

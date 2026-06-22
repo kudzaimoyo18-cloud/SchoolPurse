@@ -7,6 +7,7 @@ import { TopBar } from "@/components/topbar";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { AssistantFab } from "@/components/assistant-fab";
 import { PostHogIdentify } from "@/components/posthog-identify";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { normalizePlan } from "@/lib/plan";
 import { fetchArrears } from "@/lib/queries/arrears";
 import {
@@ -148,7 +149,11 @@ export default async function DashboardLayout({
           termStartDate={termStartDate}
         />
         <AnnouncementBanner announcement={announcement} />
-        <main className="flex-1 px-4 pb-10 pt-5 sm:px-7 sm:pt-6">{children}</main>
+        {/* pb-24 on mobile clears the fixed bottom tab bar; lg has no bar. */}
+        <main className="flex-1 px-4 pb-24 pt-5 sm:px-7 sm:pt-6 lg:pb-10">
+          {children}
+        </main>
+        <MobileTabBar role={user.role} arrearsCount={arrears.length} />
         {showAssistant ? (
           <AssistantFab
             firstName={user.name.split(" ")[0]}
