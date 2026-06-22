@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
@@ -19,6 +19,16 @@ export const metadata: Metadata = {
   title: "SchoolPurse — School Finance Tracker",
   description:
     "Internal accounting and fee-tracking dashboard for Zimbabwean schools.",
+  applicationName: "SchoolPurse",
+  appleWebApp: {
+    capable: true,
+    title: "SchoolPurse",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#102a43",
 };
 
 export default function RootLayout({
