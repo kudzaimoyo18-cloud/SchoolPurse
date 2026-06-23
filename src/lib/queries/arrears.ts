@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { toNumber, daysBetween } from "@/lib/format";
 
@@ -148,8 +149,12 @@ export function aggregateArrears(
 /**
  * Fetch all open/partial invoices with their lines and aggregate to a per-student
  * arrears view. Returns the heaviest balances first.
+ *
+ * Wrapped in React `cache()` so the heavy nested query runs at most once per
+ * server request — the dashboard layout and the overview page both call this
+ * during the same render, and without caching that fired the query twice.
  */
-export async function fetchArrears(): Promise<ArrearsStudent[]> {
+export const fetchArrears = cache(async (): Promise<ArrearsStudent[]> => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -163,4 +168,4 @@ export async function fetchArrears(): Promise<ArrearsStudent[]> {
   if (error || !data) return [];
 
   return aggregateArrears(data as unknown as ArrearsInvoiceRow[], new Date());
-}
+});

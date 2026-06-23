@@ -20,16 +20,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
-
-  // Remember whether the user collapsed the sidebar last time (Notion-style).
-  // shadcn writes "sidebar_state" on toggle; default to open when unset.
-  const sidebarOpen =
-    (await cookies()).get("sidebar_state")?.value !== "false";
-
   const supabase = await createClient();
-  const [termRes, arrears, classesRes, feeItemsRes, schoolRes, announcementRes] =
-    await Promise.all([
+
+  // The auth lookup, the sidebar cookie read, and the layout data batch are all
+  // independent, so run them concurrently instead of gating the queries behind
+  // getCurrentUser(). getCurrentUser() and fetchArrears() are React-cached, so
+  // the page re-using them later in the same render costs nothing extra.
+  const [user, cookieStore, batch] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+    Promise.all([
       supabase
         .from("terms")
         .select("name, start_date, academic_years(name)")
@@ -55,7 +55,14 @@ export default async function DashboardLayout({
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
-    ]);
+    ]),
+  ]);
+  const [termRes, arrears, classesRes, feeItemsRes, schoolRes, announcementRes] =
+    batch;
+
+  // Remember whether the user collapsed the sidebar last time (Notion-style).
+  // shadcn writes "sidebar_state" on toggle; default to open when unset.
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const schoolData = schoolRes.data as {
     logo_path?: string | null;
     plan?: string | null;

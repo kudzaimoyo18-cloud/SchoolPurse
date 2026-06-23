@@ -101,7 +101,7 @@ export default async function OverviewPage() {
       .limit(6),
     supabase
       .from("terms")
-      .select("name, start_date, end_date")
+      .select("id, name, start_date, end_date")
       .eq("is_current", true)
       .maybeSingle(),
   ]);
@@ -191,17 +191,12 @@ export default async function OverviewPage() {
 
   // Term collection
   const term = termRes.data as
-    | { name: string; start_date: string; end_date: string }
+    | { id: string; name: string; start_date: string; end_date: string }
     | null;
   let termTarget = 0;
   let termCollected = 0;
   if (term) {
-    const termIdRes = await supabase
-      .from("terms")
-      .select("id")
-      .eq("is_current", true)
-      .maybeSingle();
-    const termId = (termIdRes.data as { id: string } | null)?.id ?? "";
+    const termId = term.id;
     // Exclude carry-over invoices — they represent state from before
     // SchoolPurse, not fees actually billed this term, so they'd inflate
     // both the term target and the "collected" figure if included.

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,8 +16,12 @@ export interface CurrentUser {
 /**
  * Returns the signed-in user's profile (joining auth.users → public.users → public.schools).
  * Redirects to /login if not authenticated or if no matching public.users row exists.
+ *
+ * Wrapped in React `cache()` so it runs at most once per server request, even
+ * though the layout and each page (directly or via `requireRole`) all call it.
+ * This collapses 2–3 auth + `users` lookups per render into one.
  */
-export async function getCurrentUser(): Promise<CurrentUser> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -93,7 +98,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     schoolId: (profile.school_id as string | null) ?? null,
     schoolName,
   };
-}
+});
 
 /**
  * Like getCurrentUser, but redirects to the dashboard home if the user's role
