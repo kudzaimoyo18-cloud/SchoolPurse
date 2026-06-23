@@ -5,6 +5,7 @@ import { Hero } from "@/components/marketing/hero";
 import { Features } from "@/components/marketing/features";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { LocalContext } from "@/components/marketing/local-context";
+import { Partners } from "@/components/marketing/partners";
 import { Pricing } from "@/components/marketing/pricing";
 import { Testimonials } from "@/components/marketing/testimonials";
 import { Faq } from "@/components/marketing/faq";
@@ -40,6 +41,7 @@ export default async function Home() {
         <Features />
         <HowItWorks />
         <LocalContext />
+        <Partners />
         <Pricing />
         <Testimonials />
         <Faq />

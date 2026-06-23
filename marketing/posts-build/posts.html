@@ -1,0 +1,145 @@
+﻿<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0b1f2e; --green:#22c27a; --green-d:#1aa869;
+    --white:#f4f8fb; --sub:#8aa4be; --muted:#5e7a94; --rule:#1c3346;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#05101a;font-family:'DM Sans',system-ui,sans-serif}
+  .post{width:1080px;height:1350px;position:relative;overflow:hidden;
+    background:var(--navy);color:var(--white);padding:96px 92px 84px;display:flex;flex-direction:column}
+  .post::before{content:"";position:absolute;inset:0;opacity:.038;pointer-events:none;
+    background-image:linear-gradient(to right,#fff 1px,transparent 1px),linear-gradient(to bottom,#fff 1px,transparent 1px);
+    background-size:90px 90px}
+  .post::after{content:"";position:absolute;left:92px;top:96px;bottom:84px;width:2px;background:var(--green);opacity:.16}
+  .pad{padding-left:46px;display:flex;flex-direction:column;height:100%;position:static;z-index:2}
+  .eyebrow{font-size:15.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--green);
+    display:flex;align-items:center;gap:14px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .seal{position:absolute;top:90px;right:92px;display:flex;align-items:center;gap:12px;z-index:5;white-space:nowrap}
+  .seal .wm{font-weight:700;font-size:23px;letter-spacing:-.02em}
+  .seal .wm .g{color:var(--green)}
+  .grow{flex:1}
+  .headline{font-weight:700;letter-spacing:-.025em;line-height:1.04;color:var(--white)}
+  .h-xl{font-size:86px}
+  .h-lg{font-size:72px}
+  .g{color:var(--green)}
+  .sub{color:var(--sub);font-size:27px;font-weight:500;line-height:1.45;max-width:760px}
+  .entries{display:flex;flex-direction:column;gap:26px}
+  .entry{display:flex;align-items:center;gap:22px;font-size:31px;font-weight:600;color:var(--white)}
+  .entry .tick{flex:none;width:38px;height:38px;border-radius:50%;background:rgba(34,194,122,.16);
+    display:flex;align-items:center;justify-content:center}
+  .entry .tick svg{width:21px;height:21px}
+  .entry small{display:block;font-size:18px;font-weight:500;color:var(--sub);margin-top:3px}
+  .entry .col{display:flex;flex-direction:column}
+  .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--rule);padding-top:26px}
+  .handle{font-size:22px;font-weight:600;color:var(--green)}
+  .foot .note{font-size:18px;color:var(--muted);font-weight:500}
+  .pill{display:inline-flex;align-items:center;gap:12px;background:var(--green);color:#05221a;
+    font-weight:700;font-size:24px;padding:18px 30px;border-radius:999px;letter-spacing:-.01em;align-self:flex-start}
+  .quote{font-size:200px;line-height:.6;color:var(--green);font-weight:700;opacity:.9}
+  .qtext{font-size:46px;font-weight:600;line-height:1.32;letter-spacing:-.01em;max-width:840px;color:var(--white)}
+  .attr{font-size:23px;font-weight:600;color:var(--green);margin-top:4px}
+  .rag{display:flex;gap:40px;margin-top:8px}
+  .rag .r{display:flex;align-items:center;gap:13px;font-size:20px;font-weight:600;color:var(--sub)}
+  .rag .r i{width:15px;height:15px;border-radius:50%;display:inline-block}
+  .flag{width:40px;height:26px;border-radius:4px;overflow:hidden;display:inline-flex;flex-direction:column;border:1px solid rgba(255,255,255,.18)}
+  .flag span{flex:1}
+  .shield{width:128px;height:128px}
+</style></head>
+<body>
+<section class="post" id="p01">
+  <div class="seal">
+    <svg width="50" height="50" viewBox="0 0 64 64" fill="none"><path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round"/><rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/><rect x="9" y="34" width="46" height="6" fill="#1aa869" opacity=".55"/><circle cx="32" cy="37" r="9" fill="#fff"/><path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="wm">School<span class="g">Purse</span></div>
+  </div>
+  <div class="pad">
+    <div class="eyebrow"><span class="dot"></span>A quiet change for school offices</div>
+    <div class="grow" style="justify-content:center;display:flex;flex-direction:column;gap:40px">
+      <div class="headline h-xl">Friday-night receipt reconciling is&nbsp;<span class="g">ending.</span></div>
+      <div class="sub">Something better is coming for Zimbabwean schools &mdash; built for the people who actually run the office.</div>
+    </div>
+    <div class="foot"><span class="handle">@SchoolPursezw</span><span class="note">Coming soon</span></div>
+  </div>
+</section>
+<section class="post" id="p02">
+  <div class="seal">
+    <svg width="50" height="50" viewBox="0 0 64 64" fill="none"><path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round"/><rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/><rect x="9" y="34" width="46" height="6" fill="#1aa869" opacity=".55"/><circle cx="32" cy="37" r="9" fill="#fff"/><path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="wm">School<span class="g">Purse</span></div>
+  </div>
+  <div class="pad">
+    <div class="eyebrow"><span class="dot"></span>Now live</div>
+    <div class="headline h-xl" style="margin-top:38px">SchoolPurse is&nbsp;<span class="g">live.</span></div>
+    <div class="grow" style="justify-content:center">
+      <div class="entries">
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Track every fee.</div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Issue every receipt.</div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>See every report.</div>
+      </div>
+    </div>
+    <div class="foot"><span class="pill">Sign in &mdash; link in bio &nbsp;&rarr;</span><span class="handle">@SchoolPursezw</span></div>
+  </div>
+</section>
+<section class="post" id="p03">
+  <div class="pad">
+    <div class="quote">&ldquo;</div>
+    <div class="grow" style="justify-content:center;gap:34px;display:flex;flex-direction:column;margin-top:-30px">
+      <div class="qtext">We saw three families in critical status the first morning &mdash; and quietly followed&nbsp;up.</div>
+      <div class="attr">&mdash; a head teacher using SchoolPurse</div>
+      <div class="rag">
+        <span class="r"><i style="background:#22c27a"></i>&le; 30 days</span>
+        <span class="r"><i style="background:#f59e0b"></i>31&ndash;60 days</span>
+        <span class="r"><i style="background:#ef4444"></i>60+ days</span>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="handle" style="display:flex;align-items:center;gap:14px">
+        <svg width="34" height="34" viewBox="0 0 64 64" fill="none"><path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round"/><rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/><circle cx="32" cy="37" r="9" fill="#fff"/><path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        @SchoolPursezw</span>
+      <span class="note">Arrears, colour-coded</span>
+    </div>
+  </div>
+</section>
+<section class="post" id="p06">
+  <div class="seal">
+    <svg width="50" height="50" viewBox="0 0 64 64" fill="none"><path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round"/><rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/><rect x="9" y="34" width="46" height="6" fill="#1aa869" opacity=".55"/><circle cx="32" cy="37" r="9" fill="#fff"/><path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="wm">School<span class="g">Purse</span></div>
+  </div>
+  <div class="pad">
+    <div class="eyebrow"><span class="dot"></span>Trust by design</div>
+    <svg class="shield" viewBox="0 0 64 64" fill="none" style="margin-top:30px"><path d="M32 6l20 8v14c0 13-8.5 21.5-20 26C20.5 49.5 12 41 12 28V14l20-8z" stroke="#22c27a" stroke-width="3" stroke-linejoin="round"/><path d="M23 31.5l6.5 6.5L42 25" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="headline h-lg" style="margin-top:34px">Your school&rsquo;s books <span class="g">stay</span> your school&rsquo;s books.</div>
+    <div class="grow" style="justify-content:flex-end">
+      <div class="entries" style="margin-bottom:54px">
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="col">Every school&rsquo;s data fully isolated<small>No school ever sees another&rsquo;s</small></div></div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="col">Roles: Admin &middot; Bursar &middot; Viewer<small>People see only what they should</small></div></div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="col">Every action audit-logged<small>A clear trail, always</small></div></div>
+      </div>
+    </div>
+    <div class="foot"><span class="handle">@SchoolPursezw</span><span class="note">Multi-tenant &middot; isolated</span></div>
+  </div>
+</section>
+<section class="post" id="p07">
+  <div class="seal">
+    <svg width="50" height="50" viewBox="0 0 64 64" fill="none"><path d="M24 21v-3a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v3" stroke="#22c27a" stroke-width="3.2" stroke-linecap="round"/><rect x="9" y="21" width="46" height="32" rx="8" fill="#22c27a"/><rect x="9" y="34" width="46" height="6" fill="#1aa869" opacity=".55"/><circle cx="32" cy="37" r="9" fill="#fff"/><path d="M32 31.5v11M34.5 33.5c-.7-1-1.7-1.4-2.9-1.4-1.7 0-3 .9-3 2.4 0 3.2 6.2 1.7 6.2 4.9 0 1.6-1.4 2.6-3.3 2.6-1.4 0-2.5-.5-3.2-1.6" stroke="#0b1f2e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="wm">School<span class="g">Purse</span></div>
+  </div>
+  <div class="pad">
+    <div class="eyebrow"><span class="flag"><span style="background:#006400"></span><span style="background:#fce300"></span><span style="background:#d40000"></span><span style="background:#000"></span></span>Built for Zimbabwe</div>
+    <div class="headline h-lg" style="margin-top:34px">Built for <span class="g">Zimbabwean</span> schools.</div>
+    <div class="grow" style="justify-content:center">
+      <div class="entries">
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cash, bank transfer &amp; mobile money</div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>USD fee structures &mdash; Form 1&ndash;6 &amp; levies</div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Works on the office laptop you have</div>
+        <div class="entry"><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#22c27a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Records offline, syncs when you&rsquo;re back online</div>
+      </div>
+    </div>
+    <div class="foot"><span class="handle">@SchoolPursezw</span><span class="note">Local by design</span></div>
+  </div>
+</section>
+</body></html>
+

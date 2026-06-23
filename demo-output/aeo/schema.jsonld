@@ -1,0 +1,64 @@
+<!-- Paste inside <head> of schoolpurse.app. Only verifiable claims — no fake ratings. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://schoolpurse.app/#org",
+      "name": "SchoolPurse",
+      "url": "https://schoolpurse.app",
+      "logo": "https://schoolpurse.app/logo.png",
+      "description": "School fee management software built for African schools — track fees, record payments, issue receipts, and monitor arrears.",
+      "foundingDate": "2026",
+      "founder": { "@type": "Person", "name": "Kudzai Moyo" },
+      "areaServed": ["Zimbabwe", "Africa"],
+      "contactPoint": { "@type": "ContactPoint", "email": "support@schoolpurse.app", "contactType": "customer support" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://schoolpurse.app/#app",
+      "name": "SchoolPurse",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, Android",
+      "url": "https://schoolpurse.app",
+      "publisher": { "@id": "https://schoolpurse.app/#org" },
+      "description": "SchoolPurse helps schools invoice term fees, record payments (cash, bank transfer, mobile money), generate receipts, and see arrears and collection rates in real time.",
+      "featureList": [
+        "Term fee invoicing",
+        "Payment recording (cash, bank transfer, mobile money)",
+        "Automatic receipt generation",
+        "Arrears and outstanding-balance tracking",
+        "Income and expense reports (P&L)",
+        "Role-based access for heads, bursars and teachers"
+      ],
+      "offers": [
+        { "@type": "Offer", "name": "Starter", "price": "29", "priceCurrency": "USD", "description": "Up to 200 students, billed monthly" },
+        { "@type": "Offer", "name": "Standard", "price": "79", "priceCurrency": "USD", "description": "Up to 1000 students, billed monthly" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://schoolpurse.app/#faq",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do schools in Zimbabwe manage student fees?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Many schools still track fees on paper or spreadsheets, recording cash payments in a receipt book. SchoolPurse replaces this with a digital system: it invoices each student for the term's fee items, records payments by cash, bank transfer or mobile money, issues a numbered receipt, and shows exactly who still owes — so the bursar always knows the school's true cash position." } },
+        { "@type": "Question", "name": "What is the best software to track school fees in Africa?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The right tool depends on school size and budget. SchoolPurse is purpose-built for African schools: it supports USD and local currencies, mobile-money payment methods, term-based fee structures, and runs on low-end Android phones and any browser. Plans start at 29 USD per month for up to 200 students." } },
+        { "@type": "Question", "name": "How can a school generate fee receipts automatically?",
+          "acceptedAnswer": { "@type": "Answer", "text": "In SchoolPurse, recording a payment automatically creates a sequential, school-branded receipt (for example TSJS-2026-000412) that can be printed or emailed to the parent. The student's outstanding balance updates instantly." } },
+        { "@type": "Question", "name": "How do schools know which parents have not paid fees?",
+          "acceptedAnswer": { "@type": "Answer", "text": "SchoolPurse has an Arrears view that lists every student with an outstanding balance, largest first, with their class and amount owed. The dashboard also shows the term's overall fee-collection rate." } },
+        { "@type": "Question", "name": "Does SchoolPurse support mobile money like EcoCash?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Payments can be recorded against any method including cash, bank transfer and mobile money (such as EcoCash, OneMoney or InnBucks), so the receipt and ledger reflect how the parent actually paid." } },
+        { "@type": "Question", "name": "How much does SchoolPurse cost?",
+          "acceptedAnswer": { "@type": "Answer", "text": "SchoolPurse Starter is 29 USD per month for up to 200 students, and Standard is 79 USD per month for up to 1000 students. Larger schools can request custom pricing. Billing is monthly." } },
+        { "@type": "Question", "name": "Is SchoolPurse secure for school financial data?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. SchoolPurse runs over HTTPS, isolates each school's data, and uses role-based access so a bursar sees finance but not settings, and a teacher sees only students — never the school's payment records." } },
+        { "@type": "Question", "name": "How do I set up my school on SchoolPurse?",
+          "acceptedAnswer": { "@type": "Answer", "text": "After signing up you add your school's name and branding, turn on your school levels (which auto-creates your class list), add your fee items, then import students and generate term invoices. Most schools are fully set up in under 30 minutes." } }
+      ]
+    }
+  ]
+}
+</script>

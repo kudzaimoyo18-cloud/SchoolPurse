@@ -1,0 +1,7 @@
+file 'clips/01-hook.mp4'
+file 'clips/02-problem.mp4'
+file 'clips/03-solution.mp4'
+file 'clips/04-dashboard.mp4'
+file 'clips/05-receipt.mp4'
+file 'clips/06-arrears.mp4'
+file 'clips/07-cta.mp4'

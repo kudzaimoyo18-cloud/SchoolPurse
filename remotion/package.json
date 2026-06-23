@@ -1,0 +1,28 @@
+{
+  "name": "schoolpurse-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "60s SchoolPurse explainer video built with Remotion",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render Main out/schoolpurse-explainer.mp4 --concurrency=4",
+    "render:hq": "remotion render Main out/schoolpurse-explainer-hq.mp4 --concurrency=4 --crf=14",
+    "vo": "curl -X POST 'https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128' -H \"xi-api-key: $ELEVENLABS_API_KEY\" -H 'Content-Type: application/json' -d @vo-payload.json -o out/vo-raw.mp3",
+    "vo:process": "ffmpeg -y -i out/vo-raw.mp3 -af 'atempo=1.055,highpass=f=80,acompressor=threshold=-20dB:ratio=2.5:attack=5:release=80:makeup=2,equalizer=f=200:t=q:w=1:g=-2,equalizer=f=3000:t=q:w=2:g=2.5,equalizer=f=8000:t=h:w=2000:g=1.5,aecho=0.85:0.85:35|55:0.15|0.08,loudnorm=I=-15:TP=-1.5:LRA=11' -ar 44100 -ac 2 out/vo-final.mp3",
+    "mux": "ffmpeg -y -i out/schoolpurse-explainer.mp4 -i out/vo-final.mp3 -c:v copy -c:a aac -b:a 192k -shortest out/schoolpurse-final.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.249",
+    "@remotion/bundler": "^4.0.249",
+    "@remotion/renderer": "^4.0.249",
+    "@remotion/google-fonts": "^4.0.249",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.249"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.4.5"
+  }
+}

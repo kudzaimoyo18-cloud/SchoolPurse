@@ -1,0 +1,49 @@
+import { chromium } from "playwright";
+import fs from "fs";
+import path from "path";
+
+const W = 1080, H = 1350;
+const photo = "file://" + path.resolve("assets/pexels-6694492.jpg").replace(/\\/g, "/");
+const logo = "file://" + path.resolve("../assets/logo.png").replace(/\\/g, "/");
+
+const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{width:${W}px;height:${H}px;overflow:hidden;font-family:'Segoe UI',system-ui,Arial,sans-serif}
+.stage{position:relative;width:${W}px;height:${H}px}
+.bg{position:absolute;inset:0;background:url('${photo}') center 38% / cover}
+.ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,19,34,.93) 0%,rgba(9,19,34,.58) 26%,rgba(9,19,34,.34) 46%,rgba(9,19,34,.80) 72%,rgba(7,14,26,.97) 100%)}
+.wrap{position:absolute;inset:0;padding:72px 70px 64px;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
+.brand{display:flex;align-items:center;gap:16px}
+.brand img{width:62px;height:62px;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.brand .w{font-size:34px;font-weight:800;letter-spacing:-.5px}
+.brand .w b{color:#6cc0ff}
+.head{margin-top:30px;font-size:94px;line-height:1.0;font-weight:800;letter-spacing:-2.5px;max-width:920px}
+.head b{color:#6cc0ff}
+.bottom{}
+.sub{font-size:37px;line-height:1.34;font-weight:500;color:#eaf1fb;max-width:880px}
+.tag{margin-top:22px;font-size:29px;font-weight:700;color:#6cc0ff;letter-spacing:.3px}
+.cta{display:inline-flex;margin-top:30px;background:#6cc0ff;color:#08182b;font-size:34px;font-weight:800;padding:26px 46px;border-radius:999px;letter-spacing:-.3px}
+</style></head><body>
+<div class="stage">
+  <div class="bg"></div><div class="ov"></div>
+  <div class="wrap">
+    <div>
+      <div class="brand"><img src="${logo}"><div class="w">School<b>Purse</b></div></div>
+      <div class="head">Know <b>who&#39;s paid</b> before term ends.</div>
+    </div>
+    <div class="bottom">
+      <div class="sub">Record every fee payment, print an instant receipt, and see live arrears for your whole school.</div>
+      <div class="tag">Made in Harare &nbsp;&#183;&nbsp; From $29/month</div>
+      <div class="cta">Free demo at schoolpurse.app</div>
+    </div>
+  </div>
+</div></body></html>`;
+
+fs.writeFileSync("ig-hero.html", html);
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
+await page.goto("file://" + path.resolve("ig-hero.html").replace(/\\/g, "/"));
+await page.waitForTimeout(400);
+await page.screenshot({ path: "assets/hero-ig-final.png" });
+await browser.close();
+console.log("rendered assets/hero-ig-final.png");

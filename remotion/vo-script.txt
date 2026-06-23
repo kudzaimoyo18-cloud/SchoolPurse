@@ -1,0 +1,19 @@
+Running a school takes work.
+
+But tracking the money? That's even harder. Cash. Paper. Books. Spreadsheets.
+
+It's week eight of term one... and nobody's quite sure who paid, or who still owes.
+
+Thirteen thousand outstanding. We think. Month-end? It'll be ready next week.
+
+There has to be a better way.
+
+Meet SchoolPurse. The finance dashboard, built for Zimbabwean schools.
+
+Cash comes in. The bursar logs it, the receipt prints, the ledger updates. In seconds.
+
+Every outstanding balance, by student, by class, by term. Spot who to chase today. Not at month-end.
+
+Every payment becomes a printable receipt. School header, line items, signature line. Automatic.
+
+Built in Harare, for Zimbabwean schools. SchoolPurse. schoolpurse-dot-app.
