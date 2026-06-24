@@ -6,6 +6,7 @@ import { PostHogProvider } from "@/components/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GooeyFilter } from "@/components/ui/gooey-toggle";
+import { SwRegister } from "@/components/sw-register";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -29,6 +30,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#102a43",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -54,6 +58,7 @@ export default function RootLayout({
               <PostHogProvider>{children}</PostHogProvider>
               <Toaster richColors position="top-right" />
               <GooeyFilter />
+              <SwRegister />
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>
