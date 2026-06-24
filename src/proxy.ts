@@ -117,6 +117,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Exclude Next internals, image assets, and the PWA files (manifest,
+    // service worker, offline fallback). Those must be publicly fetchable —
+    // if the proxy 307s them to /login, the browser can't read the manifest
+    // or register the service worker, so the "Install app" prompt never fires.
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|offline|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
