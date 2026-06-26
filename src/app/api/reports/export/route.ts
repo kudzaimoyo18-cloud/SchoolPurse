@@ -1,8 +1,12 @@
 import { format } from "date-fns";
 import { fetchMonthlyPL } from "@/lib/queries/monthly-pl";
 import { csvResponse, toCsv } from "@/lib/csv";
+import { authorizeApi, FINANCE_ROLES } from "@/lib/auth/api-guard";
 
 export async function GET() {
+  const auth = await authorizeApi(FINANCE_ROLES);
+  if (!auth.ok) return auth.response;
+
   const data = await fetchMonthlyPL(12);
   const rows = data.map((m) => ({
     month: m.label,
