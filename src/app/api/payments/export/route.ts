@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { csvResponse, toCsv } from "@/lib/csv";
 import { format } from "date-fns";
+import { authorizeApi, FINANCE_ROLES } from "@/lib/auth/api-guard";
 
 export async function GET() {
+  const auth = await authorizeApi(FINANCE_ROLES);
+  if (!auth.ok) return auth.response;
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("payments")

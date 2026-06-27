@@ -1,8 +1,12 @@
 import { format } from "date-fns";
 import { fetchArrears } from "@/lib/queries/arrears";
 import { csvResponse, toCsv } from "@/lib/csv";
+import { authorizeApi, FINANCE_ROLES } from "@/lib/auth/api-guard";
 
 export async function GET() {
+  const auth = await authorizeApi(FINANCE_ROLES);
+  if (!auth.ok) return auth.response;
+
   const arrears = await fetchArrears();
   const rows = arrears.map((a) => ({
     student: a.student_name,

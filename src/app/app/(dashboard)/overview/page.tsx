@@ -25,6 +25,7 @@ import { IncomeVsExpenseChart } from "@/components/charts/income-vs-expense";
 import { formatDate, formatMoney, formatMoneyCompact, toNumber } from "@/lib/format";
 import { fetchArrears } from "@/lib/queries/arrears";
 import { fetchMonthlyPL } from "@/lib/queries/monthly-pl";
+import { getActiveTerm } from "@/lib/queries/term";
 import { SetupChecklist, type SetupStep } from "./setup-checklist";
 
 export const metadata = { title: "Overview — SchoolPurse" };
@@ -67,7 +68,6 @@ export default async function OverviewPage() {
     arrears,
     monthly,
     recentPaymentsRes,
-    termRes,
   ] = await Promise.all([
     supabase
       .from("payments")
@@ -99,12 +99,11 @@ export default async function OverviewPage() {
       .eq("status", "completed")
       .order("paid_at", { ascending: false })
       .limit(6),
-    supabase
-      .from("terms")
-      .select("id, name, start_date, end_date")
-      .eq("is_current", true)
-      .maybeSingle(),
   ]);
+
+  // The term-collection block follows the globally-selected term (topbar
+  // selector), defaulting to the current term.
+  const { active: term } = await getActiveTerm();
 
   // Onboarding setup checklist — counts drive which steps are complete.
   const [classesCnt, studentsCnt, feeItemsCnt, paymentsCnt, usersCnt, schoolRes] =
@@ -189,10 +188,7 @@ export default async function OverviewPage() {
       ? ((monthIncome - prevMonthIncome) / prevMonthIncome) * 100
       : null;
 
-  // Term collection
-  const term = termRes.data as
-    | { id: string; name: string; start_date: string; end_date: string }
-    | null;
+  // Term collection (scoped to the active term resolved above).
   let termTarget = 0;
   let termCollected = 0;
   if (term) {

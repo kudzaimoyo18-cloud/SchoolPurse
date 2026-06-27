@@ -87,7 +87,49 @@ export default async function ReportsPage() {
         }
         bodyClassName="p-0"
       >
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked month cards instead of a side-scrolling table. */}
+        <ul className="divide-y divide-border md:hidden">
+          {reverse.map((m) => {
+            const margin = m.margin;
+            const w = Math.min(Math.max(margin, 0), 100);
+            return (
+              <li key={m.key} className="px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{m.label}</span>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${m.net < 0 ? "text-sp-red" : "text-foreground"}`}
+                  >
+                    {formatMoneyCompact(m.net)}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-4 text-[11.5px] text-muted-foreground">
+                  <span className="tabular-nums text-primary">
+                    In {formatMoneyCompact(m.income)}
+                  </span>
+                  <span className="tabular-nums text-sp-red">
+                    Out {formatMoneyCompact(m.expenses)}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sp-card-alt">
+                    <div
+                      className={`h-full ${margin < 0 ? "bg-sp-red" : "bg-primary"}`}
+                      style={{ width: `${w}%` }}
+                    />
+                  </div>
+                  <span
+                    className={`min-w-[3rem] text-right text-xs tabular-nums ${margin < 0 ? "text-sp-red" : "text-muted-foreground"}`}
+                  >
+                    {margin.toFixed(1)}%
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Desktop: the full table. */}
+        <div className="hidden overflow-x-auto md:block">
           <Table>
             <TableHeader className="bg-sp-card-alt">
               <TableRow>

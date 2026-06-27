@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { format } from "date-fns";
 import { NAV_ITEMS } from "./nav-items";
 import { NewChildButton } from "./new-child-button";
+import { TermSelector, type TermSelectorOption } from "@/components/term-selector";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type {
   ClassOption,
@@ -22,6 +23,10 @@ interface TopBarProps {
    * date to the term start rather than today.
    */
   termStartDate?: string;
+  /** All terms for the global term selector, newest first. */
+  terms?: TermSelectorOption[];
+  /** Currently-active term id (drives the selector's checkmark). */
+  activeTermId?: string | null;
 }
 
 function titleFromPath(pathname: string): string {
@@ -36,6 +41,8 @@ export function TopBar({
   classes,
   feeItems,
   termStartDate,
+  terms,
+  activeTermId,
 }: TopBarProps) {
   const pathname = usePathname();
   const title = titleFromPath(pathname);
@@ -69,6 +76,10 @@ export function TopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          {terms && terms.length > 0 ? (
+            <TermSelector terms={terms} activeId={activeTermId ?? null} />
+          ) : null}
+
           <NewChildButton
             classes={classes}
             feeItems={feeItems}

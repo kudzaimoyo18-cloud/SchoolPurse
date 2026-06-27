@@ -17,8 +17,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatDate, formatDateTime, formatMoney, toNumber } from "@/lib/format";
 import { sanitizeOrLiteral } from "@/lib/security";
+import { getActiveTerm, termLabel } from "@/lib/queries/term";
 import { NewPaymentForm } from "./new-payment-form";
 import { VoidPaymentButton } from "./void-payment-button";
+import { EditPaymentButton } from "./edit-payment-button";
 
 export const metadata = { title: "Payments — SchoolPurse" };
 
@@ -43,6 +45,16 @@ export default async function PaymentsPage({
   const canVoid =
     currentUser.role === "school_admin" ||
     currentUser.role === "platform_admin";
+  // Editing income is head/admin territory too — bursars record, the head/admin
+  // corrects. Same gate as voiding.
+  const canEdit = canVoid;
+
+  // The recent-payments list follows the globally-selected term (topbar): show
+  // receipts dated within the term. The "This month / Today" KPIs stay live.
+  const { active: activeTerm } = await getActiveTerm();
+  const termStart = activeTerm?.start_date ?? null;
+  const termEnd = activeTerm?.end_date ?? null;
+  const activeTermLabel = termLabel(activeTerm);
 
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = new Date(new Date().setDate(1))
@@ -76,10 +88,13 @@ export default async function PaymentsPage({
       let query = supabase
         .from("payments")
         .select(
-          "id, receipt_number, amount_usd, method, paid_at, status, payer_name_snapshot, students(first_name, last_name, classes(name))",
+          "id, receipt_number, amount_usd, method, paid_at, status, payer_name_snapshot, notes, students(first_name, last_name, classes(name))",
         )
         .order("paid_at", { ascending: false })
         .limit(200);
+      // Scope to the active term's date range (whole end day inclusive).
+      if (termStart) query = query.gte("paid_at", termStart);
+      if (termEnd) query = query.lte("paid_at", termEnd + "T23:59:59.999Z");
       if (q && q.trim()) {
         const term = sanitizeOrLiteral(q);
         if (term) {
@@ -204,6 +219,7 @@ export default async function PaymentsPage({
     paid_at: string;
     status: string;
     payer_name_snapshot: string | null;
+    notes: string | null;
     students:
       | {
           first_name: string;
@@ -274,7 +290,11 @@ export default async function PaymentsPage({
 
       <SectionCard
         title="Recent payments"
-        subtitle="Last 200 payments, newest first."
+        subtitle={
+          activeTermLabel
+            ? `${activeTermLabel} — newest first (max 200)`
+            : "Last 200 payments, newest first."
+        }
         action={
           <form action="" className="relative max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -335,6 +355,20 @@ export default async function PaymentsPage({
                           <ReceiptText className="size-3.5" />
                           Receipt
                         </Link>
+                        {canEdit && !voided ? (
+                          <EditPaymentButton
+                            paymentId={p.id}
+                            receiptNumber={p.receipt_number}
+                            studentName={s.name}
+                            amountLabel={formatMoney(p.amount_usd)}
+                            initial={{
+                              method: p.method,
+                              paid_at: p.paid_at.slice(0, 10),
+                              payer_name: p.payer_name_snapshot ?? "",
+                              notes: p.notes ?? "",
+                            }}
+                          />
+                        ) : null}
                         {canVoid && !voided ? (
                           <VoidPaymentButton
                             paymentId={p.id}
@@ -408,6 +442,20 @@ export default async function PaymentsPage({
                             <ReceiptText className="size-3.5" />
                             Receipt
                           </Link>
+                          {canEdit && p.status !== "void" ? (
+                            <EditPaymentButton
+                              paymentId={p.id}
+                              receiptNumber={p.receipt_number}
+                              studentName={s.name}
+                              amountLabel={formatMoney(p.amount_usd)}
+                              initial={{
+                                method: p.method,
+                                paid_at: p.paid_at.slice(0, 10),
+                                payer_name: p.payer_name_snapshot ?? "",
+                                notes: p.notes ?? "",
+                              }}
+                            />
+                          ) : null}
                           {canVoid && p.status !== "void" ? (
                             <VoidPaymentButton
                               paymentId={p.id}

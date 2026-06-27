@@ -23,11 +23,22 @@ export interface CurrentUser {
  */
 export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
+  // The proxy middleware already calls getUser() on every request, which
+  // validates the token against the auth server AND refreshes the session
+  // cookie. Here we only need the identity, so use getClaims() — it verifies
+  // the JWT locally (no network round-trip) when the project uses asymmetric
+  // signing keys, and transparently falls back to a server call otherwise.
+  // This removes one Supabase-auth round-trip from every page render, which
+  // is what compounds across page-to-page navigation.
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const userId = claims?.sub;
+  const userEmail =
+    typeof claims?.email === "string" ? (claims.email as string) : null;
+
+  if (claimsError || !userId) {
     redirect("/login");
   }
 
@@ -35,7 +46,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   let { data: profile } = await supabase
     .from("users")
     .select("id, name, email, role, school_id, schools(name)")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   // Fallback: lookup by email via the admin (service-role) client so RLS
@@ -47,23 +58,23 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   // every downstream RLS policy uses auth.uid() to scope. Without the sync
   // the user lands in an empty dashboard. ON UPDATE CASCADE was added to
   // every FK referencing users.id in a prior migration so this is safe.
-  if (!profile && user.email) {
+  if (!profile && userEmail) {
     const admin = createAdminClient();
     const res = await admin
       .from("users")
       .select("id, name, email, role, school_id, schools(name)")
-      .eq("email", user.email)
+      .eq("email", userEmail)
       .maybeSingle();
     profile = res.data;
 
-    if (profile && (profile as { id?: string }).id !== user.id) {
+    if (profile && (profile as { id?: string }).id !== userId) {
       const oldId = (profile as { id: string }).id;
       const { error: syncErr } = await admin
         .from("users")
-        .update({ id: user.id })
+        .update({ id: userId })
         .eq("id", oldId);
       if (!syncErr) {
-        (profile as { id: string }).id = user.id;
+        (profile as { id: string }).id = userId;
       }
       // On error, leave the profile id mismatched — downstream RLS reads
       // will return empty, but at least the user sees the no_profile flow

@@ -187,6 +187,78 @@ export function TeamSection({
         </form>
       ) : null}
 
+      {/* Mobile: stacked teammate cards instead of a side-scrolling table. */}
+      <ul className="divide-y divide-border md:hidden">
+        {teammates.map((t) => {
+          const isMe = t.id === currentUserId;
+          return (
+            <li key={t.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {t.name}
+                    {isMe ? (
+                      <span className="ml-2 text-[10.5px] font-normal text-muted-foreground">
+                        (you)
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="truncate text-[11.5px] text-muted-foreground">
+                    {t.email}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <StatusBadge
+                    label={t.status === "active" ? "Active" : t.status}
+                    variant={t.status === "active" ? "success" : "neutral"}
+                  />
+                  {!isMe ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(t)}
+                      disabled={pending}
+                      aria-label={`Remove ${t.name}`}
+                      title="Remove"
+                      className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-red-soft hover:text-sp-red disabled:opacity-50"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+              <div className="mt-2">
+                {isMe ? (
+                  <span className="text-xs text-muted-foreground">
+                    {ROLE_LABELS[t.role] ?? t.role}
+                  </span>
+                ) : (
+                  <select
+                    value={t.role}
+                    onChange={(e) =>
+                      handleRoleChange(
+                        t,
+                        e.target.value as
+                          | "school_admin"
+                          | "bursar"
+                          | "teacher",
+                      )
+                    }
+                    disabled={pending}
+                    className="flex h-8 w-full rounded-md border border-input bg-card px-2 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="school_admin">Head / Admin</option>
+                    <option value="bursar">Bursar</option>
+                    <option value="teacher">Teacher</option>
+                  </select>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Desktop: the full table. */}
+      <div className="hidden overflow-x-auto md:block">
       <Table>
         <TableHeader className="bg-sp-card-alt">
           <TableRow>
@@ -266,6 +338,7 @@ export function TeamSection({
           })}
         </TableBody>
       </Table>
+      </div>
     </>
   );
 }
