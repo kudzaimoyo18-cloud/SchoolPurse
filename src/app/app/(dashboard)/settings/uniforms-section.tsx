@@ -165,6 +165,52 @@ export function UniformsSection({
           No uniform items yet. Add one to include it on student invoices.
         </div>
       ) : uniforms.length > 0 ? (
+        <>
+        {/* Mobile: stacked uniform cards instead of a side-scrolling table. */}
+        <ul className="divide-y divide-border md:hidden">
+          {uniforms.map((u) => (
+            <li
+              key={u.id}
+              className="flex items-center justify-between gap-3 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{u.name}</p>
+                <div className="mt-1">
+                  {u.active ? (
+                    <StatusBadge label="Active" variant="success" />
+                  ) : (
+                    <StatusBadge label="Inactive" variant="neutral" />
+                  )}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-sm font-medium tabular-nums">
+                  {formatMoney(u.amount_usd)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditing(u)}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground"
+                  aria-label="Edit"
+                >
+                  <Pencil className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggle(u)}
+                  disabled={pending}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground disabled:opacity-50"
+                  aria-label={u.active ? "Deactivate" : "Activate"}
+                >
+                  <Power className="size-4" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: the full table. */}
+        <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader className="bg-sp-card-alt">
             <TableRow>
@@ -213,6 +259,8 @@ export function UniformsSection({
             ))}
           </TableBody>
         </Table>
+        </div>
+        </>
       ) : null}
 
       {/* Reuse full dialog for editing */}

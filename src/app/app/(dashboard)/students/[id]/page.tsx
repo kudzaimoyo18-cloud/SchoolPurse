@@ -408,7 +408,42 @@ export default async function StudentProfilePage({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Mobile: stacked fee cards instead of a side-scrolling table. */}
+          <ul className="divide-y divide-border md:hidden">
+            {outstanding.map((ln) => (
+              <li
+                key={ln.id}
+                className="flex items-start justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {ln.invoice_id ? (
+                      <Link
+                        href={`/app/invoices/${ln.invoice_id}`}
+                        target="_blank"
+                        className="hover:underline"
+                      >
+                        {ln.description}
+                      </Link>
+                    ) : (
+                      ln.description
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                    {ln.period ?? "—"}
+                    {ln.due_date ? ` · due ${formatDate(ln.due_date)}` : ""}
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-sp-red">
+                  {formatMoney(ln.balance)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: the full table. */}
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
@@ -448,6 +483,7 @@ export default async function StudentProfilePage({
               </TableBody>
             </Table>
           </div>
+          </>
         )}
       </SectionCard>
 
@@ -470,7 +506,43 @@ export default async function StudentProfilePage({
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Mobile: stacked payment cards instead of a side-scrolling table. */}
+          <ul className="divide-y divide-border md:hidden">
+            {history.map((h) => (
+              <li key={h.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {h.description}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                      {formatDate(h.paid_at)} · {METHOD_LABELS[h.method] ?? h.method}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                      {h.receipt_number}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold tabular-nums text-primary">
+                      {formatMoney(h.amount)}
+                    </p>
+                    <Link
+                      href={`/app/receipts/${h.id}`}
+                      target="_blank"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:underline"
+                    >
+                      <ReceiptText className="size-3.5" />
+                      Receipt
+                    </Link>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: the full table. */}
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader className="bg-sp-card-alt">
                 <TableRow>
@@ -515,6 +587,7 @@ export default async function StudentProfilePage({
               </TableBody>
             </Table>
           </div>
+          </>
         )}
       </SectionCard>
     </div>

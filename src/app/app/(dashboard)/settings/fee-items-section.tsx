@@ -97,6 +97,59 @@ export function FeeItemsSection({
           No fee items yet. Create one to start invoicing.
         </div>
       ) : (
+        <>
+        {/* Mobile: stacked fee-item cards instead of a side-scrolling table. */}
+        <ul className="divide-y divide-border md:hidden">
+          {feeItems.map((f) => (
+            <li key={f.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{f.name}</p>
+                  <p className="mt-0.5 text-[11.5px] capitalize text-muted-foreground">
+                    {f.type} · {RECURRENCE_LABELS[f.recurrence]}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground">
+                    {classNameOf(f.applicable_class_ids)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold tabular-nums">
+                    {formatMoney(f.amount_usd)}
+                  </p>
+                  <div className="mt-1">
+                    {f.active ? (
+                      <StatusBadge label="Active" variant="success" />
+                    ) : (
+                      <StatusBadge label="Inactive" variant="neutral" />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => setEditing(f)}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground"
+                  aria-label="Edit"
+                >
+                  <Pencil className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggle(f)}
+                  disabled={pending}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-sp-card-alt hover:text-foreground disabled:opacity-50"
+                  aria-label={f.active ? "Deactivate" : "Activate"}
+                >
+                  <Power className="size-4" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: the full table. */}
+        <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader className="bg-sp-card-alt">
             <TableRow>
@@ -157,6 +210,8 @@ export function FeeItemsSection({
             ))}
           </TableBody>
         </Table>
+        </div>
+        </>
       )}
 
       <FeeItemDialog
