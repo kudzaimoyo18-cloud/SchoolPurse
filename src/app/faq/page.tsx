@@ -26,7 +26,7 @@ const INTRO =
 const KEY_FACTS = [
   "SchoolPurse is school fee management software for African schools — web and Android.",
   "It invoices term fees, records payments (cash, bank transfer, mobile money), issues numbered receipts, and tracks arrears in real time.",
-  "Pricing starts at 29 USD per month for up to 200 students; 79 USD per month for up to 1000.",
+  "Pricing starts at 35 USD per month for up to 50 students (Starter); 50 USD per month for up to 250 students (Pro). The AI tier is custom-priced for unlimited students.",
   "Each school's data is isolated with row-level security; access is role-based for heads, bursars and teachers.",
 ];
 
@@ -37,7 +37,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What is the best software to track school fees in Africa?",
-    a: "The right tool depends on school size and budget, but most options are built for Western schools and assume card payments and online portals. SchoolPurse is purpose-built for African schools: it supports USD, mobile-money methods like EcoCash and OneMoney, term-based fee structures, and runs on low-end Android phones and any browser. Plans start at 29 USD per month for up to 200 students.",
+    a: "The right tool depends on school size and budget, but most options are built for Western schools and assume card payments and online portals. SchoolPurse is purpose-built for African schools: it supports USD, mobile-money methods like EcoCash and OneMoney, term-based fee structures, and runs on low-end Android phones and any browser. Plans start at 35 USD per month for up to 50 students.",
   },
   {
     q: "How can a school generate fee receipts automatically?",
@@ -53,7 +53,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How much does SchoolPurse cost?",
-    a: "SchoolPurse Starter is 29 USD per month for up to 200 students, and Standard is 79 USD per month for up to 1000 students. Larger schools can request custom pricing. Billing is monthly, and there is no setup fee.",
+    a: "SchoolPurse Starter is 35 USD per month for up to 50 students, and Pro is 50 USD per month for up to 250 students. The AI tier — unlimited students, plus the AI finance assistant and automated WhatsApp fee reminders — is custom-priced. Billing is monthly, and there is no setup fee.",
   },
   {
     q: "Is SchoolPurse secure for school financial data?",
@@ -110,16 +110,16 @@ const jsonLd = {
         {
           "@type": "Offer",
           name: "Starter",
-          price: "29",
+          price: "35",
           priceCurrency: "USD",
-          description: "Up to 200 students, billed monthly",
+          description: "Up to 50 students, billed monthly",
         },
         {
           "@type": "Offer",
-          name: "Standard",
-          price: "79",
+          name: "Pro",
+          price: "50",
           priceCurrency: "USD",
-          description: "Up to 1000 students, billed monthly",
+          description: "Up to 250 students, billed monthly",
         },
       ],
     },

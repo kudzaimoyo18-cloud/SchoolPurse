@@ -210,8 +210,8 @@ export default async function GuidePage() {
               and two staff editing the same file overwrite each other. Purpose
               built software keeps invoices, receipts, payment methods and
               arrears in one consistent place. SchoolPurse does exactly this for
-              African schools, with mobile-money support and pricing from 29 USD
-              per month for up to 200 students.
+              African schools, with mobile-money support and pricing from 35 USD
+              per month for up to 50 students.
             </p>
           </section>
 
