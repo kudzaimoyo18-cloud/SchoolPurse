@@ -9,15 +9,17 @@ const PARTNERS = [
     name: "Zimbabwe Early Childhood Development & Education Foundation",
     short: "ZEChiDEF Institute",
     src: "/marketing/partner-zechidef.png",
-    // Wide lockup — give it a little more room than the square mark.
-    width: 320,
+    // Wide ~2:1 lockup. Intrinsic ratio only — object-contain + h-16 drive the
+    // rendered size, so a higher-res source (e.g. ~1000×500) just looks sharper.
+    width: 240,
     height: 120,
   },
   {
     name: "Twinkle Star Junior School",
     short: "Twinkle Star Junior School",
     src: "/marketing/partner-twinkle-star.png",
-    width: 140,
+    // Roughly square mark.
+    width: 120,
     height: 120,
   },
 ];
