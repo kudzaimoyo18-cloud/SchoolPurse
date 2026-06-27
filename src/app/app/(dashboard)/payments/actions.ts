@@ -261,6 +261,97 @@ export async function recordPayment(
   return { ok: true, paymentId: pay.id, receiptNumber };
 }
 
+// Correctable fields on an existing receipt. Deliberately excludes amount and
+// allocations: changing those would have to unwind and re-apply the
+// payment_allocations trigger that maintains invoice balances, so amount
+// mistakes go through void + re-record (which keeps the audit trail intact).
+// These four are all balance-neutral.
+const EditPaymentSchema = z.object({
+  method: z.enum(["cash", "bank_transfer", "mobile_money"]),
+  paid_at: z.string().min(1, "Date is required"),
+  payer_name: z.string().trim().max(200).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+export type EditPaymentInput = {
+  method: string;
+  paid_at: string;
+  payer_name?: string;
+  notes?: string;
+};
+
+/**
+ * Edit a receipt's correctable details (date, method, payer, notes).
+ *
+ * Head/admin only — same gate as voiding. Bursars record payments; the head /
+ * admin corrects mistakes, so there is a single accountable editor of income.
+ * Amount is intentionally not editable here (see EditPaymentSchema).
+ */
+export async function editPayment(
+  id: string,
+  input: EditPaymentInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const parsed = EditPaymentSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+
+  const ctx = await getContext();
+  if (!ctx) return { ok: false, error: "Not authenticated" };
+  const { supabase, schoolId, userId } = ctx;
+
+  // Role gate: school_admin / platform_admin only. Editing income rewrites
+  // finance records, so it stays with the head/admin (RLS is broader, includes
+  // bursar — we're stricter here on purpose).
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  const role = (profile as { role?: string } | null)?.role;
+  if (role !== "school_admin" && role !== "platform_admin") {
+    return { ok: false, error: "Only the head/admin can edit a receipt." };
+  }
+
+  // Defense in depth: confirm the receipt belongs to this school and isn't void.
+  const { data: existing } = await supabase
+    .from("payments")
+    .select("id, school_id, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (
+    !existing ||
+    (existing as { school_id: string }).school_id !== schoolId
+  ) {
+    return { ok: false, error: "Payment not found in this school." };
+  }
+  if ((existing as { status: string }).status === "void") {
+    return {
+      ok: false,
+      error: "This receipt is void — record a new payment instead of editing it.",
+    };
+  }
+
+  const paidAtIso = new Date(parsed.data.paid_at + "T12:00:00Z").toISOString();
+  const { error } = await supabase
+    .from("payments")
+    .update({
+      method: parsed.data.method,
+      paid_at: paidAtIso,
+      payer_name_snapshot: parsed.data.payer_name || null,
+      notes: parsed.data.notes || null,
+    })
+    .eq("id", id);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/app/payments");
+  revalidatePath("/app/overview");
+  return { ok: true };
+}
+
 export async function voidPayment(
   id: string,
   reason: string,

@@ -10,6 +10,7 @@ import { PostHogIdentify } from "@/components/posthog-identify";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { normalizePlan } from "@/lib/plan";
 import { fetchArrears } from "@/lib/queries/arrears";
+import { getActiveTerm, termLabel } from "@/lib/queries/term";
 import {
   SidebarInset,
   SidebarProvider,
@@ -26,16 +27,11 @@ export default async function DashboardLayout({
   // independent, so run them concurrently instead of gating the queries behind
   // getCurrentUser(). getCurrentUser() and fetchArrears() are React-cached, so
   // the page re-using them later in the same render costs nothing extra.
-  const [user, cookieStore, batch] = await Promise.all([
+  const [user, cookieStore, activeTerm, batch] = await Promise.all([
     getCurrentUser(),
     cookies(),
+    getActiveTerm(),
     Promise.all([
-      supabase
-        .from("terms")
-        .select("name, start_date, academic_years(name)")
-        .eq("is_current", true)
-        .limit(1)
-        .maybeSingle(),
       fetchArrears(),
       supabase.from("classes").select("id, name, level").order("name"),
       supabase
@@ -57,8 +53,7 @@ export default async function DashboardLayout({
         .maybeSingle(),
     ]),
   ]);
-  const [termRes, arrears, classesRes, feeItemsRes, schoolRes, announcementRes] =
-    batch;
+  const [arrears, classesRes, feeItemsRes, schoolRes, announcementRes] = batch;
 
   // Remember whether the user collapsed the sidebar last time (Notion-style).
   // shadcn writes "sidebar_state" on toggle; default to open when unset.
@@ -77,21 +72,17 @@ export default async function DashboardLayout({
     user.role === "school_admin" ||
     user.role === "bursar";
 
-  const term = termRes.data;
-  const termLabel = term
-    ? `${(term as { name: string }).name}${
-        (() => {
-          const ay = (term as { academic_years?: unknown }).academic_years;
-          const r = Array.isArray(ay) ? ay[0] : ay;
-          return (r as { name?: string } | null)?.name
-            ? " · " + (r as { name: string }).name
-            : "";
-        })()
-      }`
-    : undefined;
-  // Surfaced to the New Registration dialog so the carry-over mode can
-  // default the enrolment date to the term start (rather than today).
-  const termStartDate = (term as { start_date?: string } | null)?.start_date;
+  // Active term (cookie selection, else the current term) drives the sidebar
+  // label, the global term selector, and the New Registration dialog's default
+  // enrolment date.
+  const termLabelStr = termLabel(activeTerm.active);
+  const termStartDate = activeTerm.active?.start_date ?? undefined;
+  const termOptions = activeTerm.terms.map((t) => ({
+    id: t.id,
+    name: t.name,
+    year: t.year,
+    is_current: t.is_current,
+  }));
 
   // Resolve the latest active announcement (skip if user already dismissed it)
   const rawAnnouncement = announcementRes.data as {
@@ -143,7 +134,7 @@ export default async function DashboardLayout({
           role: user.role,
           schoolName: user.schoolName,
         }}
-        termLabel={termLabel}
+        termLabel={termLabelStr}
         arrearsCount={arrears.length}
         logoUrl={logoUrl}
         hasAi={hasAiAccess}
@@ -154,6 +145,8 @@ export default async function DashboardLayout({
           classes={classes}
           feeItems={feeItems}
           termStartDate={termStartDate}
+          terms={termOptions}
+          activeTermId={activeTerm.active?.id ?? null}
         />
         <AnnouncementBanner announcement={announcement} />
         {/* pb-24 on mobile clears the fixed bottom tab bar; lg has no bar. */}
