@@ -54,13 +54,16 @@ export function Partners() {
           {PARTNERS.map((partner) => (
             <li key={partner.name}>
               <div className="group flex h-full flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card px-6 py-10 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="flex h-24 items-center justify-center">
+                {/* Logos sit on a white chip so they stay crisp in dark mode
+                    (and against the light card in light mode) regardless of
+                    whether the source PNG is transparent or white-backed. */}
+                <div className="flex h-24 items-center justify-center rounded-xl bg-white px-5 py-3 shadow-sm ring-1 ring-black/5">
                   <Image
                     src={partner.src}
                     alt={`${partner.short} logo`}
                     width={partner.width}
                     height={partner.height}
-                    className="h-20 w-auto object-contain"
+                    className="h-16 w-auto object-contain"
                   />
                 </div>
                 <p className="text-[13.5px] font-semibold tracking-tight text-foreground">
