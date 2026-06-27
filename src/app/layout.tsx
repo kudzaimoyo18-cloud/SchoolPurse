@@ -7,6 +7,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GooeyFilter } from "@/components/ui/gooey-toggle";
 import { SwRegister } from "@/components/sw-register";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+} from "@/lib/seo";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -17,14 +24,43 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SchoolPurse — School Finance Tracker",
-  description:
-    "Internal accounting and fee-tracking dashboard for Zimbabwean schools.",
-  applicationName: "SchoolPurse",
+  // metadataBase makes relative OG/canonical URLs + the file-based OG image
+  // resolve to absolute https://schoolpurse.app links. Pages set their own
+  // full titles, so there's no template here (avoids double-branding).
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_NAME }],
   appleWebApp: {
     capable: true,
-    title: "SchoolPurse",
+    title: SITE_NAME,
     statusBarStyle: "black-translucent",
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_ZW",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
