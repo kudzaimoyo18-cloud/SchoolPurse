@@ -7,6 +7,7 @@ import { SchoolInfoForm } from "./school-info-form";
 import { FeeItemsSection } from "./fee-items-section";
 import { UniformsSection } from "./uniforms-section";
 import { GenerateInvoicesButton } from "./generate-invoices-button";
+import { TermsSection } from "./terms-section";
 import { TeamSection } from "./team-section";
 import { LogoSection } from "./logo-section";
 import { SchoolLevelsSection, type Level } from "./school-levels-section";
@@ -47,10 +48,8 @@ export default async function SettingsPage() {
       supabase.from("subjects").select("id, name").order("name"),
       supabase
         .from("terms")
-        .select("name, start_date, end_date")
-        .eq("is_current", true)
-        .limit(1)
-        .maybeSingle(),
+        .select("id, name, start_date, end_date, is_current")
+        .order("start_date", { ascending: true }),
       // Service-role read of teammates so we always see every row on the
       // school, regardless of RLS policies that might restrict cross-row
       // user reads to platform_admin only.
@@ -114,9 +113,20 @@ export default async function SettingsPage() {
     level: Level;
   }[];
   const subjects = (subjectsRes.data ?? []) as { id: string; name: string }[];
-  const term = termRes.data as
-    | { name: string; start_date: string; end_date: string }
-    | null;
+  const terms = ((termRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    start_date: string | null;
+    end_date: string | null;
+    is_current: boolean;
+  }>).map((t) => ({
+    id: t.id,
+    name: t.name,
+    start_date: t.start_date ?? "",
+    end_date: t.end_date ?? "",
+    is_current: !!t.is_current,
+  }));
+  const currentTerm = terms.find((t) => t.is_current) ?? terms[0] ?? null;
 
   const teammates = ((teammatesRes.data ?? []) as Record<string, unknown>[]).map(
     (t) => ({
@@ -189,21 +199,29 @@ export default async function SettingsPage() {
         </SectionCard>
       )}
 
+      <SectionCard bodyClassName="p-0">
+        <TermsSection terms={terms} />
+      </SectionCard>
+
       <SectionCard
         title="Term operations"
         subtitle={
-          term
-            ? `Current term: ${term.name} (${term.start_date} → ${term.end_date})`
-            : "No current term is set. Create one in your database before generating invoices."
+          currentTerm
+            ? `Current term: ${currentTerm.name} (${currentTerm.start_date} → ${currentTerm.end_date})`
+            : "Set your term dates above, then generate invoices."
         }
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <p className="max-w-md text-sm text-muted-foreground">
-            Generate term invoices for every active student based on the
-            active per-term fee items applicable to their class. Students who
-            already have an invoice for this term are skipped.
+            Generate term invoices for every active student based on the active
+            per-term fee items applicable to their class. Pick the term, then
+            generate — students who already have an invoice for that term are
+            skipped.
           </p>
-          <GenerateInvoicesButton />
+          <GenerateInvoicesButton
+            terms={terms}
+            defaultTermId={currentTerm?.id ?? null}
+          />
         </div>
       </SectionCard>
     </div>

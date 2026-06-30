@@ -200,29 +200,33 @@ export async function toggleFeeItem(
 }
 
 /**
- * Generate invoices for every active student for the current term using
- * the active per-term fee items applicable to each student's class.
- * Skips students who already have an invoice for this term.
+ * Generate invoices for every active student for the GIVEN term using the
+ * active per-term fee items applicable to each student's class. Skips students
+ * who already have an invoice for that term. Admin-only; the term must belong
+ * to the caller's school.
  */
-export async function generateInvoicesForCurrentTerm(): Promise<
-  ActionResult<{ invoices: number; skipped: number }>
-> {
+export async function generateInvoicesForTerm(
+  termId: string,
+): Promise<ActionResult<{ invoices: number; skipped: number }>> {
+  if (!termId) {
+    return { ok: false, error: "Pick a term to generate invoices for." };
+  }
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { schoolId } = ctx;
   const supabase = await createClient();
-  const schoolId = await getCurrentSchoolId();
-  if (!schoolId) return { ok: false, error: "No school assigned" };
 
+  // Look the term up by id AND school so a crafted id from another school
+  // can't be used (RLS also scopes this, belt-and-braces).
   const { data: term } = await supabase
     .from("terms")
     .select("id, name, start_date, end_date, academic_year_id")
-    .eq("is_current", true)
+    .eq("id", termId)
+    .eq("school_id", schoolId)
     .maybeSingle();
 
   if (!term) {
-    return {
-      ok: false,
-      error:
-        "No current term is set. Mark a term as current before generating invoices.",
-    };
+    return { ok: false, error: "That term was not found for your school." };
   }
 
   const t = term as {
@@ -340,6 +344,61 @@ export async function generateInvoicesForCurrentTerm(): Promise<
   revalidatePath("/app/arrears");
   revalidatePath("/app/overview");
   return { ok: true, invoices: created, skipped };
+}
+
+// =============================================================================
+// Term dates
+// =============================================================================
+
+const TermDatesSchema = z.object({
+  id: z.string().uuid("Invalid term"),
+  start_date: z.string().min(1, "Start date is required"),
+  end_date: z.string().min(1, "End date is required"),
+});
+
+/**
+ * Update a single term's start/end dates (admin-only, own school). Renaming,
+ * choosing the current term, and add/delete are intentionally out of scope —
+ * this just lets schools correct the auto-seeded term dates so invoice due
+ * dates and term-scoped views match their real calendar.
+ */
+export async function updateTermDates(input: {
+  id: string;
+  start_date: string;
+  end_date: string;
+}): Promise<ActionResult> {
+  const parsed = TermDatesSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  // yyyy-mm-dd compares correctly as a string.
+  if (parsed.data.end_date < parsed.data.start_date) {
+    return { ok: false, error: "End date can't be before the start date." };
+  }
+
+  const ctx = await getAdminContext();
+  if ("error" in ctx) return { ok: false, error: ctx.error };
+  const { schoolId } = ctx;
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("terms")
+    .update({
+      start_date: parsed.data.start_date,
+      end_date: parsed.data.end_date,
+    })
+    .eq("id", parsed.data.id)
+    .eq("school_id", schoolId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/app/settings");
+  revalidatePath("/app/overview");
+  revalidatePath("/app/payments");
+  return { ok: true };
 }
 
 // =============================================================================
