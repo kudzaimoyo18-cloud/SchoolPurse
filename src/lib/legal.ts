@@ -19,12 +19,15 @@ export const LEGAL = {
    * operator (no registered company yet) — put your full legal name here.
    * Registering a company before scaling is strongly recommended.
    */
-  operatorLegalName: "[OPERATOR LEGAL NAME — edit in src/lib/legal.ts]",
+  operatorLegalName: "Kudzie Moyo",
   location: "Harare, Zimbabwe",
 
   /** Contact inboxes — verify these exist before publishing. */
   contactEmail: "support@schoolpurse.app",
-  privacyEmail: "privacy@schoolpurse.app",
+  // Pointed at support@ (which exists) rather than a privacy@ inbox that may not
+  // yet be set up, so data-protection requests don't bounce. Create privacy@ and
+  // change this one line when ready.
+  privacyEmail: "support@schoolpurse.app",
 
   /** Governing law + regulator (Zimbabwe). */
   law: "Cyber and Data Protection Act [Chapter 12:07] of Zimbabwe",
