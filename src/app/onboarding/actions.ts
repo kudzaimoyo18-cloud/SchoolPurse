@@ -158,6 +158,15 @@ export async function provisionMySchool(
   _prev: OnboardingState,
   formData: FormData,
 ): Promise<OnboardingState> {
+  // Legal gate: the form disables submit until Terms + Privacy are accepted;
+  // enforce it server-side too so the account can't be created without consent.
+  if (formData.get("accept_terms") !== "on") {
+    return {
+      error:
+        "Please accept the Terms of Service and Privacy Policy to create your school.",
+    };
+  }
+
   const parsed = Schema.safeParse({
     school_name: formData.get("school_name"),
     school_slug: formData.get("school_slug"),

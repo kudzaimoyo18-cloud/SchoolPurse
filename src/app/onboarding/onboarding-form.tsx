@@ -73,6 +73,7 @@ export function OnboardingForm({
   const [levels, setLevels] = React.useState<Set<Level>>(new Set());
   const [plan, setPlan] = React.useState<Plan>("free");
   const [logoName, setLogoName] = React.useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = React.useState(false);
 
   function handleSchoolNameChange(value: string) {
     setSchoolName(value);
@@ -470,6 +471,36 @@ export function OnboardingForm({
             activate {plan === "pro" ? "Pro" : "Starter"}.
           </p>
         )}
+
+        <label className="flex items-start gap-2.5 pt-1 text-[12.5px] leading-relaxed text-slate-600">
+          <input
+            type="checkbox"
+            name="accept_terms"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            disabled={pending}
+            className="mt-0.5"
+          />
+          <span>
+            I agree to the{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              className="font-medium text-slate-900 underline"
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              className="font-medium text-slate-900 underline"
+            >
+              Privacy Policy
+            </a>
+            .
+          </span>
+        </label>
       </div>
 
       {state?.error ? (
@@ -512,7 +543,7 @@ export function OnboardingForm({
         ) : (
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !acceptedTerms}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
           >
             {pending ? (

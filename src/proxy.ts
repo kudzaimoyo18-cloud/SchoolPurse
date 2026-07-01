@@ -18,7 +18,14 @@ const PUBLIC_PATH_PREFIXES = [
   "/guides",
   "/room",
 ];
-const PUBLIC_EXACT_PATHS = new Set(["/", "/welcome", "/faq"]);
+const PUBLIC_EXACT_PATHS = new Set([
+  "/",
+  "/welcome",
+  "/faq",
+  "/privacy",
+  "/terms",
+  "/dpa",
+]);
 
 function isPublic(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;
