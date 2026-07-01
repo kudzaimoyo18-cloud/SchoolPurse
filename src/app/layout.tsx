@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GooeyFilter } from "@/components/ui/gooey-toggle";
 import { SwRegister } from "@/components/sw-register";
+import { CookieConsent } from "@/components/cookie-consent";
 import {
   SITE_URL,
   SITE_NAME,
@@ -93,6 +94,7 @@ export default function RootLayout({
             <TooltipProvider delay={200}>
               <PostHogProvider>{children}</PostHogProvider>
               <Toaster richColors position="top-right" />
+              <CookieConsent />
               <GooeyFilter />
               <SwRegister />
             </TooltipProvider>
